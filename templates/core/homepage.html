@@ -1,0 +1,595 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- ========== HERO SECTION ========== -->
+<section class="relative">
+  {% if hero_banners %}
+  <div class="swiper hero-swiper w-full">
+    <div class="swiper-wrapper">
+      {% for banner in hero_banners %}
+      <div class="swiper-slide">
+        <div
+          class="relative min-h-[420px] md:min-h-[540px] lg:min-h-[600px] flex items-center overflow-hidden bg-gradient-to-br from-primary-900 via-primary-800 to-gray-900">
+          {% if banner.image %}
+          <img src="{{ banner.image.url }}" alt="{{ banner.title }}"
+            class="absolute inset-0 w-full h-full object-cover object-center opacity-30 md:opacity-40 mix-blend-overlay"
+            loading="eager">
+          {% endif %}
+          <div class="absolute inset-0 bg-gradient-to-r from-gray-900/90 via-gray-900/60 to-transparent"></div>
+          <div class="relative z-10 max-w-7xl mx-auto px-6 py-16 w-full">
+            <div class="max-w-2xl">
+              {% if banner.badge_text %}
+              <span
+                class="inline-flex items-center gap-1.5 bg-accent-500/20 border border-accent-500/40 text-accent-400 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-5">
+                <i class="ti ti-sparkles text-xs"></i> {{ banner.badge_text }}
+              </span>
+              {% endif %}
+              <h1 class="text-white text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-4 tracking-tight">
+                {{ banner.title }}
+              </h1>
+              {% if banner.subtitle %}
+              <p class="text-gray-300 text-lg md:text-xl mb-8 leading-relaxed max-w-lg">{{ banner.subtitle }}</p>
+              {% endif %}
+              <div class="flex flex-wrap gap-4">
+                {% if banner.link %}
+                <a href="{{ banner.link }}"
+                  class="inline-flex items-center gap-3 bg-primary-600 hover:bg-primary-500 text-white font-bold px-7 py-4 rounded-2xl text-base transition-all hover:scale-105 shadow-xl shadow-primary-900/50">
+                  {{ banner.button_text }} <i class="ti ti-arrow-right"></i>
+                </a>
+                {% endif %}
+                <a href="{% url 'core:contact' %}"
+                  class="inline-flex items-center gap-3 bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-2xl text-base transition-all border border-white/20">
+                  Get Consultation <i class="ti ti-headset"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+  </div>
+  {% else %}
+  <!-- Default hero when no banners -->
+  <div
+    class="relative min-h-[520px] flex items-center bg-gradient-to-br from-primary-900 via-primary-800 to-gray-900 overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute top-10 left-10 w-72 h-72 bg-primary-400 rounded-full filter blur-3xl"></div>
+      <div class="absolute bottom-10 right-10 w-96 h-96 bg-blue-300 rounded-full filter blur-3xl"></div>
+    </div>
+    <div class="relative z-10 max-w-7xl mx-auto px-6 py-20 w-full">
+      <div class="max-w-3xl">
+        <span
+          class="inline-flex items-center gap-2 bg-accent-500/20 border border-accent-500/40 text-accent-400 text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full mb-6">
+          <i class="ti ti-sparkles"></i> Premium Electronics Store
+        </span>
+        <h1 class="text-white text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] mb-6 tracking-tight">
+          Discover the Future of
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400"> Electronics</span>
+        </h1>
+        <p class="text-gray-300 text-xl mb-10 leading-relaxed max-w-xl">Top brands, unbeatable prices, expert service.
+          Your one-stop destination for premium electronics.</p>
+        <div class="flex flex-wrap gap-4">
+          <a href="{% url 'products:list' %}"
+            class="inline-flex items-center gap-3 bg-primary-500 hover:bg-primary-400 text-white font-bold px-8 py-4 rounded-2xl text-base transition-all hover:scale-105 shadow-xl shadow-primary-900/50">
+            Shop Now <i class="ti ti-arrow-right"></i>
+          </a>
+          <a href="{% url 'core:contact' %}"
+            class="inline-flex items-center gap-3 bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-2xl text-base transition-all border border-white/20">
+            Get Consultation <i class="ti ti-headset"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Stats bar -->
+  <div class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
+    <div
+      class="max-w-7xl mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-100 dark:divide-gray-800">
+      <div class="flex items-center gap-3 px-4 first:pl-0">
+        <div class="w-10 h-10 bg-blue-50 dark:bg-blue-950 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="ti ti-truck text-primary-600 text-lg"></i>
+        </div>
+        <div>
+          <p class="font-bold text-gray-900 dark:text-white text-sm">Free Delivery</p>
+          <p class="text-xs text-gray-500">On orders above ₹999</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 px-4">
+        <div class="w-10 h-10 bg-green-50 dark:bg-green-950 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="ti ti-shield-check text-green-600 text-lg"></i>
+        </div>
+        <div>
+          <p class="font-bold text-gray-900 dark:text-white text-sm">Genuine Products</p>
+          <p class="text-xs text-gray-500">100% authentic brands</p>
+        </div>
+      </div>
+      <div class="md:flex items-center gap-3 px-4">
+        <div
+          class="w-10 h-10 bg-orange-50 dark:bg-orange-950 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="ti ti-refresh text-orange-500 text-lg"></i>
+        </div>
+        <div>
+          <p class="font-bold text-gray-900 dark:text-white text-sm">Easy Returns</p>
+          <p class="text-xs text-gray-500">7-day hassle-free returns</p>
+        </div>
+      </div>
+      <div class="md:flex items-center gap-3 px-4">
+        <div
+          class="w-10 h-10 bg-purple-50 dark:bg-purple-950 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="ti ti-headset text-purple-600 text-lg"></i>
+        </div>
+        <div>
+          <p class="font-bold text-gray-900 dark:text-white text-sm">Expert Support</p>
+          <p class="text-xs text-gray-500">Mon–Sat, 10am–8pm</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CATEGORY SECTION ========== -->
+{% if featured_categories %}
+<section class="py-14 bg-white dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-end justify-between mb-8">
+      <div>
+        <h2 class="section-title">Shop by Category</h2>
+        <p class="section-subtitle">Browse our wide range of electronics categories</p>
+      </div>
+      <a href="{% url 'products:list' %}"
+        class="hidden md:flex items-center gap-1.5 text-sm text-primary-600 font-semibold hover:underline">
+        View All <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    <div class="flex flex-wrap justify-center gap-3 md:gap-4">
+      {% for cat in featured_categories %}
+      <a href="{{ cat.get_absolute_url }}"
+        class="group w-[130px] shrink-0 flex flex-col items-center p-3 md:p-4 bg-gray-50 dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-950 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-800 transition-all text-center hover:-translate-y-1 hover:shadow-lg">
+
+        <div
+          class="w-11 h-11 bg-white dark:bg-gray-700 group-hover:bg-primary-100 dark:group-hover:bg-primary-900 rounded-xl flex items-center justify-center mb-2.5 shadow-sm transition-colors">
+          <i class="ti {{ cat.icon|default:'ti-tag' }} text-xl text-primary-600 dark:text-primary-400"></i>
+        </div>
+
+        <span
+          class="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors line-clamp-2 leading-tight break-words">
+          {{ cat.name }}
+        </span>
+
+        <span class="text-xs text-gray-400 mt-0.5">
+          {{ cat.product_count }}
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== PROMO BANNERS ========== -->
+{% if promo_banners %}
+<section class="py-6 bg-gray-50 dark:bg-gray-950">
+  <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    {% for banner in promo_banners %}
+    <a href="{{ banner.link|default:'#' }}"
+      class="relative rounded-2xl overflow-hidden h-36 flex items-center group bg-gradient-to-br from-primary-600 to-primary-900 hover:shadow-xl transition-all hover:-translate-y-1">
+      {% if banner.image %}
+      <img src="{{ banner.image.url }}" alt="{{ banner.title }}"
+        class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-opacity">
+      {% endif %}
+      <div class="relative z-10 p-5">
+        {% if banner.badge_text %}
+        <span class="text-xs font-bold text-white/80 uppercase tracking-wider">{{ banner.badge_text }}</span>
+        {% endif %}
+        <h3 class="text-white font-bold text-base leading-tight mt-1">{{ banner.title }}</h3>
+        {% if banner.subtitle %}
+        <p class="text-white/70 text-xs mt-1">{{ banner.subtitle }}</p>
+        {% endif %}
+        <span
+          class="mt-2 inline-flex items-center gap-1 text-white text-xs font-semibold group-hover:gap-2 transition-all">
+          {{ banner.button_text }} <i class="ti ti-arrow-right text-xs"></i>
+        </span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== FEATURED PRODUCTS ========== -->
+{% if featured_products %}
+<section class="py-14 bg-white dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-end justify-between mb-8">
+      <div>
+        <h2 class="section-title">Featured Products</h2>
+        <p class="section-subtitle">Handpicked premium electronics just for you</p>
+      </div>
+      <a href="{% url 'products:list' %}?featured=1"
+        class="hidden md:flex items-center gap-1.5 text-sm text-primary-600 font-semibold hover:underline">
+        View All <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6">
+      {% for product in featured_products %}
+      {% include "products/partials/product_card.html" %}
+      {% endfor %}
+    </div>
+    <div class="text-center mt-8 md:hidden">
+      <a href="{% url 'products:list' %}" class="btn-outline">View All Products <i class="ti ti-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== TRENDING PRODUCTS ========== -->
+{% if trending_products %}
+<section class="py-14 bg-gray-50 dark:bg-gray-950">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-end justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+          <span class="text-xs text-orange-500 font-bold uppercase tracking-wider">Hot Right Now</span>
+        </div>
+        <h2 class="section-title">Trending Products</h2>
+        <p class="section-subtitle">Most popular electronics this week</p>
+      </div>
+      <a href="{% url 'products:list' %}?trending=1"
+        class="hidden md:flex items-center gap-1.5 text-sm text-primary-600 font-semibold hover:underline">
+        View All <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-6">
+      {% for product in trending_products %}
+      {% include "products/partials/product_card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== WHY CHOOSE US ========== -->
+{% if why_choose_us %}
+<section class="py-16 bg-white dark:bg-gray-900 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]">
+    <div class="absolute top-0 left-1/2 w-96 h-96 bg-primary-500 rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="section-title">Why Choose TechZone?</h2>
+      <p class="section-subtitle max-w-xl mx-auto">We're committed to delivering the best electronics shopping
+        experience with quality, value and service.</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for item in why_choose_us %}
+      <div
+        class="group p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div
+          class="w-14 h-14 bg-primary-100 dark:bg-primary-950 group-hover:bg-primary-600 rounded-2xl flex items-center justify-center mb-5 transition-colors duration-300">
+          <i
+            class="ti {{ item.icon }} text-2xl text-primary-600 group-hover:text-white transition-colors duration-300"></i>
+        </div>
+        <h3 class="font-bold text-gray-900 dark:text-white text-base mb-2">{{ item.title }}</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{{ item.description }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== NEW ARRIVALS ========== -->
+{% if new_arrivals %}
+<section class="py-14 bg-gray-50 dark:bg-gray-950">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-end justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+          <span class="text-xs text-green-600 font-bold uppercase tracking-wider">Just Landed</span>
+        </div>
+        <h2 class="section-title">New Arrivals</h2>
+        <p class="section-subtitle">Fresh off the shelf — latest electronics</p>
+      </div>
+      <a href="{% url 'products:list' %}?new=1"
+        class="hidden md:flex items-center gap-1.5 text-sm text-primary-600 font-semibold hover:underline">
+        View All <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+      {% for product in new_arrivals %}
+      {% include "products/partials/product_card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== BRANDS ========== -->
+{% if featured_brands %}
+<section class="py-12 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-8">
+      <h2 class="section-title">Authorized Brand Partners</h2>
+      <p class="section-subtitle">Shop authentic products from top global brands</p>
+    </div>
+    <div class="swiper brand-swiper py-4">
+      <div class="swiper-wrapper items-center">
+        {% for brand in featured_brands %}
+        <div class="swiper-slide">
+          <a href="{% url 'products:list' %}?brand={{ brand.pk }}"
+            class="group h-20 bg-gray-50 dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-2xl flex items-center justify-center border border-gray-100 dark:border-gray-700 hover:border-primary-200 transition-all px-4 mx-1">
+            {% if brand.logo %}
+            <img src="{{ brand.logo.url }}" alt="{{ brand.name }}"
+              class="max-h-10 w-auto object-contain filter grayscale group-hover:grayscale-0 transition-all">
+            {% else %}
+            <span class="font-bold text-sm text-gray-500 group-hover:text-primary-600 transition-colors">
+              {{ brand.name }}
+            </span>
+            {% endif %}
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== SERVICES OVERVIEW ========== -->
+<section class="py-16 bg-gradient-to-br from-primary-900 to-gray-900 text-white relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-96 h-96 bg-blue-500 rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-bold mb-3">Our Services</h2>
+      <p class="text-blue-200 max-w-xl mx-auto">Complete electronics solutions for home, business, and beyond</p>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {% for svc in homepage_services %}
+      <a href="{% url 'pages:services' %}"
+        class="group text-center p-5 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 hover:border-white/20 transition-all hover:-translate-y-1">
+        <div
+          class="w-12 h-12 bg-white/10 group-hover:bg-primary-500 rounded-xl flex items-center justify-center mx-auto mb-3 transition-colors">
+          <i class="ti {{ svc.icon }} text-xl text-white"></i>
+        </div>
+        <p class="text-sm font-semibold text-white leading-tight">{{ svc.title }}</p>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-10">
+      <a href="{% url 'pages:services' %}"
+        class="inline-flex items-center gap-2 bg-white text-primary-700 hover:bg-blue-50 font-bold px-7 py-3.5 rounded-2xl transition-all hover:scale-105 shadow-xl">
+        Explore All Services <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TESTIMONIALS ========== -->
+{% if testimonials %}
+<section class="py-16 bg-gray-50 dark:bg-gray-950">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="section-title">What Our Customers Say</h2>
+      <p class="section-subtitle">Real reviews from real electronics enthusiasts</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for t in testimonials %}
+      <div
+        class="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow">
+        <!-- Stars -->
+        <div class="flex mb-4">
+          {% for i in "12345" %}
+          {% if forloop.counter <= t.rating %} <i class="ti ti-star-filled text-yellow-400 text-base"></i>
+            {% else %}
+            <i class="ti ti-star text-gray-200 text-base"></i>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-5 italic">"{{ t.content }}"</p>
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-full overflow-hidden bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0">
+            {% if t.avatar %}
+            <img src="{{ t.avatar.url }}" alt="{{ t.name }}" class="w-full h-full object-cover">
+            {% else %}
+            <span class="text-primary-600 dark:text-primary-400 font-bold text-sm">{{ t.name|slice:":1" }}</span>
+            {% endif %}
+          </div>
+          <div>
+            <p class="font-bold text-gray-900 dark:text-white text-sm">{{ t.name }}</p>
+            {% if t.designation %}
+            <p class="text-xs text-gray-500">{{ t.designation }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== SERVING AREAS ========== -->
+<section class="py-14 bg-white dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex flex-col md:flex-row gap-10 items-center">
+      <div class="flex-1">
+        <div class="flex items-center gap-2 mb-3">
+          <i class="ti ti-map-pin text-primary-600 text-lg"></i>
+          <span class="text-xs text-primary-600 font-bold uppercase tracking-wider">Coverage</span>
+        </div>
+        <h2 class="section-title mb-4">Serving Across Gujarat & Beyond</h2>
+        <p class="text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">We deliver and service electronics across major
+          cities. Get expert consultation, delivery, and installation at your doorstep.</p>
+        <div class="flex flex-wrap gap-2 mb-6">
+          {% for area in serving_area_cities %}
+          <a href="{% url 'pages:serving_areas' %}"
+            class="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-950 border border-gray-200 dark:border-gray-700 hover:border-primary-300 px-3 py-1.5 rounded-full text-sm text-gray-700 dark:text-gray-300 transition-colors">
+            <i class="ti ti-map-pin text-xs text-primary-500"></i> {{ area }}
+          </a>
+          {% endfor %}
+        </div>
+        <a href="{% url 'pages:serving_areas' %}" class="btn-primary">
+          View All Areas <i class="ti ti-arrow-right"></i>
+        </a>
+      </div>
+      <div class="flex-1 hidden md:flex items-center justify-center">
+        <div
+          class="w-80 h-80 bg-primary-50 dark:bg-primary-950 rounded-3xl flex items-center justify-center border border-primary-100 dark:border-primary-900">
+          <div class="text-center">
+            <i class="ti ti-map-2 text-8xl text-primary-300 dark:text-primary-700"></i>
+            <p class="text-primary-600 dark:text-primary-400 font-semibold mt-4">Pan-Gujarat Coverage</p>
+            <p class="text-primary-400 text-sm">100+ cities served</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CONTACT CTA ========== -->
+<section class="py-16 bg-gray-50 dark:bg-gray-950">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+      <!-- CTA Left -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <i class="ti ti-headset text-primary-600"></i>
+          <span class="text-xs text-primary-600 font-bold uppercase tracking-wider">Get in Touch</span>
+        </div>
+        <h2 class="section-title mb-4">Have Questions? We're Here to Help</h2>
+        <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">Our expert team is available to guide you in
+          choosing the right electronics. Get personalized recommendations, bulk pricing, or technical support.</p>
+        <div class="space-y-4">
+          {% if site_settings.phone %}
+          <a href="tel:{{ site_settings.phone }}"
+            class="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-primary-200 transition-all group">
+            <div
+              class="w-12 h-12 bg-blue-50 dark:bg-blue-950 rounded-xl flex items-center justify-center group-hover:bg-primary-600 transition-colors">
+              <i class="ti ti-phone text-primary-600 group-hover:text-white text-lg transition-colors"></i>
+            </div>
+            <div>
+              <p class="font-bold text-gray-900 dark:text-white text-sm">Call Us</p>
+              <p class="text-gray-500 dark:text-gray-400 text-sm">{{ site_settings.phone }}</p>
+            </div>
+          </a>
+          {% endif %}
+          {% if site_settings.whatsapp %}
+          <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank"
+            class="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-green-200 transition-all group">
+            <div
+              class="w-12 h-12 bg-green-50 dark:bg-green-950 rounded-xl flex items-center justify-center group-hover:bg-green-600 transition-colors">
+              <i class="ti ti-brand-whatsapp text-green-600 group-hover:text-white text-lg transition-colors"></i>
+            </div>
+            <div>
+              <p class="font-bold text-gray-900 dark:text-white text-sm">WhatsApp</p>
+              <p class="text-gray-500 dark:text-gray-400 text-sm">Chat with our team</p>
+            </div>
+          </a>
+          {% endif %}
+          {% if site_settings.email %}
+          <a href="mailto:{{ site_settings.email }}"
+            class="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-purple-200 transition-all group">
+            <div
+              class="w-12 h-12 bg-purple-50 dark:bg-purple-950 rounded-xl flex items-center justify-center group-hover:bg-purple-600 transition-colors">
+              <i class="ti ti-mail text-purple-600 group-hover:text-white text-lg transition-colors"></i>
+            </div>
+            <div>
+              <p class="font-bold text-gray-900 dark:text-white text-sm">Email Us</p>
+              <p class="text-gray-500 dark:text-gray-400 text-sm">{{ site_settings.email }}</p>
+            </div>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      <!-- Contact Form -->
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-7 shadow-sm">
+        <h3 class="font-bold text-gray-900 dark:text-white text-lg mb-5">Send us a Message</h3>
+        <form method="post" action="{% url 'core:contact_submit' %}" id="contact-form" class="space-y-4">
+          {% csrf_token %}
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Your Name *</label>
+              <input type="text" name="name" required placeholder="John Doe" class="form-input">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Phone</label>
+              <input type="tel" name="phone" placeholder="+91 98765 43210" class="form-input">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Email Address *</label>
+            <input type="email" name="email" required placeholder="you@example.com" class="form-input">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Subject *</label>
+            <input type="text" name="subject" required placeholder="How can we help?" class="form-input">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Message *</label>
+            <textarea name="message" required rows="4" placeholder="Tell us more about your requirements..."
+              class="form-textarea"></textarea>
+          </div>
+          <input type="hidden" name="inquiry_type" value="general">
+          <button type="submit" class="w-full btn-primary justify-center py-3 rounded-xl text-sm font-bold">
+            <i class="ti ti-send"></i> Send Message
+          </button>
+          <p class="contact-form-msg hidden text-sm text-center font-medium mt-2"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Contact form AJAX
+  const contactForm = document.getElementById('contact-form');
+  if (contactForm) {
+    contactForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = contactForm.querySelector('[type="submit"]');
+      const msgEl = contactForm.querySelector('.contact-form-msg');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ti ti-loader animate-spin"></i> Sending...';
+      try {
+        const res = await fetch('{% url "core:contact_submit" %}', {
+          method: 'POST',
+          body: new FormData(contactForm),
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        msgEl.classList.remove('hidden');
+        if (data.success) {
+          msgEl.className = 'text-sm text-center font-medium mt-2 text-green-600';
+          msgEl.textContent = data.message;
+          contactForm.reset();
+        } else {
+          msgEl.className = 'text-sm text-center font-medium mt-2 text-red-600';
+          msgEl.textContent = 'Please fill all required fields.';
+        }
+      } catch (err) {
+        msgEl.classList.remove('hidden');
+        msgEl.textContent = 'Something went wrong. Please try again.';
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-send"></i> Send Message';
+    });
+  }
+</script>
+{% endblock %}

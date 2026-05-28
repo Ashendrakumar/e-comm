@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}All Categories — TechZone{% endblock %}
+{% block meta_description %}Browse all electronics categories at TechZone — mobiles, laptops, TVs, cameras and more.{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-gradient-to-br from-primary-800 via-primary-700 to-primary-900 py-14 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-300 rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-6 text-center">
+    <nav class="flex items-center justify-center gap-2 text-xs text-white/70 mb-5">
+      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
+      <i class="ti ti-chevron-right text-[10px]"></i>
+      <span class="text-white font-semibold">All Categories</span>
+    </nav>
+    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-3 tracking-tight">Shop by Category</h1>
+    <p class="text-blue-200 text-lg max-w-xl mx-auto">Browse our complete range of premium electronics across {{ root_categories|length }} categories</p>
+  </div>
+</div>
+
+<!-- Categories Grid -->
+<div class="max-w-7xl mx-auto px-4 py-12">
+  {% for cat in root_categories %}
+  <div class="mb-12">
+    <!-- Category header row -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+             style="background:{{ cat.color|default:'#2563eb' }}20;">
+          <i class="ti {{ cat.icon|default:'ti-tag' }} text-2xl" style="color:{{ cat.color|default:'#2563eb' }};"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ cat.name }}</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ cat.total_product_count }} product{{ cat.total_product_count|pluralize }}
+            {% if cat.children.count %} · {{ cat.children.count }} sub-categor{{ cat.children.count|pluralize:"y,ies" }}{% endif %}
+          </p>
+        </div>
+      </div>
+      <a href="{{ cat.get_absolute_url }}"
+         class="hidden sm:flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors">
+        View all <i class="ti ti-arrow-right text-sm"></i>
+      </a>
+    </div>
+
+    <!-- Banner + subcategories row -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <!-- Category card / banner -->
+      <a href="{{ cat.get_absolute_url }}"
+         class="lg:col-span-1 group relative rounded-2xl overflow-hidden flex flex-col justify-end min-h-[200px]"
+         style="background:linear-gradient(135deg,{{ cat.color|default:'#1d4ed8' }}ee,{{ cat.color|default:'#1e40af' }});">
+        {% if cat.banner %}
+        <img src="{{ cat.banner.url }}" alt="{{ cat.name }}"
+             class="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500">
+        {% endif %}
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+        <div class="relative z-10 p-5">
+          {% if cat.icon %}
+          <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+            <i class="ti {{ cat.icon }} text-xl text-white"></i>
+          </div>
+          {% endif %}
+          <h3 class="text-white font-bold text-lg leading-tight mb-1">{{ cat.name }}</h3>
+          {% if cat.description %}
+          <p class="text-white/70 text-xs line-clamp-2">{{ cat.description|truncatewords:12 }}</p>
+          {% endif %}
+          <span class="mt-3 inline-flex items-center gap-1 text-white/90 text-xs font-semibold group-hover:gap-2 transition-all">
+            Shop Now <i class="ti ti-arrow-right text-xs"></i>
+          </span>
+        </div>
+      </a>
+
+      <!-- Subcategory cards -->
+      <div class="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
+        {% for sub in cat.children.all %}
+        {% if sub.is_active %}
+        <a href="{{ sub.get_absolute_url }}"
+           class="group flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-lg hover:-translate-y-1 transition-all text-center min-h-[110px]">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform"
+               style="background:{{ cat.color|default:'#2563eb' }}15;">
+            <i class="ti {{ sub.icon|default:'ti-tag' }} text-xl" style="color:{{ cat.color|default:'#2563eb' }};"></i>
+          </div>
+          <span class="text-xs font-semibold text-gray-800 dark:text-gray-200 group-hover:text-primary-600 transition-colors line-clamp-2 leading-tight">{{ sub.name }}</span>
+          <span class="text-[11px] text-gray-400 mt-0.5">{{ sub.total_product_count }} items</span>
+        </a>
+        {% endif %}
+        {% empty %}
+        <!-- If no subcategories, show featured products from this category -->
+        {% with featured=cat.get_featured_products %}
+        {% for product in featured|slice:":4" %}
+        <a href="{{ product.get_absolute_url }}"
+           class="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:shadow-md hover:-translate-y-1 transition-all overflow-hidden">
+          <div class="aspect-square bg-gray-50 dark:bg-gray-800 p-2 flex items-center justify-center">
+            {% if product.primary_image %}
+            <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}"
+                 class="h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
+            {% else %}
+            <i class="ti ti-photo-off text-2xl text-gray-300"></i>
+            {% endif %}
+          </div>
+          <div class="p-2">
+            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 line-clamp-1">{{ product.name }}</p>
+            <p class="text-xs font-bold text-primary-600 mt-0.5">₹{{ product.effective_price|floatformat:0 }}</p>
+          </div>
+        </a>
+        {% endfor %}
+        {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if not forloop.last %}
+    <hr class="mt-10 border-gray-100 dark:border-gray-800">
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <!-- CTA -->
+  <div class="mt-6 text-center bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-950 dark:to-gray-900 rounded-3xl p-10 border border-primary-100 dark:border-primary-900">
+    <i class="ti ti-package text-5xl text-primary-400 block mb-4"></i>
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Can't find what you're looking for?</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">Browse all products or contact our expert team for personalised recommendations.</p>
+    <div class="flex items-center justify-center gap-4 flex-wrap">
+      <a href="{% url 'products:list' %}" class="btn-primary px-8 py-3.5 rounded-xl text-sm">Browse All Products</a>
+      <a href="{% url 'core:contact' %}" class="btn-outline px-8 py-3.5 rounded-xl text-sm">Talk to an Expert</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

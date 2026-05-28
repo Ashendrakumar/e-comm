@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Server Error — TechZone{% endblock %}
+{% block content %}
+<div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 py-20">
+  <i class="ti ti-server-off text-9xl text-gray-200 dark:text-gray-800 block mb-6"></i>
+  <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-3">Something Went Wrong</h1>
+  <p class="text-gray-500 mb-8 max-w-sm">We're working on fixing this. Please try again in a moment.</p>
+  <a href="{% url 'core:homepage' %}" class="btn-primary">Return Home <i class="ti ti-home"></i></a>
+</div>
+{% endblock %}

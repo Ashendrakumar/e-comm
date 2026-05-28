@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Contact Us — TechZone{% endblock %}
+{% block content %}
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-12 text-white text-center">
+  <h1 class="text-3xl font-extrabold mb-2">Contact Us</h1>
+  <p class="text-blue-200">We'd love to hear from you. Get in touch with our team.</p>
+</div>
+<div class="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-2 gap-10">
+  <div>
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Get in Touch</h2>
+    {% if messages %}{% for msg in messages %}<div class="mb-4 p-3 rounded-xl bg-green-50 text-green-700 text-sm">{{ msg }}</div>{% endfor %}{% endif %}
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Name *</label><input type="text" name="name" required class="form-input"></div>
+        <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Phone</label><input type="tel" name="phone" class="form-input"></div>
+      </div>
+      <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Email *</label><input type="email" name="email" required class="form-input"></div>
+      <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Inquiry Type</label>
+        <select name="inquiry_type" class="form-select">
+          <option value="general">General</option><option value="product">Product</option>
+          <option value="service">Service</option><option value="bulk">Bulk Order</option><option value="support">Support</option>
+        </select>
+      </div>
+      <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Subject *</label><input type="text" name="subject" required class="form-input"></div>
+      <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Message *</label><textarea name="message" required rows="5" class="form-textarea"></textarea></div>
+      <button type="submit" class="w-full btn-primary justify-center py-3 rounded-xl">Send Message <i class="ti ti-send"></i></button>
+    </form>
+  </div>
+  <div class="space-y-5">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Our Details</h2>
+    {% if site_settings.phone %}<div class="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800"><div class="w-10 h-10 bg-blue-50 dark:bg-blue-950 rounded-xl flex items-center justify-center"><i class="ti ti-phone text-primary-600"></i></div><div><p class="text-xs text-gray-500">Phone</p><a href="tel:{{ site_settings.phone }}" class="font-bold text-gray-900 dark:text-white hover:text-primary-600">{{ site_settings.phone }}</a></div></div>{% endif %}
+    {% if site_settings.email %}<div class="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800"><div class="w-10 h-10 bg-purple-50 dark:bg-purple-950 rounded-xl flex items-center justify-center"><i class="ti ti-mail text-purple-600"></i></div><div><p class="text-xs text-gray-500">Email</p><a href="mailto:{{ site_settings.email }}" class="font-bold text-gray-900 dark:text-white hover:text-primary-600">{{ site_settings.email }}</a></div></div>{% endif %}
+    {% if site_settings.address %}<div class="flex items-start gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800"><div class="w-10 h-10 bg-green-50 dark:bg-green-950 rounded-xl flex items-center justify-center flex-shrink-0"><i class="ti ti-map-pin text-green-600"></i></div><div><p class="text-xs text-gray-500">Address</p><p class="font-bold text-gray-900 dark:text-white text-sm">{{ site_settings.address }}</p></div></div>{% endif %}
+    {% if site_settings.working_hours %}<div class="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800"><div class="w-10 h-10 bg-orange-50 dark:bg-orange-950 rounded-xl flex items-center justify-center"><i class="ti ti-clock text-orange-500"></i></div><div><p class="text-xs text-gray-500">Working Hours</p><p class="font-bold text-gray-900 dark:text-white text-sm">{{ site_settings.working_hours }}</p></div></div>{% endif %}
+    {% if site_settings.google_maps_embed %}
+    <div class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 h-64">{{ site_settings.google_maps_embed|safe }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

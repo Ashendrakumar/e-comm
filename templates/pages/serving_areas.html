@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Serving Areas — TechZone{% endblock %}
+{% block content %}
+
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative">
+    <nav class="flex items-center justify-center gap-2 text-xs text-white/70 mb-5">
+      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
+      <i class="ti ti-chevron-right text-[10px]"></i>
+      <span class="text-white font-semibold">Serving Areas</span>
+    </nav>
+    <h1 class="text-4xl font-extrabold mb-3">Serving Areas</h1>
+    <p class="text-blue-200 text-lg max-w-xl mx-auto">Delivering electronics and services across Gujarat and beyond</p>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-14">
+  <div class="text-center mb-10">
+    <div class="inline-flex items-center gap-2 bg-primary-50 dark:bg-primary-950 border border-primary-100 dark:border-primary-900 text-primary-700 dark:text-primary-300 px-5 py-3 rounded-full text-sm font-semibold mb-4">
+      <i class="ti ti-map-pin"></i> 100+ Cities Covered
+    </div>
+    <p class="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">We provide doorstep delivery, installation and service support across all major cities in Gujarat.</p>
+  </div>
+
+  {% if areas %}
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-12">
+    {% for area in areas %}
+    <div class="group flex items-center gap-2.5 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all cursor-pointer">
+      <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900 group-hover:bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+        <i class="ti ti-map-pin text-primary-600 group-hover:text-white text-sm transition-colors"></i>
+      </div>
+      <div>
+        <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">{{ area.city }}</span>
+        <p class="text-xs text-gray-400">{{ area.state }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-12">
+    {% for city in default_cities %}
+    <div class="group flex items-center gap-2.5 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all">
+      <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900 group-hover:bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+        <i class="ti ti-map-pin text-primary-600 group-hover:text-white text-sm transition-colors"></i>
+      </div>
+      <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">{{ city }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="bg-primary-600 rounded-3xl p-10 text-white text-center">
+    <h2 class="text-2xl font-bold mb-3">Don't See Your City?</h2>
+    <p class="text-blue-200 mb-6 max-w-md mx-auto">We're constantly expanding. Contact us and we'll check if we can serve your location.</p>
+    <a href="{% url 'core:contact' %}" class="inline-flex items-center gap-2 bg-white text-primary-700 hover:bg-blue-50 font-bold px-7 py-3.5 rounded-2xl transition-colors">
+      Contact Us <i class="ti ti-arrow-right"></i>
+    </a>
+  </div>
+</div>
+{% endblock %}

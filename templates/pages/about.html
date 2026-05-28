@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}About Us — TechZone{% endblock %}
+{% block content %}
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-16 text-white text-center">
+  <h1 class="text-4xl font-extrabold mb-3">About TechZone</h1>
+  <p class="text-blue-200 text-lg max-w-xl mx-auto">Your trusted partner for premium electronics since 2015</p>
+</div>
+<div class="max-w-5xl mx-auto px-4 py-14">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-14 items-center">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Our Story</h2>
+      <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">TechZone was founded with a simple mission: make
+        premium electronics accessible to everyone in Gujarat. What started as a small retail store has grown into a
+        trusted electronics destination serving thousands of customers across 100+ cities.</p>
+      <p class="text-gray-600 dark:text-gray-400 leading-relaxed">We are authorized dealers for top global brands and
+        provide expert consultation, genuine products, after-sales support, and fast delivery.</p>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-primary-50 dark:bg-primary-950 p-5 rounded-2xl text-center">
+        <p class="text-3xl font-extrabold text-primary-600">10+</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Years of Experience</p>
+      </div>
+      <div class="bg-green-50 dark:bg-green-950 p-5 rounded-2xl text-center">
+        <p class="text-3xl font-extrabold text-green-600">50k+</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Happy Customers</p>
+      </div>
+      <div class="bg-orange-50 dark:bg-orange-950 p-5 rounded-2xl text-center">
+        <p class="text-3xl font-extrabold text-orange-500">100+</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Cities Served</p>
+      </div>
+      <div class="bg-purple-50 dark:bg-purple-950 p-5 rounded-2xl text-center">
+        <p class="text-3xl font-extrabold text-purple-600">500+</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Products Listed</p>
+      </div>
+    </div>
+  </div>
+  {% if why_choose_us %}
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-8">Why Choose Us</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-14">
+    {% for item in why_choose_us %}
+    <div
+      class="p-5 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
+      <div class="w-12 h-12 bg-primary-100 dark:bg-primary-950 rounded-xl flex items-center justify-center mb-4"><i
+          class="ti {{ item.icon }} text-xl text-primary-600"></i></div>
+      <h3 class="font-bold text-gray-900 dark:text-white mb-2">{{ item.title }}</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.description }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if testimonials %}
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-8">Customer Reviews</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    {% for t in testimonials %}
+    <div class="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
+      <div class="flex mb-3">{% for i in "12345" %}{% if forloop.counter <= t.rating %}<i
+          class="ti ti-star-filled text-yellow-400 text-sm"></i>{% else %}<i
+            class="ti ti-star text-gray-200 text-sm"></i>{% endif %}{% endfor %}</div>
+      <p class="text-gray-600 dark:text-gray-400 text-sm italic mb-4">"{{ t.content }}"</p>
+      <div class="flex items-center gap-2">
+        <div
+          class="w-9 h-9 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-600 font-bold text-sm">
+          {{ t.name|slice:":1" }}</div>
+        <div>
+          <p class="font-bold text-sm text-gray-900 dark:text-white">{{ t.name }}</p>{% if t.designation %}<p
+            class="text-xs text-gray-400">{{ t.designation }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% load static %}
+<!-- Newsletter Banner -->
+<section class="bg-gradient-to-r from-primary-700 to-primary-900 dark:from-primary-900 dark:to-gray-900 py-12">
+  <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-8">
+    <div class="flex-1 text-center md:text-left">
+      <h3 class="text-white text-2xl font-bold mb-1">Stay Updated with TechZone</h3>
+      <p class="text-primary-200 text-sm">Get exclusive deals, new arrivals and tech news straight to your inbox.</p>
+    </div>
+    <form class="newsletter-form flex w-full md:w-auto gap-2" method="post" action="{% url 'core:newsletter_subscribe' %}">
+      {% csrf_token %}
+      <input type="email" name="email" placeholder="Your email address" required
+        class="flex-1 md:w-72 px-4 py-3 rounded-xl border-0 outline-none text-sm text-gray-800 bg-white">
+      <button type="submit" class="bg-accent-500 hover:bg-accent-600 text-white px-5 py-3 rounded-xl font-semibold text-sm transition-colors whitespace-nowrap flex items-center gap-2">
+        <i class="ti ti-send"></i> Subscribe
+      </button>
+    </form>
+    <p class="newsletter-msg hidden text-green-300 text-sm mt-2"></p>
+  </div>
+</section>
+
+<!-- Main Footer -->
+<footer class="bg-gray-900 dark:bg-gray-950 text-gray-300 pt-14 pb-6">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-10">
+
+      <!-- Brand column -->
+      <div class="col-span-2 md:col-span-4 lg:col-span-1">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+            <i class="ti ti-cpu text-white text-lg"></i>
+          </div>
+          <span class="font-bold text-xl text-white">TechZone</span>
+        </div>
+        <p class="text-sm leading-relaxed text-gray-400 mb-5">{{ site_settings.tagline }}</p>
+        <div class="space-y-2.5 text-sm">
+          {% if site_settings.phone %}
+          <a href="tel:{{ site_settings.phone }}" class="flex items-center gap-2 hover:text-white transition-colors">
+            <i class="ti ti-phone text-primary-400 text-base flex-shrink-0"></i> {{ site_settings.phone }}
+          </a>
+          {% endif %}
+          {% if site_settings.email %}
+          <a href="mailto:{{ site_settings.email }}" class="flex items-center gap-2 hover:text-white transition-colors">
+            <i class="ti ti-mail text-primary-400 text-base flex-shrink-0"></i> {{ site_settings.email }}
+          </a>
+          {% endif %}
+          {% if site_settings.address %}
+          <p class="flex items-start gap-2">
+            <i class="ti ti-map-pin text-primary-400 text-base flex-shrink-0 mt-0.5"></i>
+            <span class="text-gray-400 text-xs leading-relaxed">{{ site_settings.address }}</span>
+          </p>
+          {% endif %}
+        </div>
+        <!-- Social icons -->
+        <div class="flex items-center gap-3 mt-5">
+          {% for sl in social_links %}
+          <a href="{{ sl.url }}" target="_blank" rel="noopener"
+            class="w-9 h-9 bg-gray-800 hover:bg-primary-600 text-gray-400 hover:text-white rounded-xl flex items-center justify-center transition-all">
+            <i class="ti {{ sl.get_icon_class }}"></i>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div>
+        <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Categories</h4>
+        <ul class="space-y-2.5 text-sm">
+          {% for cat in nav_categories|slice:":6" %}
+          <li>
+            <a href="{{ cat.get_absolute_url }}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5">
+              <i class="ti ti-chevron-right text-xs text-gray-600"></i>{{ cat.name }}
+            </a>
+          </li>
+          {% endfor %}
+          <li>
+            <a href="{% url 'products:list' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5">
+              <i class="ti ti-chevron-right text-xs text-gray-600"></i>All Products
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Services -->
+      <div>
+        <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Services</h4>
+        <ul class="space-y-2.5 text-sm">
+          <li><a href="{% url 'pages:services' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>All Services</a></li>
+          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Product Consultation</a></li>
+          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Installation</a></li>
+          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Device Repair</a></li>
+          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Warranty Support</a></li>
+          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Bulk Orders</a></li>
+        </ul>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Quick Links</h4>
+        <ul class="space-y-2.5 text-sm">
+          <li><a href="{% url 'core:homepage' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Home</a></li>
+          <li><a href="{% url 'core:about' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>About Us</a></li>
+          <li><a href="{% url 'core:contact' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Contact</a></li>
+          <li><a href="{% url 'pages:serving_areas' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Serving Areas</a></li>
+          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Privacy Policy</a></li>
+          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Terms of Service</a></li>
+        </ul>
+      </div>
+
+      <!-- Working Hours -->
+      <div>
+        <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Store Hours</h4>
+        <div class="space-y-2 text-sm text-gray-400">
+          <div class="flex items-center gap-2"><i class="ti ti-clock text-primary-400"></i>{{ site_settings.working_hours }}</div>
+          <p class="text-xs text-gray-500 leading-relaxed mt-3">Visit our store or contact us online. We're here to help you find the perfect electronics.</p>
+        </div>
+        {% if site_settings.whatsapp %}
+        <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank"
+          class="mt-5 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
+          <i class="ti ti-brand-whatsapp"></i> Chat on WhatsApp
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Brands bar -->
+    {% if featured_brands %}
+    <div class="border-t border-gray-800 py-6 mb-6">
+      <p class="text-xs text-gray-500 uppercase tracking-wider mb-4">Authorized Brands</p>
+      <div class="flex flex-wrap items-center gap-4">
+        {% for brand in featured_brands %}
+        <a href="{% url 'products:list' %}?brand={{ brand.pk }}" class="group">
+          {% if brand.logo %}
+          <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="h-8 w-auto object-contain filter brightness-75 group-hover:brightness-100 transition-all">
+          {% else %}
+          <span class="text-xs text-gray-500 group-hover:text-gray-300 font-semibold transition-colors">{{ brand.name }}</span>
+          {% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Bottom bar -->
+    <div class="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+      <p>&copy; {% now "Y" %} <span class="text-gray-400 font-medium">{{ site_settings.site_name }}</span>. All rights reserved.</p>
+      <div class="flex items-center gap-1 text-gray-600">
+        <i class="ti ti-shield-check text-green-600 text-sm"></i>
+        <span>Secure Shopping</span>
+        <span class="mx-2">·</span>
+        <i class="ti ti-truck text-blue-500 text-sm"></i>
+        <span>Fast Delivery</span>
+        <span class="mx-2">·</span>
+        <i class="ti ti-headset text-purple-500 text-sm"></i>
+        <span>24/7 Support</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- WhatsApp floating button -->
+{% if site_settings.whatsapp %}
+<a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener"
+  class="fixed bottom-6 right-6 z-40 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110"
+  title="Chat on WhatsApp">
+  <i class="ti ti-brand-whatsapp text-2xl"></i>
+</a>
+{% endif %}

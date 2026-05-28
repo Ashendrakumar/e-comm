@@ -1,0 +1,96 @@
+{% load static %}
+<div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative flex flex-col">
+
+  <!-- Badges -->
+  <div class="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+    {% if product.is_new_arrival %}
+    <span class="badge bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">New</span>
+    {% endif %}
+    {% if product.discount_percent %}
+    <span class="badge bg-red-100 text-red-600 dark:bg-red-900/60 dark:text-red-300">-{{ product.discount_percent }}%</span>
+    {% endif %}
+    {% if product.is_trending %}
+    <span class="badge bg-orange-100 text-orange-600 dark:bg-orange-900/60 dark:text-orange-300">🔥 Hot</span>
+    {% endif %}
+    {% if not product.is_in_stock %}
+    <span class="badge bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400">Out of Stock</span>
+    {% endif %}
+  </div>
+
+  <!-- Wishlist -->
+  <button class="wishlist-btn absolute top-3 right-3 z-10 w-8 h-8 bg-white dark:bg-gray-800 rounded-full shadow-md flex items-center justify-center text-gray-400 hover:text-red-500 hover:scale-110 transition-all"
+          data-product="{{ product.pk }}" title="Add to wishlist">
+    <i class="ti ti-heart text-sm"></i>
+  </button>
+
+  <!-- Product Image -->
+  <a href="{{ product.get_absolute_url }}" class="card-img block aspect-[4/3] bg-gray-50 dark:bg-gray-800 overflow-hidden flex-shrink-0">
+    {% if product.primary_image %}
+    <img src="{{ product.primary_image.image.url }}"
+         alt="{{ product.primary_image.alt_text|default:product.name }}"
+         class="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500"
+         loading="lazy">
+    {% else %}
+    <div class="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-700">
+      <i class="ti ti-photo-off text-4xl"></i>
+    </div>
+    {% endif %}
+  </a>
+
+  <!-- Hover action bar -->
+  <div class="product-actions absolute inset-x-0 bottom-0 flex opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 bg-white/96 dark:bg-gray-900/96 backdrop-blur-sm border-t border-gray-100 dark:border-gray-800">
+    <button onclick="openQuickView('{{ product.slug }}')"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors cursor-pointer">
+      <i class="ti ti-eye text-sm"></i> Quick View
+    </button>
+    <button onclick="toggleCompare('{{ product.pk }}','{{ product.name|escapejs }}')"
+            class="compare-btn flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-l border-gray-100 dark:border-gray-800 cursor-pointer"
+            data-id="{{ product.pk }}" title="Add to compare">
+      <i class="ti ti-arrows-diff text-sm"></i> Compare
+    </button>
+  </div>
+
+  <!-- Info -->
+  <div class="card-info p-4 flex flex-col flex-1 pb-12">
+    {% if product.brand %}
+    <a href="{% url 'products:list' %}?brand={{ product.brand.pk }}"
+       class="text-[11px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wide mb-1 hover:underline w-fit">
+      {{ product.brand.name }}
+    </a>
+    {% endif %}
+    <a href="{{ product.get_absolute_url }}" class="block">
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 mb-2 hover:text-primary-600 transition-colors leading-snug">
+        {{ product.name }}
+      </h3>
+    </a>
+    <!-- Rating -->
+    {% if product.review_count > 0 %}
+    <div class="flex items-center gap-1.5 mb-2">
+      <div class="flex">
+        {% for i in "12345" %}
+          {% if forloop.counter <= product.average_rating %}
+          <i class="ti ti-star-filled text-yellow-400 text-xs"></i>
+          {% else %}
+          <i class="ti ti-star text-gray-300 dark:text-gray-600 text-xs"></i>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <span class="text-[11px] text-gray-500 dark:text-gray-400">({{ product.review_count }})</span>
+    </div>
+    {% endif %}
+    <!-- Price -->
+    <div class="flex items-center gap-2 mt-auto pt-2">
+      {% if product.sale_price %}
+      <span class="text-base font-extrabold text-gray-900 dark:text-white">₹{{ product.sale_price|floatformat:0 }}</span>
+      <span class="text-xs text-gray-400 line-through">₹{{ product.price|floatformat:0 }}</span>
+      {% else %}
+      <span class="text-base font-extrabold text-gray-900 dark:text-white">₹{{ product.price|floatformat:0 }}</span>
+      {% endif %}
+    </div>
+    {% if product.is_low_stock %}
+    <p class="text-[11px] text-orange-500 font-semibold mt-1 flex items-center gap-1">
+      <i class="ti ti-alert-triangle text-xs"></i> Only {{ product.stock }} left!
+    </p>
+    {% endif %}
+  </div>
+</div>
