@@ -1,0 +1,40 @@
+{# Testimonials section #}
+<section class="py-12 bg-gray-50">
+  <div class="container mx-auto px-4">
+    {% if section.title %}
+      <div class="text-center mb-8">
+        <h2 class="text-3xl lg:text-4xl font-bold">{{ section.title }}</h2>
+        {% if section.subtitle %}
+          <p class="text-gray-600 mt-2 max-w-2xl mx-auto">{{ section.subtitle }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for testimonial in testimonials %}
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center mb-4">
+            <div class="flex-1">
+              <h3 class="font-semibold text-lg">{{ testimonial.name }}</h3>
+              <p class="text-gray-600 text-sm">{{ testimonial.title }}</p>
+            </div>
+          </div>
+          <div class="flex mb-4">
+            {% for i in "12345" %}
+              {% if forloop.counter <= testimonial.rating %}
+                <i class="ti ti-star-filled text-yellow-400"></i>
+              {% else %}
+                <i class="ti ti-star text-gray-300"></i>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <p class="text-gray-700 italic">{{ testimonial.content }}</p>
+        </div>
+      {% empty %}
+        <div class="col-span-full text-center py-12">
+          <p class="text-gray-500">No testimonials available</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>

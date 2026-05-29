@@ -1,0 +1,8 @@
+{% load static %}
+{% if products %}
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+  {% for product in products %}{% include "products/partials/product_card.html" %}{% endfor %}
+</div>
+{% else %}
+<p class="text-sm text-gray-400 py-6 text-center">No related products found.</p>
+{% endif %}

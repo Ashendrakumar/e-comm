@@ -6,71 +6,74 @@
 
 {% block extra_head %}
 <style>
-/* ── Filter sidebar ── */
-.filter-section { padding-bottom:16px; margin-bottom:16px; border-bottom:1px solid #f3f4f6; }
-.dark .filter-section { border-color:#1f2937; }
-.filter-section:last-child { border:none; padding-bottom:0; margin-bottom:0; }
-.filter-label { display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer; font-size:13px; color:#4b5563; transition:color .15s; }
-.dark .filter-label { color:#d1d5db; }
-.filter-label:hover { color:#2563eb; }
-.filter-label input { width:15px; height:15px; accent-color:#2563eb; flex-shrink:0; cursor:pointer; }
-/* ── List view ── */
-#product-grid.list-mode { display:flex!important; flex-direction:column!important; gap:10px!important; }
-#product-grid.list-mode .product-card { display:flex!important; flex-direction:row!important; height:auto!important; min-height:130px!important; }
-#product-grid.list-mode .product-card .card-img { width:150px!important; min-width:150px!important; flex-shrink:0!important; aspect-ratio:unset!important; }
-#product-grid.list-mode .product-card .product-actions { display:none!important; }
-#product-grid.list-mode .product-card .card-info { flex:1; padding:14px!important; padding-bottom:14px!important; }
-/* ── Quick view modal ── */
-#qv-modal { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.65); backdrop-filter:blur(4px); align-items:center; justify-content:center; }
-#qv-modal.open { display:flex; }
-/* ── Compare bar ── */
-#compare-bar { transform:translateY(100%); transition:transform .3s ease; z-index:40; }
-#compare-bar.show { transform:translateY(0); }
-/* ── Color swatch ── */
-.color-swatch { width:20px; height:20px; border-radius:50%; border:2px solid rgba(0,0,0,.1); cursor:pointer; transition:transform .15s, box-shadow .15s; flex-shrink:0; }
-.color-swatch:hover, .color-swatch.selected { transform:scale(1.2); box-shadow:0 0 0 3px rgba(37,99,235,.4); }
-/* ── Fade-in ── */
-.fade-in { animation:fadeIn .3s ease; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
-/* ── Rating stars ── */
-.rating-star { cursor:pointer; transition:color .1s; }
-/* ── Loading overlay ── */
-.loading-overlay { opacity:.45; pointer-events:none; transition:opacity .2s; }
+/* ── Filter sidebar ───────────────────────── */
+.filter-section{padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;}
+.dark .filter-section{border-color:#1f2937;}
+.filter-section:last-child{border:none;padding-bottom:0;margin-bottom:0;}
+.filter-label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:#4b5563;transition:color .15s;}
+.dark .filter-label{color:#d1d5db;}
+.filter-label:hover{color:#2563eb;}
+.filter-label input{width:15px;height:15px;accent-color:#2563eb;flex-shrink:0;cursor:pointer;}
+/* ── List mode ────────────────────────────── */
+#product-grid.list-mode{display:flex!important;flex-direction:column!important;gap:10px!important;}
+#product-grid.list-mode .product-card{display:flex!important;flex-direction:row!important;height:auto!important;min-height:130px!important;}
+#product-grid.list-mode .product-card .card-img{width:140px!important;min-width:140px!important;flex-shrink:0!important;aspect-ratio:unset!important;}
+#product-grid.list-mode .product-card .card-actions{display:none!important;}
+#product-grid.list-mode .product-card .card-info{flex:1;padding:14px!important;}
+/* ── Quick view modal ─────────────────────── */
+#qv-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+#qv-modal.open{display:flex;}
+/* ── Compare bar ──────────────────────────── */
+#compare-bar{transform:translateY(100%);transition:transform .3s ease;z-index:40;}
+#compare-bar.show{transform:translateY(0);}
+/* ── Skeleton ─────────────────────────────── */
+.skeleton{background:linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%);background-size:200% 100%;animation:shimmer 1.3s infinite;border-radius:12px;}
+.dark .skeleton{background:linear-gradient(90deg,#1f2937 25%,#374151 50%,#1f2937 75%);background-size:200% 100%;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* ── Fade in ──────────────────────────────── */
+.fade-in{animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- ═══ PAGE HEADER ═══════════════════════════════════════ -->
+<!-- ═══ PAGE HEADER ═══════════════════════════════════════════ -->
 <div class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
   <div class="max-w-7xl mx-auto px-4 py-5">
+
+    <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3">
       <a href="{% url 'core:homepage' %}" class="hover:text-primary-600 transition-colors">Home</a>
       <i class="ti ti-chevron-right text-[10px]"></i>
       <span class="text-gray-900 dark:text-white font-semibold">All Products</span>
     </nav>
+
     <div class="flex items-start justify-between gap-4 flex-wrap">
       <div>
         <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white">
           {% if q %}Results for "<span class="text-primary-600">{{ q }}</span>"
           {% else %}All Products{% endif %}
         </h1>
-        <p class="text-sm text-gray-500 mt-0.5">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
           <span class="font-bold text-gray-900 dark:text-white" id="result-count">{{ total_count }}</span> products
         </p>
       </div>
+
       <!-- Active filter chips -->
       {% if active_chips %}
       <div class="flex flex-wrap gap-2 items-center">
         {% for chip in active_chips %}
         <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
           {{ chip.label }}
-          <button onclick="removeChip('{{ chip.key }}','{{ chip.val }}')" class="hover:text-red-500 transition-colors">
+          <button onclick="removeFilterChip('{{ chip.key }}','{{ chip.val }}')"
+                  class="hover:text-red-500 transition-colors leading-none">
             <i class="ti ti-x text-[10px]"></i>
           </button>
         </span>
         {% endfor %}
-        <a href="{% url 'products:list' %}" class="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1 font-medium px-2 py-1.5">
+        <a href="{% url 'products:list' %}"
+           class="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1 font-medium px-2 py-1.5">
           <i class="ti ti-x text-xs"></i> Clear all
         </a>
       </div>
@@ -79,19 +82,23 @@
   </div>
 </div>
 
-<!-- ═══ MAIN LAYOUT ════════════════════════════════════════ -->
+<!-- ═══ MAIN LAYOUT ══════════════════════════════════════════ -->
 <div class="max-w-7xl mx-auto px-4 py-8">
   <div class="flex gap-6">
 
-    <!-- ══ SIDEBAR ════════════════════════════════════════ -->
+    <!-- ══ SIDEBAR ════════════════════════════════════════════ -->
     <aside class="hidden lg:block w-64 flex-shrink-0">
-      <div class="sticky top-24">
-        <form method="get" id="filter-form">
+      <div class="sticky top-24 space-y-4">
+
+        <form method="get" id="filter-form" class="space-y-0">
+          <!-- Preserve sort/view/per_page -->
           {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
           {% if request.GET.view %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
           {% if request.GET.per_page %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}
 
-          <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
+          <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+
+            <!-- Header -->
             <div class="flex items-center justify-between mb-5">
               <h3 class="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
                 <i class="ti ti-adjustments-horizontal text-primary-600"></i> Filters
@@ -99,32 +106,34 @@
               <a href="{% url 'products:list' %}" class="text-xs text-primary-600 hover:underline font-semibold">Clear all</a>
             </div>
 
-            <!-- Search -->
+            <!-- Keyword search -->
             <div class="filter-section">
               <div class="relative">
                 <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
                 <input type="text" name="q" value="{{ q }}" placeholder="Search products..."
-                       class="form-input pl-9 py-2 text-sm">
+                       class="form-input pl-9 py-2 text-sm" id="search-input">
               </div>
             </div>
 
             <!-- Category -->
             <div class="filter-section">
               <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Category</p>
-              <div class="space-y-0.5 max-h-52 overflow-y-auto pr-1">
+              <div class="space-y-0.5 max-h-52 overflow-y-auto pr-1 custom-scroll">
                 <label class="filter-label font-medium">
                   <input type="radio" name="category" value="" {% if not request.GET.category %}checked{% endif %}>
                   All Categories
                 </label>
                 {% for cat in root_cats %}
                 <label class="filter-label">
-                  <input type="radio" name="category" value="{{ cat.slug }}" {% if request.GET.category == cat.slug %}checked{% endif %}>
+                  <input type="radio" name="category" value="{{ cat.slug }}"
+                         {% if request.GET.category == cat.slug %}checked{% endif %}>
                   <span class="flex-1">{{ cat.name }}</span>
                   <span class="text-[11px] text-gray-400">{{ cat.total_product_count }}</span>
                 </label>
                 {% for sub in cat.children.all %}{% if sub.is_active %}
-                <label class="filter-label pl-4">
-                  <input type="radio" name="category" value="{{ sub.slug }}" {% if request.GET.category == sub.slug %}checked{% endif %}>
+                <label class="filter-label pl-5">
+                  <input type="radio" name="category" value="{{ sub.slug }}"
+                         {% if request.GET.category == sub.slug %}checked{% endif %}>
                   <span class="flex-1 text-gray-500 dark:text-gray-400">└ {{ sub.name }}</span>
                   <span class="text-[11px] text-gray-400">{{ sub.product_count }}</span>
                 </label>
@@ -137,15 +146,21 @@
             <div class="filter-section">
               <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Availability</p>
               <label class="filter-label justify-between">
-                <span class="flex items-center gap-2"><input type="checkbox" name="in_stock" value="1" {% if request.GET.in_stock %}checked{% endif %}> In Stock Only</span>
+                <span class="flex items-center gap-2">
+                  <input type="checkbox" name="in_stock" value="1" {% if request.GET.in_stock %}checked{% endif %}> In Stock Only
+                </span>
                 <span class="text-[11px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full">{{ in_stock_count }}</span>
               </label>
               <label class="filter-label justify-between">
-                <span class="flex items-center gap-2"><input type="checkbox" name="on_sale" value="1" {% if request.GET.on_sale %}checked{% endif %}> On Sale</span>
+                <span class="flex items-center gap-2">
+                  <input type="checkbox" name="on_sale" value="1" {% if request.GET.on_sale %}checked{% endif %}> On Sale
+                </span>
                 <span class="text-[11px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full">{{ on_sale_count }}</span>
               </label>
               <label class="filter-label justify-between">
-                <span class="flex items-center gap-2"><input type="checkbox" name="new_arrival" value="1" {% if request.GET.new_arrival %}checked{% endif %}> New Arrivals</span>
+                <span class="flex items-center gap-2">
+                  <input type="checkbox" name="new_arrival" value="1" {% if request.GET.new_arrival %}checked{% endif %}> New Arrivals
+                </span>
                 <span class="text-[11px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full">{{ new_count }}</span>
               </label>
             </div>
@@ -154,10 +169,11 @@
             {% if sidebar_brands %}
             <div class="filter-section">
               <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Brand</p>
-              <div class="space-y-0.5 max-h-48 overflow-y-auto pr-1" id="brand-filter-list">
+              <div class="space-y-0.5 max-h-48 overflow-y-auto pr-1 custom-scroll">
                 {% for brand in sidebar_brands %}
                 <label class="filter-label">
-                  <input type="checkbox" name="brand" value="{{ brand.pk }}" {% if brand.pk|stringformat:"s" in selected_brands %}checked{% endif %}>
+                  <input type="checkbox" name="brand" value="{{ brand.pk }}"
+                         {% if brand.pk|stringformat:"s" in selected_brands %}checked{% endif %}>
                   <span class="flex-1">{{ brand.name }}</span>
                 </label>
                 {% endfor %}
@@ -181,66 +197,11 @@
                 </div>
               </div>
               {% if price_range.min_price and price_range.max_price %}
-              <p class="text-[11px] text-gray-400 mt-1.5 text-right">₹{{ price_range.min_price|floatformat:0 }} – ₹{{ price_range.max_price|floatformat:0 }}</p>
+              <p class="text-[11px] text-gray-400 mt-1.5 text-right">
+                ₹{{ price_range.min_price|floatformat:0 }} – ₹{{ price_range.max_price|floatformat:0 }}
+              </p>
               {% endif %}
             </div>
-
-            <!-- Rating -->
-            <div class="filter-section">
-              <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Minimum Rating</p>
-              <div class="space-y-1.5">
-                {% for stars in "54321" %}
-                <label class="filter-label">
-                  <input type="radio" name="min_rating" value="{{ stars }}" {% if request.GET.min_rating == stars %}checked{% endif %}>
-                  <span class="flex items-center gap-0.5">
-                    {% for i in "12345" %}
-                      {% if forloop.counter <= stars|add:"0" %}
-                      <i class="ti ti-star-filled text-yellow-400 text-xs"></i>
-                      {% else %}
-                      <i class="ti ti-star text-gray-300 text-xs"></i>
-                      {% endif %}
-                    {% endfor %}
-                  </span>
-                  <span class="text-xs text-gray-500">& up</span>
-                </label>
-                {% endfor %}
-                <label class="filter-label">
-                  <input type="radio" name="min_rating" value="" {% if not request.GET.min_rating %}checked{% endif %}>
-                  <span class="text-xs text-gray-500">All Ratings</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Discount -->
-            <div class="filter-section">
-              <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Discount</p>
-              <div class="space-y-1">
-                <label class="filter-label"><input type="radio" name="min_discount" value="" {% if not request.GET.min_discount %}checked{% endif %}> Any</label>
-                <label class="filter-label"><input type="radio" name="min_discount" value="10" {% if request.GET.min_discount == '10' %}checked{% endif %}> 10% or more</label>
-                <label class="filter-label"><input type="radio" name="min_discount" value="20" {% if request.GET.min_discount == '20' %}checked{% endif %}> 20% or more</label>
-                <label class="filter-label"><input type="radio" name="min_discount" value="30" {% if request.GET.min_discount == '30' %}checked{% endif %}> 30% or more</label>
-                <label class="filter-label"><input type="radio" name="min_discount" value="50" {% if request.GET.min_discount == '50' %}checked{% endif %}> 50% or more</label>
-              </div>
-            </div>
-
-            <!-- Color -->
-            {% if color_list %}
-            <div class="filter-section">
-              <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Color</p>
-              <div class="flex flex-wrap gap-2">
-                {% for color in color_list %}
-                <label class="cursor-pointer" title="{{ color }}">
-                  <input type="checkbox" name="color" value="{{ color }}" class="sr-only color-checkbox"
-                         {% if color in selected_colors %}checked{% endif %}>
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-xs font-medium transition-all
-                    {% if color in selected_colors %}border-primary-500 bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300{% else %}border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary-300{% endif %}">
-                    {{ color }}
-                  </span>
-                </label>
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
 
             <!-- Condition -->
             <div class="filter-section">
@@ -251,7 +212,7 @@
               <label class="filter-label"><input type="radio" name="condition" value="open_box" {% if request.GET.condition == 'open_box' %}checked{% endif %}> Open Box</label>
             </div>
 
-            <button type="submit" class="w-full btn-primary justify-center py-2.5 text-sm rounded-xl">
+            <button type="submit" class="w-full btn-primary justify-center py-2.5 text-sm rounded-xl mt-1">
               <i class="ti ti-search text-sm"></i> Apply Filters
             </button>
           </div>
@@ -259,7 +220,7 @@
       </div>
     </aside>
 
-    <!-- ══ PRODUCTS AREA ════════════════════════════════ -->
+    <!-- ══ PRODUCT AREA ════════════════════════════════════════ -->
     <div class="flex-1 min-w-0">
 
       <!-- Toolbar -->
@@ -267,9 +228,10 @@
         <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">
           <span id="live-count" class="font-bold text-gray-900 dark:text-white">{{ total_count }}</span> results
         </p>
+
         <div class="flex items-center gap-2 flex-wrap">
 
-          <!-- Mobile filters button -->
+          <!-- Mobile filter -->
           <button onclick="document.getElementById('mob-filter').classList.remove('hidden')"
                   class="lg:hidden flex items-center gap-2 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium bg-white dark:bg-gray-900 hover:border-primary-400 transition-colors">
             <i class="ti ti-adjustments-horizontal text-primary-600"></i> Filters
@@ -279,7 +241,8 @@
           <!-- Sort -->
           <form method="get" id="sort-form">
             {% for k,v in request.GET.items %}{% if k != 'sort' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
-            <select name="sort" onchange="this.form.submit()" class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900">
+            <select name="sort" onchange="this.form.submit()"
+                    class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900">
               <option value="-created_at"  {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
               <option value="price"        {% if sort == 'price' %}selected{% endif %}>Price: Low → High</option>
               <option value="-price"       {% if sort == '-price' %}selected{% endif %}>Price: High → Low</option>
@@ -292,37 +255,39 @@
           <!-- Per page -->
           <form method="get" id="perpage-form" class="hidden md:block">
             {% for k,v in request.GET.items %}{% if k != 'per_page' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
-            <select name="per_page" onchange="this.form.submit()" class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900">
+            <select name="per_page" onchange="this.form.submit()"
+                    class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900">
               <option value="12" {% if per_page == 12 %}selected{% endif %}>12 / page</option>
               <option value="24" {% if per_page == 24 %}selected{% endif %}>24 / page</option>
               <option value="48" {% if per_page == 48 %}selected{% endif %}>48 / page</option>
             </select>
           </form>
 
-          <!-- Grid / List toggle -->
+          <!-- Grid / List -->
           <div class="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
             <button onclick="setView('grid')" id="btn-grid"
-                    class="px-3 py-2 {% if view_mode != 'list' %}bg-primary-600 text-white{% else %}text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %} transition-colors" title="Grid view">
+                    class="px-3 py-2 {% if view_mode != 'list' %}bg-primary-600 text-white{% else %}text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %} transition-colors">
               <i class="ti ti-layout-grid text-sm"></i>
             </button>
             <button onclick="setView('list')" id="btn-list"
-                    class="px-3 py-2 {% if view_mode == 'list' %}bg-primary-600 text-white{% else %}text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %} transition-colors border-l border-gray-200 dark:border-gray-700" title="List view">
+                    class="px-3 py-2 {% if view_mode == 'list' %}bg-primary-600 text-white{% else %}text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %} transition-colors border-l border-gray-200 dark:border-gray-700">
               <i class="ti ti-list text-sm"></i>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Products AJAX target -->
+      <!-- Products (AJAX target) -->
       <div id="products-section">
         {% include "products/partials/product_grid.html" %}
         <div id="pagination-section">{% include "products/partials/pagination.html" %}</div>
       </div>
+
     </div>
   </div>
 </div>
 
-<!-- ═══ MOBILE FILTER DRAWER ════════════════════════════ -->
+<!-- ═══ MOBILE FILTER DRAWER ════════════════════════════════ -->
 <div id="mob-filter" class="hidden fixed inset-0 z-50 flex">
   <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"
        onclick="document.getElementById('mob-filter').classList.add('hidden')"></div>
@@ -332,7 +297,7 @@
         <i class="ti ti-adjustments-horizontal text-primary-600"></i> Filters
       </h3>
       <button onclick="document.getElementById('mob-filter').classList.add('hidden')"
-              class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
+              class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
         <i class="ti ti-x text-lg"></i>
       </button>
     </div>
@@ -365,7 +330,9 @@
         <div>
           <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Brand</p>
           {% for brand in sidebar_brands %}
-          <label class="filter-label"><input type="checkbox" name="brand" value="{{ brand.pk }}" {% if brand.pk|stringformat:"s" in selected_brands %}checked{% endif %}> {{ brand.name }}</label>
+          <label class="filter-label">
+            <input type="checkbox" name="brand" value="{{ brand.pk }}" {% if brand.pk|stringformat:"s" in selected_brands %}checked{% endif %}> {{ brand.name }}
+          </label>
           {% endfor %}
         </div>
         {% endif %}
@@ -377,25 +344,6 @@
           </div>
         </div>
         <div>
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Min Rating</p>
-          {% for stars in "54321" %}
-          <label class="filter-label">
-            <input type="radio" name="min_rating" value="{{ stars }}" {% if request.GET.min_rating == stars %}checked{% endif %}>
-            <span class="flex gap-0.5">{% for i in "12345" %}{% if forloop.counter <= stars|add:"0" %}<i class="ti ti-star-filled text-yellow-400 text-xs"></i>{% else %}<i class="ti ti-star text-gray-300 text-xs"></i>{% endif %}{% endfor %}</span>
-            <span class="text-xs text-gray-500">& up</span>
-          </label>
-          {% endfor %}
-          <label class="filter-label"><input type="radio" name="min_rating" value="" {% if not request.GET.min_rating %}checked{% endif %}> All</label>
-        </div>
-        <div>
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Discount</p>
-          <label class="filter-label"><input type="radio" name="min_discount" value="" {% if not request.GET.min_discount %}checked{% endif %}> Any</label>
-          <label class="filter-label"><input type="radio" name="min_discount" value="10" {% if request.GET.min_discount == '10' %}checked{% endif %}> 10%+ off</label>
-          <label class="filter-label"><input type="radio" name="min_discount" value="20" {% if request.GET.min_discount == '20' %}checked{% endif %}> 20%+ off</label>
-          <label class="filter-label"><input type="radio" name="min_discount" value="30" {% if request.GET.min_discount == '30' %}checked{% endif %}> 30%+ off</label>
-          <label class="filter-label"><input type="radio" name="min_discount" value="50" {% if request.GET.min_discount == '50' %}checked{% endif %}> 50%+ off</label>
-        </div>
-        <div>
           <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Condition</p>
           <label class="filter-label"><input type="radio" name="condition" value="" {% if not request.GET.condition %}checked{% endif %}> All</label>
           <label class="filter-label"><input type="radio" name="condition" value="new" {% if request.GET.condition == 'new' %}checked{% endif %}> New</label>
@@ -405,42 +353,46 @@
         <button type="submit" class="w-full btn-primary justify-center py-3 rounded-xl text-sm font-semibold">
           <i class="ti ti-search"></i> Apply Filters
         </button>
-        <a href="{% url 'products:list' %}" class="block text-center text-sm text-gray-500 hover:text-primary-600 transition-colors">Clear All</a>
+        <a href="{% url 'products:list' %}" class="block text-center text-sm text-gray-500 hover:text-primary-600 mt-1 transition-colors">Clear All</a>
       </form>
     </div>
   </div>
 </div>
 
-<!-- ═══ QUICK VIEW MODAL ════════════════════════════════ -->
+<!-- ═══ QUICK VIEW MODAL ════════════════════════════════════ -->
 <div id="qv-modal" onclick="if(event.target===this)closeQV()">
   <div class="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto fade-in">
     <button onclick="closeQV()"
-            class="absolute top-4 right-4 z-10 w-9 h-9 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-500 transition-all">
-      <i class="ti ti-x text-sm"></i>
+            class="absolute top-4 right-4 z-10 w-9 h-9 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+      <i class="ti ti-x text-sm text-gray-600 dark:text-gray-400"></i>
     </button>
-    <div id="qv-content" class="p-6 min-h-[200px] flex items-center justify-center">
-      <div class="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+    <div id="qv-content" class="p-6 md:p-8">
+      <div class="flex items-center justify-center h-48">
+        <div class="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ COMPARE BAR ══════════════════════════════════════ -->
+<!-- ═══ COMPARE BAR ═════════════════════════════════════════ -->
 <div id="compare-bar" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t-2 border-primary-500 shadow-2xl py-3 px-4">
   <div class="max-w-7xl mx-auto flex items-center gap-4 flex-wrap">
     <p class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 flex-shrink-0">
       <i class="ti ti-arrows-diff text-primary-600 text-lg"></i>
-      Compare <span id="cmp-count" class="text-primary-600 font-bold">(0/3)</span>
+      Compare <span id="cmp-count" class="text-primary-600">(0/3)</span>
     </p>
     <div class="flex gap-3 flex-1 min-w-0" id="cmp-slots">
-      <div class="cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 min-w-[110px] h-10"><span class="cmp-name truncate">Empty slot</span></div>
-      <div class="cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 min-w-[110px] h-10"><span class="cmp-name truncate">Empty slot</span></div>
-      <div class="cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 min-w-[110px] h-10"><span class="cmp-name truncate">Empty slot</span></div>
+      {% for i in "123" %}
+      <div class="cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 min-w-[120px] h-10">
+        <span class="cmp-name text-xs truncate">Empty slot</span>
+      </div>
+      {% endfor %}
     </div>
-    <div class="flex gap-2 flex-shrink-0 ml-auto">
+    <div class="flex gap-2 flex-shrink-0">
       <button onclick="clearCompare()" class="btn-outline text-sm py-2 px-4 rounded-xl">Clear</button>
       <button onclick="goCompare()" id="cmp-go-btn" disabled
-              class="btn-primary text-sm py-2 px-5 rounded-xl opacity-50 cursor-not-allowed transition-all">
-        Compare Now <i class="ti ti-arrow-right text-sm"></i>
+              class="btn-primary text-sm py-2 px-5 rounded-xl opacity-50 cursor-not-allowed">
+        Compare Now
       </button>
     </div>
   </div>
@@ -450,232 +402,218 @@
 
 {% block extra_scripts %}
 <script>
-// ── Helpers ────────────────────────────────────────────────
+// ── CSRF ───────────────────────────────────────────────────────────
 const CSRF = document.cookie.split(';').reduce((a,c)=>{
-  const[k,v]=c.trim().split('='); return k==='csrftoken'?decodeURIComponent(v):a; }, '');
+  const[k,v]=c.trim().split('=');return k==='csrftoken'?decodeURIComponent(v):a;},'');
 
+// ── Toast ──────────────────────────────────────────────────────────
 function showToast(msg, type='info'){
-  const colors = {success:'bg-green-500', error:'bg-red-500', warning:'bg-orange-500', info:'bg-primary-600'};
-  const icons  = {success:'ti-circle-check', error:'ti-circle-x', warning:'ti-alert-triangle', info:'ti-info-circle'};
-  const t = document.createElement('div');
-  t.className = `fixed top-20 right-4 z-[9999] ${colors[type]||colors.info} text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold fade-in flex items-center gap-2 max-w-xs`;
-  t.innerHTML = `<i class="ti ${icons[type]||icons.info} text-base flex-shrink-0"></i><span>${msg}</span>`;
+  const colors={success:'bg-green-500',error:'bg-red-500',warning:'bg-orange-500',info:'bg-primary-600'};
+  const t=document.createElement('div');
+  t.className=`fixed top-20 right-4 z-[9999] ${colors[type]||colors.info} text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold fade-in flex items-center gap-2 max-w-xs`;
+  const icons={success:'ti-circle-check',error:'ti-circle-x',warning:'ti-alert-triangle',info:'ti-info-circle'};
+  t.innerHTML=`<i class="ti ${icons[type]||icons.info} text-base flex-shrink-0"></i><span>${msg}</span>`;
   document.body.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300);}, 3500);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3500);
 }
 
-// ── Grid/List view ──────────────────────────────────────────
+// ── Grid / List toggle ─────────────────────────────────────────────
 function setView(v){
-  const grid = document.getElementById('product-grid');
-  const bG = document.getElementById('btn-grid');
-  const bL = document.getElementById('btn-list');
-  if(!grid) return;
-  if(v === 'list'){
+  const grid=document.getElementById('product-grid');
+  const bG=document.getElementById('btn-grid');
+  const bL=document.getElementById('btn-list');
+  if(!grid)return;
+  if(v==='list'){
     grid.classList.add('list-mode');
-    bG.className = 'px-3 py-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors';
-    bL.className = 'px-3 py-2 bg-primary-600 text-white transition-colors border-l border-gray-200 dark:border-gray-700';
+    bG.className='px-3 py-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors';
+    bL.className='px-3 py-2 bg-primary-600 text-white transition-colors border-l border-gray-200 dark:border-gray-700';
   } else {
     grid.classList.remove('list-mode');
-    bG.className = 'px-3 py-2 bg-primary-600 text-white transition-colors';
-    bL.className = 'px-3 py-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-l border-gray-200 dark:border-gray-700';
+    bG.className='px-3 py-2 bg-primary-600 text-white transition-colors';
+    bL.className='px-3 py-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-l border-gray-200 dark:border-gray-700';
   }
-  localStorage.setItem('pview', v);
-  const p = new URLSearchParams(window.location.search);
-  p.set('view', v); p.delete('page');
-  history.replaceState({}, '', window.location.pathname + '?' + p.toString());
+  localStorage.setItem('pview',v);
+  const p=new URLSearchParams(window.location.search);
+  p.set('view',v); p.delete('page');
+  history.replaceState({},'',window.location.pathname+'?'+p.toString());
 }
-// Restore saved view
-(function(){ if(localStorage.getItem('pview') === 'list') setView('list'); })();
+// Restore saved view on load
+(function(){
+  const saved=localStorage.getItem('pview')||'grid';
+  if(saved==='list'){setView('list');}
+})();
 
-// ── Remove filter chip ──────────────────────────────────────
-function removeChip(key, val){
-  const p = new URLSearchParams(window.location.search);
-  if(key === 'price_range'){ p.delete('min_price'); p.delete('max_price'); }
-  else if(key === 'brand' && val){ const kept = p.getAll('brand').filter(v=>v!==val); p.delete('brand'); kept.forEach(v=>p.append('brand',v)); }
-  else { p.delete(key); }
+// ── Remove filter chip ─────────────────────────────────────────────
+function removeFilterChip(key,val){
+  const p=new URLSearchParams(window.location.search);
+  if(key==='price_range'){p.delete('min_price');p.delete('max_price');}
+  else if(key==='brand'&&val){
+    const kept=p.getAll('brand').filter(v=>v!==val);
+    p.delete('brand'); kept.forEach(v=>p.append('brand',v));
+  } else {p.delete(key);}
   p.delete('page');
-  window.location.search = p.toString();
+  window.location.search=p.toString();
 }
 
-// ── AJAX filter ─────────────────────────────────────────────
+// ── AJAX filter (auto-submit on checkbox/radio change) ────────────
 function doAjaxFilter(){
-  const form = document.getElementById('filter-form');
-  if(!form) return;
-  const params = new URLSearchParams(new FormData(form));
-  params.set('view', localStorage.getItem('pview') || 'grid');
+  const form=document.getElementById('filter-form');
+  if(!form)return;
+  const params=new URLSearchParams(new FormData(form));
+  const view=localStorage.getItem('pview')||'grid';
+  params.set('view',view);
 
-  const section = document.getElementById('products-section');
-  section.classList.add('loading-overlay');
+  const section=document.getElementById('products-section');
+  section.style.opacity='0.45';
+  section.style.pointerEvents='none';
 
-  fetch('/products/ajax/filter/?' + params.toString(), {headers:{'X-Requested-With':'XMLHttpRequest'}})
-    .then(r => r.json())
-    .then(data => {
-      // Replace grid content
-      const existing = document.getElementById('product-grid') || document.getElementById('empty-state');
-      if(existing){ existing.outerHTML = data.html; }
-      else { section.insertAdjacentHTML('afterbegin', data.html); }
-      // Replace pagination
-      const pagSection = document.getElementById('pagination-section');
-      if(pagSection) pagSection.innerHTML = data.pagination;
-      // Update counts
-      document.getElementById('live-count').textContent = data.count;
-      document.getElementById('result-count').textContent = data.count;
-      section.classList.remove('loading-overlay');
+  fetch('/products/ajax/filter/?'+params.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json())
+    .then(data=>{
+      section.innerHTML=data.html+'<div id="pagination-section">'+data.pagination+'</div>';
+      document.getElementById('live-count').textContent=data.count;
+      document.getElementById('result-count').textContent=data.count;
+      section.style.opacity='';
+      section.style.pointerEvents='';
+      // Re-init compare buttons
       updateCompareUI();
-      // Re-apply list mode if needed
-      if(localStorage.getItem('pview') === 'list'){
-        const g = document.getElementById('product-grid');
-        if(g) g.classList.add('list-mode');
-      }
+      // Re-apply view
+      if(view==='list'){ const g=document.getElementById('product-grid'); if(g) g.classList.add('list-mode'); }
     })
-    .catch(() => section.classList.remove('loading-overlay'));
+    .catch(()=>{section.style.opacity='';section.style.pointerEvents='';});
 }
 
-// Auto-submit on checkbox/radio change
-document.querySelectorAll('#filter-form input[type=checkbox], #filter-form input[type=radio]').forEach(el => {
-  el.addEventListener('change', () => doAjaxFilter());
+// Auto AJAX on checkbox/radio
+document.querySelectorAll('#filter-form input[type=checkbox], #filter-form input[type=radio]').forEach(el=>{
+  el.addEventListener('change',()=>doAjaxFilter());
 });
 
-// Color pill toggle style
-document.querySelectorAll('.color-checkbox').forEach(input => {
-  input.addEventListener('change', function(){
-    const pill = this.closest('label').querySelector('span');
-    if(this.checked){
-      pill.classList.add('border-primary-500','bg-primary-50','dark:bg-primary-950','text-primary-700','dark:text-primary-300');
-      pill.classList.remove('border-gray-200','dark:border-gray-700','text-gray-600','dark:text-gray-400');
-    } else {
-      pill.classList.remove('border-primary-500','bg-primary-50','dark:bg-primary-950','text-primary-700','dark:text-primary-300');
-      pill.classList.add('border-gray-200','dark:border-gray-700','text-gray-600','dark:text-gray-400');
-    }
-  });
-});
-
-// ── Quick View ───────────────────────────────────────────────
-async function openQuickView(slug){
-  const modal = document.getElementById('qv-modal');
-  const content = document.getElementById('qv-content');
+// ── Quick View ─────────────────────────────────────────────────────
+async function openQV(slug){
+  const modal=document.getElementById('qv-modal');
+  const content=document.getElementById('qv-content');
   modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  content.innerHTML = '<div class="flex items-center justify-center h-48"><div class="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div></div>';
+  document.body.style.overflow='hidden';
+  content.innerHTML='<div class="flex items-center justify-center h-48"><div class="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div></div>';
   try{
-    const res = await fetch(`/products/ajax/quick-view/${slug}/`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
-    content.innerHTML = await res.text();
-  } catch{
-    content.innerHTML = '<p class="text-center text-gray-500 py-10">Could not load product. <a href="#" class="text-primary-600 underline" onclick="closeQV()">Close</a></p>';
-  }
+    const res=await fetch(`/products/ajax/quick-view/${slug}/`,{headers:{'X-Requested-With':'XMLHttpRequest'}});
+    content.innerHTML=await res.text();
+  }catch{content.innerHTML='<p class="text-center text-gray-500 py-12">Could not load product details.</p>';}
 }
 function closeQV(){
   document.getElementById('qv-modal').classList.remove('open');
-  document.body.style.overflow = '';
+  document.body.style.overflow='';
 }
-document.addEventListener('keydown', e => { if(e.key === 'Escape') closeQV(); });
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeQV();});
+// Global alias used by product cards
+function openQuickView(slug){openQV(slug);}
 
-// ── Compare ──────────────────────────────────────────────────
-let compareItems = JSON.parse(localStorage.getItem('tzCompare') || '[]');
+// ── Compare ────────────────────────────────────────────────────────
+let compareItems=JSON.parse(localStorage.getItem('tzCompare')||'[]');
 
 function updateCompareUI(){
-  const slots  = document.querySelectorAll('.cmp-slot');
-  const goBtn  = document.getElementById('cmp-go-btn');
-  const countEl = document.getElementById('cmp-count');
-  if(!slots.length) return;
+  const slots=document.querySelectorAll('.cmp-slot');
+  const countEl=document.getElementById('cmp-count');
+  const goBtn=document.getElementById('cmp-go-btn');
+  countEl.textContent=`(${compareItems.length}/3)`;
+  goBtn.disabled=compareItems.length<2;
+  goBtn.className=compareItems.length>=2
+    ?'btn-primary text-sm py-2 px-5 rounded-xl'
+    :'btn-primary text-sm py-2 px-5 rounded-xl opacity-50 cursor-not-allowed';
 
-  countEl.textContent = `(${compareItems.length}/3)`;
-  goBtn.disabled = compareItems.length < 2;
-  if(compareItems.length >= 2){
-    goBtn.classList.remove('opacity-50','cursor-not-allowed');
-  } else {
-    goBtn.classList.add('opacity-50','cursor-not-allowed');
-  }
-
-  slots.forEach((slot, i) => {
-    const nameEl = slot.querySelector('.cmp-name');
-    let rmBtn = slot.querySelector('.cmp-rm');
+  slots.forEach((slot,i)=>{
+    const nameEl=slot.querySelector('.cmp-name');
     if(compareItems[i]){
-      slot.className = 'cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-primary-50 dark:bg-primary-950 rounded-xl text-xs border-2 border-primary-300 dark:border-primary-700 min-w-[110px] h-10';
-      nameEl.className = 'cmp-name text-xs font-semibold text-primary-700 dark:text-primary-300 truncate flex-1';
-      nameEl.textContent = compareItems[i].name;
+      slot.className='cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-primary-50 dark:bg-primary-950 rounded-xl text-sm border-2 border-primary-300 dark:border-primary-700 min-w-[120px] h-10';
+      nameEl.className='cmp-name text-xs font-semibold text-primary-700 dark:text-primary-300 truncate flex-1';
+      nameEl.textContent=compareItems[i].name;
+      // Add remove btn
+      let rmBtn=slot.querySelector('.cmp-rm');
       if(!rmBtn){
-        rmBtn = document.createElement('button');
-        rmBtn.className = 'cmp-rm flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-primary-200 dark:bg-primary-800 hover:bg-red-200 dark:hover:bg-red-800 transition-colors';
-        rmBtn.innerHTML = '<i class="ti ti-x text-[10px] text-primary-700 dark:text-primary-300"></i>';
+        rmBtn=document.createElement('button');
+        rmBtn.className='cmp-rm flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-primary-200 dark:bg-primary-800 hover:bg-red-200 dark:hover:bg-red-800 transition-colors';
+        rmBtn.innerHTML='<i class="ti ti-x text-[10px] text-primary-600 dark:text-primary-400"></i>';
         slot.appendChild(rmBtn);
       }
-      const itemId = compareItems[i].id;
-      rmBtn.onclick = () => toggleCompare(itemId, '');
+      const itemId=compareItems[i].id;
+      rmBtn.onclick=()=>toggleCompare(itemId,'');
     } else {
-      slot.className = 'cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 min-w-[110px] h-10';
-      nameEl.className = 'cmp-name truncate';
-      nameEl.textContent = 'Empty slot';
+      slot.className='cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 min-w-[120px] h-10';
+      nameEl.className='cmp-name text-xs truncate';
+      nameEl.textContent='Empty slot';
+      const rmBtn=slot.querySelector('.cmp-rm');
       if(rmBtn) rmBtn.remove();
     }
   });
 
   // Show/hide bar
-  const bar = document.getElementById('compare-bar');
-  bar.classList.toggle('show', compareItems.length > 0);
+  const bar=document.getElementById('compare-bar');
+  if(compareItems.length>0) bar.classList.add('show');
+  else bar.classList.remove('show');
 
   // Update compare buttons on cards
-  document.querySelectorAll('.compare-btn').forEach(btn => {
-    const active = compareItems.some(p => p.id === btn.dataset.id);
-    btn.classList.toggle('text-primary-600', active);
-    btn.classList.toggle('bg-primary-50', active);
-    btn.classList.toggle('dark:bg-primary-950', active);
+  document.querySelectorAll('.compare-btn').forEach(btn=>{
+    const id=btn.dataset.id;
+    const active=compareItems.some(p=>p.id===id);
+    btn.classList.toggle('text-primary-600',active);
+    btn.classList.toggle('dark:text-primary-400',active);
+    btn.classList.toggle('bg-primary-50',active);
+    btn.classList.toggle('dark:bg-primary-950',active);
   });
 }
 
-function toggleCompare(id, name){
-  const idx = compareItems.findIndex(p => p.id === id);
-  if(idx > -1){
-    compareItems.splice(idx, 1);
-    showToast('Removed from compare', 'info');
+function toggleCompare(id,name){
+  const idx=compareItems.findIndex(p=>p.id===id);
+  if(idx>-1){
+    compareItems.splice(idx,1);
+    showToast('Removed from compare','info');
   } else {
-    if(compareItems.length >= 3){ showToast('Max 3 products for comparison', 'warning'); return; }
-    compareItems.push({id, name});
-    showToast(`${name.substring(0,30)}... added to compare`, 'success');
+    if(compareItems.length>=3){showToast('Max 3 products for comparison','warning');return;}
+    compareItems.push({id,name});
+    showToast('Added to compare','success');
   }
-  localStorage.setItem('tzCompare', JSON.stringify(compareItems));
+  localStorage.setItem('tzCompare',JSON.stringify(compareItems));
   updateCompareUI();
 }
 
 function clearCompare(){
-  compareItems = [];
-  localStorage.setItem('tzCompare', '[]');
+  compareItems=[];
+  localStorage.setItem('tzCompare','[]');
   updateCompareUI();
-  showToast('Compare list cleared', 'info');
+  showToast('Compare list cleared','info');
 }
 
 function goCompare(){
-  if(compareItems.length < 2){ showToast('Select at least 2 products', 'warning'); return; }
-  window.location.href = '/products/compare/?' + compareItems.map(p => 'ids=' + p.id).join('&');
+  if(compareItems.length<2){showToast('Select at least 2 products','warning');return;}
+  window.location.href='/products/compare/?'+compareItems.map(p=>'ids='+p.id).join('&');
 }
 
-// Init compare on load
+// Init compare on page load
 updateCompareUI();
 
-// ── Wishlist ─────────────────────────────────────────────────
-document.addEventListener('click', async e => {
-  const btn = e.target.closest('.wishlist-btn');
-  if(!btn) return;
-  e.preventDefault();
-  const pid = btn.dataset.product;
+// ── Wishlist ───────────────────────────────────────────────────────
+document.addEventListener('click',async e=>{
+  const btn=e.target.closest('.wishlist-btn');
+  if(!btn)return; e.preventDefault();
+  const pid=btn.dataset.product;
   try{
-    const res = await fetch(`/products/ajax/wishlist/toggle/${pid}/`, {
-      method: 'POST',
-      headers: {'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest'}
+    const res=await fetch(`/products/ajax/wishlist/toggle/${pid}/`,{
+      method:'POST',
+      headers:{'X-CSRFToken':CSRF,'X-Requested-With':'XMLHttpRequest'}
     });
-    if(res.status === 302 || res.redirected){ showToast('Sign in to save to wishlist', 'info'); return; }
-    const data = await res.json();
-    const icon = btn.querySelector('i');
-    if(data.status === 'added'){
-      icon.className = 'ti ti-heart-filled text-red-500 text-sm';
-      btn.classList.add('bg-red-50','dark:bg-red-950');
-      showToast('Added to wishlist ❤️', 'success');
-    } else {
-      icon.className = 'ti ti-heart text-sm';
-      btn.classList.remove('bg-red-50','dark:bg-red-950');
-      showToast('Removed from wishlist', 'info');
+    if(res.status===302||res.url.includes('login')){
+      showToast('Sign in to save wishlist items','info'); return;
     }
-  } catch { showToast('Something went wrong', 'error'); }
+    const data=await res.json();
+    const icon=btn.querySelector('i');
+    if(data.status==='added'){
+      icon.className='ti ti-heart-filled text-red-500 text-sm';
+      showToast('Added to wishlist ❤️','success');
+    } else {
+      icon.className='ti ti-heart text-sm';
+      showToast('Removed from wishlist','info');
+    }
+  }catch{showToast('Something went wrong','error');}
 });
 </script>
 {% endblock %}

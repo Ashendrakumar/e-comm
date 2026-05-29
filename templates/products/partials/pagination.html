@@ -6,9 +6,10 @@
     <i class="ti ti-chevron-left text-sm"></i> Previous
   </a>
   {% endif %}
+
   {% for num in products.paginator.page_range %}
     {% if products.number == num %}
-    <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-primary-600 text-white text-sm font-bold shadow-md">{{ num }}</span>
+    <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-primary-600 text-white text-sm font-bold shadow-md shadow-primary-200 dark:shadow-primary-900">{{ num }}</span>
     {% elif num >= products.number|add:"-2" and num <= products.number|add:"2" or num == 1 or num == products.paginator.num_pages %}
     <a href="?page={{ num }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}"
        class="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-primary-300 transition-colors font-medium">
@@ -18,12 +19,16 @@
     <span class="w-10 h-10 flex items-center justify-center text-gray-400 text-sm">…</span>
     {% endif %}
   {% endfor %}
+
   {% if products.has_next %}
   <a href="?page={{ products.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}"
      class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-primary-300 transition-colors">
     Next <i class="ti ti-chevron-right text-sm"></i>
   </a>
   {% endif %}
-  <span class="text-xs text-gray-400 ml-2">Page {{ products.number }} of {{ products.paginator.num_pages }}</span>
+
+  <span class="text-xs text-gray-400 dark:text-gray-500 ml-2">
+    Page {{ products.number }} of {{ products.paginator.num_pages }}
+  </span>
 </div>
 {% endif %}

@@ -1,117 +1,101 @@
 {% load static %}
-<div class="p-6 md:p-8">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-7">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- Image -->
+  <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 flex items-center justify-center min-h-[240px]">
+    {% if product.primary_image %}
+    <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}"
+         class="max-h-64 w-full object-contain" id="qv-main-img">
+    {% else %}
+    <i class="ti ti-photo-off text-5xl text-gray-300 dark:text-gray-600"></i>
+    {% endif %}
+  </div>
+  <!-- Thumbnails row -->
+  {% if product.images.count > 1 %}
+  <div class="col-span-full md:col-span-1 md:col-start-1 flex gap-2 flex-wrap md:-mt-2">
+    {% for img in product.images.all %}
+    <button onclick="document.getElementById('qv-main-img').src='{{ img.image.url }}'"
+            class="w-14 h-14 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-primary-400 overflow-hidden p-1 bg-white dark:bg-gray-800 transition-colors">
+      <img src="{{ img.image.url }}" alt="" class="w-full h-full object-contain">
+    </button>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <!-- Info -->
+  <div class="flex flex-col gap-3">
+    {% if product.brand %}
+    <p class="text-xs text-primary-600 dark:text-primary-400 font-bold uppercase tracking-wider">{{ product.brand.name }}</p>
+    {% endif %}
+    <h2 class="text-lg font-extrabold text-gray-900 dark:text-white leading-snug">{{ product.name }}</h2>
 
-    <!-- Left: Image Gallery -->
-    <div>
-      <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 flex items-center justify-center min-h-[240px] mb-3 overflow-hidden">
-        {% if product.primary_image %}
-        <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}"
-             class="max-h-64 w-full object-contain transition-opacity duration-200" id="qv-main-img">
-        {% else %}
-        <i class="ti ti-photo-off text-5xl text-gray-300 dark:text-gray-600"></i>
-        {% endif %}
-      </div>
-      <!-- Thumbnails -->
-      {% if product.images.count > 1 %}
-      <div class="flex gap-2 flex-wrap">
-        {% for img in product.images.all %}
-        <button onclick="document.getElementById('qv-main-img').src='{{ img.image.url }}'"
-                class="w-14 h-14 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-primary-400 overflow-hidden p-1 bg-white dark:bg-gray-900 transition-colors flex-shrink-0">
-          <img src="{{ img.image.url }}" alt="" class="w-full h-full object-contain">
-        </button>
+    <!-- Rating -->
+    {% if product.review_count %}
+    <div class="flex items-center gap-2">
+      <div class="flex">
+        {% for i in "12345" %}
+          {% if forloop.counter <= product.average_rating %}
+          <i class="ti ti-star-filled text-yellow-400 text-sm"></i>
+          {% else %}
+          <i class="ti ti-star text-gray-300 text-sm"></i>
+          {% endif %}
         {% endfor %}
       </div>
+      <span class="text-xs text-gray-500">({{ product.review_count }} reviews)</span>
+    </div>
+    {% endif %}
+
+    <!-- Price -->
+    <div class="flex items-center gap-3">
+      {% if product.sale_price %}
+      <span class="text-2xl font-extrabold text-gray-900 dark:text-white">₹{{ product.sale_price|floatformat:0 }}</span>
+      <span class="text-base text-gray-400 line-through">₹{{ product.price|floatformat:0 }}</span>
+      <span class="badge bg-red-100 text-red-600 text-sm">{{ product.discount_percent }}% OFF</span>
+      {% else %}
+      <span class="text-2xl font-extrabold text-gray-900 dark:text-white">₹{{ product.price|floatformat:0 }}</span>
       {% endif %}
     </div>
 
-    <!-- Right: Product Info -->
-    <div class="flex flex-col gap-3">
-      {% if product.brand %}
-      <p class="text-xs text-primary-600 dark:text-primary-400 font-bold uppercase tracking-wider">{{ product.brand.name }}</p>
+    <!-- Stock -->
+    <div class="flex items-center gap-2">
+      {% if product.is_in_stock %}
+      <span class="w-2 h-2 bg-green-500 rounded-full inline-block"></span>
+      <span class="text-sm text-green-600 font-semibold">In Stock{% if product.is_low_stock %} — Only {{ product.stock }} left{% endif %}</span>
+      {% else %}
+      <span class="w-2 h-2 bg-red-500 rounded-full inline-block"></span>
+      <span class="text-sm text-red-500 font-semibold">Out of Stock</span>
       {% endif %}
-      <h2 class="text-xl font-extrabold text-gray-900 dark:text-white leading-snug">{{ product.name }}</h2>
+    </div>
 
-      <!-- Rating -->
-      {% if product.review_count %}
-      <div class="flex items-center gap-2">
-        <div class="flex">
-          {% for i in "12345" %}
-            {% if forloop.counter <= product.average_rating %}
-            <i class="ti ti-star-filled text-yellow-400 text-sm"></i>
-            {% else %}
-            <i class="ti ti-star text-gray-300 dark:text-gray-600 text-sm"></i>
-            {% endif %}
-          {% endfor %}
-        </div>
-        <span class="text-xs text-gray-500 dark:text-gray-400">{{ product.average_rating }}/5 ({{ product.review_count }} reviews)</span>
+    {% if product.short_description %}
+    <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{{ product.short_description }}</p>
+    {% endif %}
+
+    <!-- Key specs preview -->
+    {% with attrs=product.attributes.all|slice:":4" %}
+    {% if attrs %}
+    <div class="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
+      {% for av in attrs %}
+      <div>
+        <p class="text-[11px] text-gray-400 uppercase">{{ av.attribute.name }}</p>
+        <p class="text-xs font-semibold text-gray-800 dark:text-gray-200">{{ av.value }}</p>
       </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- CTAs -->
+    <div class="flex gap-3 mt-auto pt-2">
+      <a href="{{ product.get_absolute_url }}"
+         class="flex-1 btn-primary justify-center py-3 rounded-xl text-sm">
+        View Full Details <i class="ti ti-arrow-right text-sm"></i>
+      </a>
+      {% if site_settings.whatsapp %}
+      <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi, I'm interested in {{ product.name|urlencode }}"
+         target="_blank"
+         class="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-4 rounded-xl transition-colors text-sm">
+        <i class="ti ti-brand-whatsapp text-lg"></i>
+      </a>
       {% endif %}
-
-      <!-- Price -->
-      <div class="flex items-center gap-3 py-2 border-t border-b border-gray-100 dark:border-gray-800">
-        {% if product.sale_price %}
-        <span class="text-2xl font-extrabold text-gray-900 dark:text-white">₹{{ product.sale_price|floatformat:0 }}</span>
-        <span class="text-sm text-gray-400 line-through">₹{{ product.price|floatformat:0 }}</span>
-        <span class="badge bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300 text-xs">{{ product.discount_percent }}% OFF</span>
-        {% else %}
-        <span class="text-2xl font-extrabold text-gray-900 dark:text-white">₹{{ product.price|floatformat:0 }}</span>
-        {% endif %}
-      </div>
-
-      <!-- Stock status -->
-      <div class="flex items-center gap-2">
-        {% if product.is_in_stock %}
-        <span class="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></span>
-        <span class="text-sm text-green-600 dark:text-green-400 font-semibold">
-          In Stock{% if product.is_low_stock %} — Only {{ product.stock }} left{% endif %}
-        </span>
-        {% else %}
-        <span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
-        <span class="text-sm text-red-500 font-semibold">Out of Stock</span>
-        {% endif %}
-      </div>
-
-      <!-- Short description -->
-      {% if product.short_description %}
-      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{{ product.short_description }}</p>
-      {% endif %}
-
-      <!-- Key Specs -->
-      {% with attrs=product.attributes.all|slice:":4" %}
-      {% if attrs %}
-      <div class="grid grid-cols-2 gap-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl p-3.5">
-        {% for av in attrs %}
-        <div>
-          <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">{{ av.attribute.name }}</p>
-          <p class="text-xs font-bold text-gray-800 dark:text-gray-200 mt-0.5">{{ av.value }}</p>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-      {% endwith %}
-
-      <!-- Meta -->
-      <div class="text-xs text-gray-400 space-y-0.5">
-        {% if product.sku %}<p>SKU: <span class="text-gray-600 dark:text-gray-300 font-mono">{{ product.sku }}</span></p>{% endif %}
-        {% if product.warranty %}<p>Warranty: <span class="text-gray-600 dark:text-gray-300">{{ product.warranty }}</span></p>{% endif %}
-        {% if product.color %}<p>Color: <span class="text-gray-600 dark:text-gray-300">{{ product.color }}</span></p>{% endif %}
-      </div>
-
-      <!-- CTA Buttons -->
-      <div class="flex gap-3 mt-auto pt-2">
-        <a href="{{ product.get_absolute_url }}"
-           class="flex-1 btn-primary justify-center py-3 rounded-xl text-sm font-bold">
-          View Full Details <i class="ti ti-arrow-right text-sm"></i>
-        </a>
-        {% if site_settings.whatsapp %}
-        <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi, I'm interested in {{ product.name|urlencode }}"
-           target="_blank"
-           class="w-12 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-xl transition-colors">
-          <i class="ti ti-brand-whatsapp text-xl"></i>
-        </a>
-        {% endif %}
-      </div>
     </div>
   </div>
 </div>

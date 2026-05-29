@@ -1,0 +1,55 @@
+{# Hero banner section with Swiper carousel #}
+<div class="hero-section py-6 lg:py-12 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+  <div class="swiper hero-swiper">
+    <div class="swiper-wrapper">
+      {% for banner in banners %}
+        <div class="swiper-slide">
+          <div class="relative h-96 lg:h-[500px]">
+            <img src="{% if banner.image_mobile and request.is_mobile %}{{ banner.image_mobile }}{% else %}{{ banner.image }}{% endif %}" alt="{{ banner.title }}" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-black/40"></div>
+            <div class="absolute inset-0 flex flex-col justify-center items-center text-center px-4">
+              {% if banner.badge_text %}
+                <span class="inline-block px-3 py-1 mb-4 text-sm font-semibold rounded-full text-white" style="background-color: {{ banner.badge_color }};">
+                  {{ banner.badge_text }}
+                </span>
+              {% endif %}
+              <h1 class="text-3xl lg:text-5xl font-bold mb-4">{{ banner.title }}</h1>
+              {% if banner.subtitle %}
+                <p class="text-lg lg:text-xl mb-6 max-w-2xl">{{ banner.subtitle }}</p>
+              {% endif %}
+              {% if banner.link %}
+                <a href="{{ banner.link }}" class="btn btn-primary px-8 py-3 text-lg">
+                  {{ banner.link_text|default:"Learn More" }}
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="swiper-slide">
+          <div class="relative h-96 lg:h-[500px] bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
+            <div class="text-center text-white">
+              <h1 class="text-3xl lg:text-5xl font-bold">Welcome to TechZone</h1>
+              <p class="text-xl mt-4">Premium Electronics Awaits</p>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+  </div>
+</div>
+
+<script>
+  new Swiper('.hero-swiper', {
+    loop: true,
+    autoplay: { delay: 5000 },
+    pagination: { el: '.swiper-pagination', clickable: true },
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+  });
+</script>

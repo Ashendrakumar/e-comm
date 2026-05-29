@@ -1,5 +1,9 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Service, ServingArea
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.db import transaction
+import json
+from .models import Service, ServingArea, HomepageBanner, HomepageSection
 
 
 def services_list(request):
@@ -38,3 +42,73 @@ def area_detail(request, slug):
         'area':       area,
         'page_title': area.city,
     })
+
+
+def api_homepage_sections(request):
+    sections = HomepageSection.objects.filter(is_active=True)
+    banners = HomepageBanner.objects.filter(is_active=True)
+
+    sections_data = [
+        {
+            'id': s.id,
+            'name': s.name,
+            'section_type': s.section_type,
+            'title': s.title,
+            'subtitle': s.subtitle,
+            'content': s.content,
+            'template': s.template,
+            'order': s.order,
+        }
+        for s in sections
+    ]
+
+    banners_data = [
+        {
+            'id': b.id,
+            'title': b.title,
+            'subtitle': b.subtitle,
+            'image': b.image.url if b.image else '',
+            'image_mobile': b.image_mobile.url if b.image_mobile else '',
+            'link': b.link,
+            'link_text': b.link_text,
+            'badge_text': b.badge_text,
+            'badge_color': b.badge_color,
+            'order': b.order,
+        }
+        for b in banners
+    ]
+
+    return JsonResponse({
+        'sections': sections_data,
+        'banners': banners_data,
+    })
+
+
+@require_http_methods(['POST'])
+def api_sections_reorder(request):
+    try:
+        data = json.loads(request.body)
+        section_ids = data.get('section_ids', [])
+
+        with transaction.atomic():
+            for order, section_id in enumerate(section_ids):
+                HomepageSection.objects.filter(id=section_id).update(order=order)
+
+        return JsonResponse({'success': True, 'message': 'Sections reordered'})
+    except (json.JSONDecodeError, ValueError) as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+@require_http_methods(['POST'])
+def api_banners_reorder(request):
+    try:
+        data = json.loads(request.body)
+        banner_ids = data.get('banner_ids', [])
+
+        with transaction.atomic():
+            for order, banner_id in enumerate(banner_ids):
+                HomepageBanner.objects.filter(id=banner_id).update(order=order)
+
+        return JsonResponse({'success': True, 'message': 'Banners reordered'})
+    except (json.JSONDecodeError, ValueError) as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

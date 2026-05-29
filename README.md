@@ -3,7 +3,8 @@
 ## ✅ Module 1 — Landing Page
 ## ✅ Module 2 — Product Categories
 ## ✅ Module 3 — Product Listing Page
-## ✅ Module 4 — Product Details Page  ← CURRENT
+## ✅ Module 4 — Product Details Page
+## ✅ Module 5 — Related Products Algorithm  ← CURRENT
 
 ---
 
@@ -16,221 +17,91 @@ python manage.py seed_data
 python manage.py runserver
 ```
 
-- Site:  http://localhost:8000/
-- Admin: http://localhost:8000/admin/ → **admin / admin123**
+**Site:** http://localhost:8000  
+**Admin:** http://localhost:8000/admin/ → `admin / admin123`
 
 ---
 
-## Module 4 — What's Included
+## Module 5 — Related Products Algorithm
 
-### Features Delivered
-| Feature | Status |
-|---|---|
-| Image carousel with Swiper.js | ✅ |
-| Image gallery with zoom on hover | ✅ |
-| Lightbox modal for full-screen viewing | ✅ |
-| Previous/Next navigation in lightbox | ✅ |
-| Thumbnail switcher | ✅ |
-| Review submission form (client-side) | ✅ |
-| Rating selection with star UI | ✅ |
-| Pros/Cons fields in review form | ✅ |
-| Rating distribution chart (5-star breakdown) | ✅ |
-| Product inquiry form (in-stock products) | ✅ |
-| Stock alert signup form (out-of-stock products) | ✅ |
-| Email notifications for inquiries | ✅ |
-| Email notifications for stock alerts | ✅ |
-| Admin interface for managing inquiries | ✅ |
-| Admin interface for managing stock alerts | ✅ |
-| Status tracking for inquiries (New, In Progress, Resolved, Closed) | ✅ |
-| Collapsible inquiry/stock alert sections | ✅ |
-| AJAX form submission with toast notifications | ✅ |
-| Dark mode support for all new components | ✅ |
-| Mobile responsive forms and carousel | ✅ |
+### 7 Scoring Signals
+
+| Signal | Points | Description |
+|---|---|---|
+| Same brand + same category | 50 | Highest-intent match |
+| Same category + price ±30% | 30 | Relevant alternative |
+| Same category (any price) | 20 | Broad category match |
+| Same brand (other category) | 15 | Brand loyalty signal |
+| Frequently viewed together | up to 40 | Session co-view count × 4 |
+| Popular in category | up to 20 | Views above category average |
+| User browsing history | 25 | Appeared in same session |
+
+All signals are **additive** — a product can score on multiple signals simultaneously.
 
 ### New Models
-```
-products/
-  models.py
-    - ProductInquiry (product, name, email, phone, message, status)
-    - StockAlert (product, email, name, is_active, notified)
-```
 
-### New Database Tables & Migrations
+**`ProductViewLog`** — Records every product page view with session key, user (if logged in), and timestamp. Powers browsing-pattern and frequently-viewed-together signals.
+
+**`FrequentlyViewedTogether`** — Denormalised pair-count table. Incremented in real time when two products appear in the same session within 30 minutes. Always stored with `product_a < product_b` (by pk string) to prevent duplicates.
+
+### New Files (Module 5)
+
 ```
 products/
+  related.py          Complete algorithm module:
+                        get_related_products()       — scored multi-signal list
+                        get_frequently_viewed_together()
+                        get_popular_in_category()
+                        get_same_brand()
+                        record_view()               — logs view + updates FVT pairs
+  models.py           + ProductViewLog, FrequentlyViewedTogether
+  views.py            + record_view() called on every detail page load
+                      + ajax_related endpoint
+  urls.py             + /products/ajax/related/<slug>/
   migrations/
-    0004_add_inquiry_stockalert.py
-```
-
-### Updated Files (Module 4)
-```
-products/
-  views.py              — Product detail, inquiry, review, stock alert handlers
-  urls.py               — New endpoints for inquiries, reviews, stock alerts
-  admin.py              — ProductInquiry, StockAlert, Wishlist admin panels
-  models.py             — ProductInquiry & StockAlert models
+    0004_module5_related_tracking.py
 
 templates/products/
-  detail.html           — Enhanced with Swiper, forms, lightbox, rating chart
+  detail.html         + 4 new related sections (FVT, scored, same brand, popular)
+  partials/
+    related_row.html  AJAX-replaceable related product grid
+```
+
+### Detail Page Sections (in order)
+
+1. **Frequently Viewed Together** — products co-viewed in same session  
+2. **You May Also Like** — full scored algorithm result  
+3. **More from [Brand]** — same brand, sorted by featured/popularity  
+4. **Popular in [Category]** — top by views_count  
+5. **Recently Viewed** — session-based horizontal scroll strip
+
+### API Endpoint
+
+```
+GET /products/ajax/related/<slug>/
+Returns: { html: "...", count: N }
 ```
 
 ---
 
-## New API Endpoints
+## All URLs
 
-| URL | Method | Description |
-|---|---|---|
-| `/products/<slug>/` | GET | Product detail page |
-| `/products/<slug>/inquiry/` | POST | Submit product inquiry |
-| `/products/<slug>/review/` | POST | Submit product review |
-| `/products/<slug>/stock-alert/` | POST | Register for stock alerts |
-| `/products/ajax/rating-dist/<slug>/` | GET | Rating distribution JSON |
-
----
-
-## Form Features
-
-### Review Submission Form
-- Name, Email, Rating (required)
-- Title, Content (required)
-- Pros/Cons (optional)
-- Client-side AJAX submission
-- Toast success/error notifications
-- Pending approval before display
-
-### Inquiry Form
-- Available only for in-stock products
-- Name, Email, Phone (optional), Message (required)
-- Stored in database for admin review
-- Email notification to admin
-- Status tracking in admin
-
-### Stock Alert Signup
-- Available only for out-of-stock products
-- Name (optional), Email (required)
-- Unique constraint: one alert per product per email
-- Confirmation email sent to subscriber
-- Marked as "notified" when product back in stock
-- Email notification to subscriber when stock returns
+| URL | Description |
+|---|---|
+| `/` | Homepage |
+| `/products/` | Product listing with all filters |
+| `/products/categories/` | All categories overview |
+| `/products/category/<slug>/` | Category detail |
+| `/products/<slug>/` | Product detail (M4+M5) |
+| `/products/compare/?ids=...` | Compare up to 3 products |
+| `/products/ajax/filter/` | AJAX filter (JSON) |
+| `/products/ajax/quick-view/<slug>/` | Quick view modal |
+| `/products/ajax/wishlist/toggle/<uuid>/` | Wishlist toggle |
+| `/products/ajax/review/<slug>/` | Submit review |
+| `/products/ajax/inquiry/<slug>/` | Submit enquiry |
+| `/products/ajax/helpful/<id>/` | Mark review helpful |
+| `/products/ajax/related/<slug>/` | Related products (JSON+HTML) |
 
 ---
 
-## Admin Dashboard Enhancements
-
-### ProductInquiry Admin
-- List view with search and filtering
-- Status dropdown (New, In Progress, Resolved, Closed)
-- Mark as read/unread
-- Filter by date created
-- View full message and contact details
-
-### StockAlert Admin
-- View all active alerts
-- Mark alert as notified
-- Search by email or product name
-- Filter by date
-- Manage alert status
-
-### Wishlist Admin
-- View all wishlisted products
-- Filter by user and date
-- Search capability
-
----
-
-## JavaScript Features
-
-### Image Gallery (Swiper)
-- Smooth carousel with prev/next buttons
-- Pagination dots
-- Touch-enabled on mobile
-- Thumbnail switcher
-- Zoom on hover effect
-
-### Lightbox
-- Full-screen image viewer
-- Previous/Next navigation
-- Close button (X)
-- Keyboard navigation (Escape to close)
-
-### Form Validation & Submission
-- Client-side validation
-- CSRF token handling
-- Async form submission
-- FormData handling
-- Error/success toast notifications
-
-### Rating Selection
-- Visual star selection UI
-- Click to select 1-5 stars
-- Show selected rating count
-
----
-
-## Database Queries
-
-### Get Product with All Details
-```python
-product = Product.objects.select_related('category', 'brand')\
-    .prefetch_related('images', 'reviews', 'attributes', 'inquiries', 'stock_alerts')\
-    .get(slug='product-slug')
-```
-
-### Get Rating Distribution
-```python
-reviews = product.reviews.filter(is_approved=True)
-distribution = {i: reviews.filter(rating=i).count() for i in range(1, 6)}
-```
-
-### Get Pending Inquiries (Admin)
-```python
-pending = ProductInquiry.objects.filter(status='new').order_by('-created_at')
-```
-
----
-
-## Email Configuration
-
-Add to `.env`:
-```env
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your@gmail.com
-EMAIL_HOST_PASSWORD=your_app_password
-DEFAULT_FROM_EMAIL=your@gmail.com
-```
-
----
-
-## Environment Variables (.env)
-
-```env
-SECRET_KEY=your-secret-key
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-
-# PostgreSQL (SQLite used by default)
-# DB_NAME=techzone
-# DB_USER=postgres
-# DB_PASSWORD=
-# DB_HOST=localhost
-# DB_PORT=5432
-
-# Email
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your@email.com
-EMAIL_HOST_PASSWORD=your_app_password
-DEFAULT_FROM_EMAIL=your@email.com
-```
-
----
-
-## Coming Next — Module 5: Shopping Cart & Checkout
-- Add to cart functionality
-- Cart management (update quantities, remove items)
-- Persistent cart (session + database for auth users)
-- Checkout flow
-- Order placement
-- Order management in admin
-- Email order confirmations
+## Coming Next — Module 6: CMS Management

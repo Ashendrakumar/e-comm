@@ -13,15 +13,15 @@ class Category(models.Model):
     image            = models.ImageField(upload_to='categories/icons/', blank=True, null=True)
     banner           = models.ImageField(upload_to='categories/banners/', blank=True, null=True)
     banner_mobile    = models.ImageField(upload_to='categories/banners/mobile/', blank=True, null=True)
-    icon             = models.CharField(max_length=60, blank=True, help_text='Tabler icon class e.g. ti-device-mobile')
-    color            = models.CharField(max_length=7, blank=True, default='#2563eb', help_text='Hex colour for UI accent')
+    icon             = models.CharField(max_length=60, blank=True)
+    color            = models.CharField(max_length=7, blank=True, default='#2563eb')
     description      = models.TextField(blank=True)
     meta_title       = models.CharField(max_length=200, blank=True)
     meta_description = models.TextField(max_length=320, blank=True)
     meta_keywords    = models.CharField(max_length=300, blank=True)
     is_active        = models.BooleanField(default=True)
     is_featured      = models.BooleanField(default=False)
-    show_in_nav      = models.BooleanField(default=True, help_text='Show in top navigation bar')
+    show_in_nav      = models.BooleanField(default=True)
     order            = models.PositiveIntegerField(default=0)
     created_at       = models.DateTimeField(auto_now_add=True)
     updated_at       = models.DateTimeField(auto_now=True)
@@ -32,15 +32,11 @@ class Category(models.Model):
         verbose_name_plural = 'Categories'
 
     def __str__(self):
-        if self.parent:
-            return f'{self.parent.name} › {self.name}'
-        return self.name
+        return f'{self.parent.name} › {self.name}' if self.parent else self.name
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base = slugify(self.name)
-            slug = base
-            n = 1
+            base = slugify(self.name); slug = base; n = 1
             while Category.objects.filter(slug=slug).exclude(pk=self.pk).exists():
                 slug = f'{base}-{n}'; n += 1
             self.slug = slug
@@ -68,8 +64,7 @@ class Category(models.Model):
     def get_breadcrumbs(self):
         crumbs, node = [], self
         while node:
-            crumbs.insert(0, (node.name, node.get_absolute_url()))
-            node = node.parent
+            crumbs.insert(0, (node.name, node.get_absolute_url())); node = node.parent
         return crumbs
 
     def get_ancestors(self):
@@ -93,7 +88,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    CONDITION_CHOICES = [('new','New'),('refurbished','Refurbished'),('open_box','Open Box')]
+    CONDITION_CHOICES = [('new','New'), ('refurbished','Refurbished'), ('open_box','Open Box')]
 
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name                = models.CharField(max_length=300)
@@ -109,7 +104,7 @@ class Product(models.Model):
     stock               = models.PositiveIntegerField(default=0)
     low_stock_threshold = models.PositiveIntegerField(default=5)
     condition           = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='new')
-    color               = models.CharField(max_length=50, blank=True, help_text='e.g. Black, Silver, Blue')
+    color               = models.CharField(max_length=50, blank=True)
     is_active           = models.BooleanField(default=True)
     is_featured         = models.BooleanField(default=False)
     is_trending         = models.BooleanField(default=False)
@@ -153,6 +148,12 @@ class Product(models.Model):
         return 0
 
     @property
+    def savings_amount(self):
+        if self.sale_price:
+            return self.price - self.sale_price
+        return 0
+
+    @property
     def is_in_stock(self):
         return self.stock > 0
 
@@ -175,6 +176,19 @@ class Product(models.Model):
     def primary_image(self):
         img = self.images.filter(is_primary=True).first()
         return img or self.images.first()
+
+    def get_rating_distribution(self):
+        """Returns dict {5:count, 4:count, ...} and percentages."""
+        reviews = self.reviews.filter(is_approved=True)
+        total   = reviews.count()
+        dist    = {}
+        for i in range(5, 0, -1):
+            cnt = reviews.filter(rating=i).count()
+            dist[i] = {
+                'count':   cnt,
+                'percent': int((cnt / total * 100)) if total else 0,
+            }
+        return dist
 
 
 class ProductImage(models.Model):
@@ -236,6 +250,7 @@ class Review(models.Model):
     content              = models.TextField()
     pros                 = models.TextField(blank=True)
     cons                 = models.TextField(blank=True)
+    images               = models.ManyToManyField('ReviewImage', blank=True)
     is_approved          = models.BooleanField(default=False)
     is_verified_purchase = models.BooleanField(default=False)
     helpful_count        = models.PositiveIntegerField(default=0)
@@ -245,6 +260,13 @@ class Review(models.Model):
         ordering = ['-created_at']
 
     def __str__(self): return f'{self.name} – {self.product.name} ({self.rating}★)'
+
+
+class ReviewImage(models.Model):
+    image      = models.ImageField(upload_to='reviews/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self): return f'Review image {self.pk}'
 
 
 class FAQ(models.Model):
@@ -272,36 +294,75 @@ class Wishlist(models.Model):
 
 
 class ProductInquiry(models.Model):
-    STATUS_CHOICES = [('new','New'),('in_progress','In Progress'),('resolved','Resolved'),('closed','Closed')]
-
-    product       = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inquiries')
-    name          = models.CharField(max_length=100)
-    email         = models.EmailField()
-    phone         = models.CharField(max_length=20, blank=True)
-    message       = models.TextField()
-    status        = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
-    is_read       = models.BooleanField(default=False)
-    created_at    = models.DateTimeField(auto_now_add=True)
-    updated_at    = models.DateTimeField(auto_now=True)
+    """Product-specific inquiry form submitted from the detail page."""
+    STATUS_CHOICES = [('new','New'),('replied','Replied'),('closed','Closed')]
+    product    = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inquiries')
+    name       = models.CharField(max_length=100)
+    email      = models.EmailField()
+    phone      = models.CharField(max_length=20, blank=True)
+    message    = models.TextField()
+    status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = 'Product Inquiry'
+        verbose_name        = 'Product Inquiry'
         verbose_name_plural = 'Product Inquiries'
 
     def __str__(self): return f'{self.name} – {self.product.name}'
 
 
-class StockAlert(models.Model):
-    product   = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stock_alerts')
-    email     = models.EmailField()
-    name      = models.CharField(max_length=100, blank=True)
-    is_active = models.BooleanField(default=True)
-    notified  = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+# ══════════════════════════════════════════════════════════════════
+# MODULE 5 — RELATED PRODUCTS TRACKING MODELS
+# ══════════════════════════════════════════════════════════════════
+
+class ProductViewLog(models.Model):
+    """
+    Tracks every product page view with session info.
+    Powers 'User browsing patterns' and 'Frequently viewed together'.
+    """
+    product    = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='view_logs')
+    session_key = models.CharField(max_length=40, db_index=True)
+    user       = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    viewed_at  = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
-        unique_together = ['product', 'email']
-        ordering = ['-created_at']
+        ordering = ['-viewed_at']
+        verbose_name        = 'Product View Log'
+        verbose_name_plural = 'Product View Logs'
 
-    def __str__(self): return f'{self.email} – {self.product.name}'
+    def __str__(self):
+        return f'{self.session_key[:8]} → {self.product.name}'
+
+
+class FrequentlyViewedTogether(models.Model):
+    """
+    Denormalised pair-count table.
+    Incremented whenever two products are viewed in the same session within 30 minutes.
+    product_a < product_b always (by pk string) to avoid duplicates.
+    """
+    product_a  = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='fvt_as')
+    product_b  = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='fvt_bs')
+    view_count = models.PositiveIntegerField(default=1, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together     = ['product_a', 'product_b']
+        ordering            = ['-view_count']
+        verbose_name        = 'Frequently Viewed Together'
+        verbose_name_plural = 'Frequently Viewed Together'
+
+    def __str__(self):
+        return f'{self.product_a.name} ↔ {self.product_b.name} ({self.view_count})'
+
+    @classmethod
+    def record(cls, product_a, product_b):
+        """Create or increment the pair count (ensures a < b ordering)."""
+        if str(product_a.pk) > str(product_b.pk):
+            product_a, product_b = product_b, product_a
+        obj, created = cls.objects.get_or_create(
+            product_a=product_a, product_b=product_b,
+            defaults={'view_count': 1}
+        )
+        if not created:
+            cls.objects.filter(pk=obj.pk).update(view_count=models.F('view_count') + 1)
