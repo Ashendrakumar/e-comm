@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title }} — TechZone{% endblock %}
+{% block content %}
+
+<!-- Page header -->
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative">
+    <nav class="flex items-center justify-center gap-2 text-xs text-white/70 mb-5">
+      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
+      <i class="ti ti-chevron-right text-[10px]"></i>
+      {% if active_category %}
+        <a href="{% url 'blog:list' %}" class="hover:text-white">Blog</a>
+        <i class="ti ti-chevron-right text-[10px]"></i>
+        <span class="text-white font-semibold">{{ active_category.name }}</span>
+      {% else %}
+        <span class="text-white font-semibold">Blog</span>
+      {% endif %}
+    </nav>
+    <h1 class="text-4xl font-extrabold mb-3">
+      {% if active_category %}{{ active_category.name }}{% else %}Blog &amp; News{% endif %}
+    </h1>
+    <p class="text-blue-200 text-lg max-w-xl mx-auto">
+      {% if active_category and active_category.description %}{{ active_category.description }}
+      {% else %}Buying guides, reviews, tech tips and the latest electronics news.{% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-12">
+
+  {% if query %}
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+    Showing results for <span class="font-semibold text-gray-800 dark:text-gray-200">"{{ query }}"</span>
+    — {{ page_obj.paginator.count }} article{{ page_obj.paginator.count|pluralize }} found.
+  </p>
+  {% elif active_tag %}
+  <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+    Articles tagged <span class="badge bg-primary-100 text-primary-700">#{{ active_tag }}</span>
+  </p>
+  {% endif %}
+
+  <!-- Featured post -->
+  {% if featured_post %}
+  <a href="{{ featured_post.get_absolute_url }}"
+     class="group grid md:grid-cols-2 gap-0 mb-12 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-2xl transition-all">
+    <div class="relative aspect-[16/10] md:aspect-auto overflow-hidden bg-gray-100 dark:bg-gray-800">
+      {% if featured_post.featured_image %}
+        <img src="{{ featured_post.featured_image.url }}" alt="{{ featured_post.title }}"
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="eager" fetchpriority="high" decoding="async">
+      {% else %}
+        <div class="w-full h-full flex items-center justify-center text-primary-300"><i class="ti ti-news text-6xl"></i></div>
+      {% endif %}
+      <span class="absolute top-4 left-4 badge bg-accent-500 text-white">Featured</span>
+    </div>
+    <div class="p-8 flex flex-col justify-center">
+      {% if featured_post.category %}
+      <span class="badge text-white w-fit mb-3" style="background:{{ featured_post.category.color }};">{{ featured_post.category.name }}</span>
+      {% endif %}
+      <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white mb-3 leading-tight group-hover:text-primary-600 transition-colors">{{ featured_post.title }}</h2>
+      <p class="text-gray-500 dark:text-gray-400 leading-relaxed mb-5 line-clamp-3">{{ featured_post.excerpt }}</p>
+      <div class="flex items-center gap-4 text-sm text-gray-400">
+        <span class="flex items-center gap-1.5"><i class="ti ti-user-circle"></i>{{ featured_post.display_author }}</span>
+        <span class="flex items-center gap-1.5"><i class="ti ti-calendar"></i>{{ featured_post.published_at|date:"M d, Y" }}</span>
+        <span class="flex items-center gap-1.5"><i class="ti ti-clock"></i>{{ featured_post.reading_minutes }} min</span>
+      </div>
+    </div>
+  </a>
+  {% endif %}
+
+  <div class="grid lg:grid-cols-4 gap-8">
+    <!-- Main -->
+    <div class="lg:col-span-3">
+      {% if posts %}
+      <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        {% for post in posts %}
+          {% include "blog/partials/post_card.html" %}
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.paginator.num_pages > 1 %}
+      <div class="flex items-center justify-center gap-2 mt-12">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
+           class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm hover:bg-primary-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-1">
+          <i class="ti ti-chevron-left text-xs"></i> Prev
+        </a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+          {% if num == page_obj.number %}
+          <span class="px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold">{{ num }}</span>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}"
+             class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm hover:bg-primary-50 dark:hover:bg-gray-800 transition-colors">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
+           class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm hover:bg-primary-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-1">
+          Next <i class="ti ti-chevron-right text-xs"></i>
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="text-center py-20">
+        <i class="ti ti-news-off text-6xl text-gray-300 dark:text-gray-700 mb-4 block"></i>
+        <h3 class="text-xl font-bold text-gray-700 dark:text-gray-300 mb-2">No articles found</h3>
+        <p class="text-gray-500 dark:text-gray-400 mb-6">Try a different search or browse all posts.</p>
+        <a href="{% url 'blog:list' %}" class="btn-primary">View All Posts</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+      {% include "blog/partials/sidebar.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

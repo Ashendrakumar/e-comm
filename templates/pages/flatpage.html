@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page.meta_title|default:page.title }} — TechZone{% endblock %}
+{% block meta_description %}{{ page.meta_description }}{% endblock %}
+{% block content %}
+
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative">
+    <nav class="flex items-center justify-center gap-2 text-xs text-white/70 mb-5">
+      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
+      <i class="ti ti-chevron-right text-[10px]"></i>
+      <span class="text-white font-semibold">{{ page.title }}</span>
+    </nav>
+    <h1 class="text-4xl font-extrabold">{{ page.title }}</h1>
+  </div>
+</div>
+
+<div class="max-w-3xl mx-auto px-4 py-12">
+  <div class="prose-content text-gray-700 dark:text-gray-300 leading-relaxed space-y-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-8">
+    {{ page.content|safe|linebreaks }}
+  </div>
+  <p class="text-xs text-gray-400 mt-6 text-center">Last updated: {{ page.updated_at|date:"F d, Y" }}</p>
+</div>
+{% endblock %}

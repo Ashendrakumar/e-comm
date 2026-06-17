@@ -2,7 +2,11 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from core.models import Brand, Testimonial, WhyChooseUs, SiteSettings, SocialLink
 from products.models import Category, Product, ProductAttribute, ProductAttributeValue, FAQ, Review, ProductInquiry
-from pages.models import Service, ServingArea
+from pages.models import (
+    Service, ServiceFeature, ServingArea,
+    FlatPage, FAQCategory, GeneralFAQ,
+)
+from blog.models import BlogCategory, BlogPost
 
 
 class Command(BaseCommand):
@@ -367,27 +371,220 @@ class Command(BaseCommand):
             SocialLink.objects.get_or_create(platform=platform, defaults={'url': url, 'is_active': True})
         self.stdout.write(self.style.SUCCESS('  ✓ Social links'))
 
-        # ── Services ────────────────────────────────────────────
+        # ── Services (Module 7) ─────────────────────────────────
         services_data = [
-            ('ti-bulb','Product Consultation','expert-consultation','Expert advice to help you choose the right electronics.'),
-            ('ti-tool','Installation Services','installation','Professional installation of TVs, ACs, networking equipment.'),
-            ('ti-device-mobile','Device Repair','repair','Fast and reliable repair for mobiles, laptops and tablets.'),
-            ('ti-shield-checkered','Warranty Support','warranty','Hassle-free warranty claims and after-sales support.'),
-            ('ti-package','Bulk Orders','bulk-orders','Special pricing for bulk electronics purchases.'),
-            ('ti-home','Home Delivery','home-delivery','Fast doorstep delivery across Gujarat. Same-day in Surat.'),
-            ('ti-building-community','Corporate Solutions','corporate','End-to-end electronics procurement for enterprises.'),
+            {
+                'icon':'ti-bulb','title':'Product Consultation','slug':'expert-consultation','color':'#2563eb','order':1,
+                'featured':True,'price':'Free',
+                'short':'Expert advice to help you choose the right electronics for your needs and budget.',
+                'desc':'''Not sure which laptop, TV or smartphone fits your needs? Our certified product specialists offer free, no-obligation consultations — in-store, over the phone or on WhatsApp.\n\nWe understand your usage, budget and preferences, then recommend the best options across brands. No sales pressure, just honest guidance to help you make a confident purchase.''',
+                'features':[
+                    ('ti-user-check','Certified Specialists','Trained experts across every product category.'),
+                    ('ti-coin','Budget-First Advice','Recommendations tailored to your price range.'),
+                    ('ti-brand-whatsapp','Consult on WhatsApp','Quick advice without visiting the store.'),
+                    ('ti-scale','Unbiased Comparison','Honest brand-neutral suggestions.'),
+                ],
+            },
+            {
+                'icon':'ti-tool','title':'Installation Services','slug':'installation','color':'#7c3aed','order':2,
+                'featured':True,'price':'Starting at ₹499',
+                'short':'Professional installation of TVs, home appliances and networking equipment at your home.',
+                'desc':'''Get your new electronics set up safely and correctly by trained technicians. We handle wall-mounting, configuration, calibration and a full working demo before we leave.\n\nFrom 65-inch TVs to mesh Wi-Fi networks, our installation team ensures everything works perfectly the first time.''',
+                'features':[
+                    ('ti-device-tv','TV Wall Mounting','Secure mounting with cable management.'),
+                    ('ti-router','Network Setup','Routers, mesh systems and smart-home devices.'),
+                    ('ti-settings','Calibration & Demo','Optimised settings + a full working walkthrough.'),
+                    ('ti-clock','Same-Day Slots','Fast scheduling across major cities.'),
+                ],
+            },
+            {
+                'icon':'ti-device-mobile','title':'Device Repair','slug':'repair','color':'#dc2626','order':3,
+                'featured':True,'price':'Free diagnosis',
+                'short':'Fast and reliable repair services for mobiles, laptops, tablets and other electronics.',
+                'desc':'''Cracked screen, battery issues or a device that won't turn on? Our repair centre uses genuine parts and offers a free diagnosis with transparent quotes before any work begins.\n\nMost common repairs are completed the same day, and every repair is backed by a service warranty.''',
+                'features':[
+                    ('ti-search','Free Diagnosis','Know the issue and cost before you commit.'),
+                    ('ti-cpu','Genuine Parts','OEM-grade components only.'),
+                    ('ti-bolt','Same-Day Repairs','Quick turnaround for common faults.'),
+                    ('ti-shield-check','Repair Warranty','Every repair is warranty-backed.'),
+                ],
+            },
+            {
+                'icon':'ti-shield-checkered','title':'Warranty Support','slug':'warranty','color':'#059669','order':4,
+                'featured':False,'price':'Included',
+                'short':'Hassle-free warranty claims and after-sales support for all products purchased from us.',
+                'desc':'''We make warranty claims simple. Our team coordinates directly with manufacturers on your behalf, tracks the claim and keeps you updated until it's resolved.\n\nExtended warranty and AppleCare-style protection plans are also available at the point of sale.''',
+                'features':[
+                    ('ti-file-check','Claim Assistance','We handle the paperwork for you.'),
+                    ('ti-refresh','Quick Replacements','Fast processing for eligible products.'),
+                    ('ti-calendar-plus','Extended Plans','Optional protection beyond standard warranty.'),
+                ],
+            },
+            {
+                'icon':'ti-package','title':'Bulk Orders','slug':'bulk-orders','color':'#d97706','order':5,
+                'featured':True,'price':'Custom pricing',
+                'short':'Special pricing and dedicated support for bulk electronics purchases for businesses.',
+                'desc':'''Buying for an office, school or event? Our B2B team offers volume discounts, GST invoicing, flexible payment terms and a dedicated account manager.\n\nWe handle everything from quotation to delivery and post-sale support, so you can equip your organisation with zero hassle.''',
+                'features':[
+                    ('ti-discount','Volume Discounts','The more you buy, the more you save.'),
+                    ('ti-receipt','GST Invoicing','Proper tax invoices for your business.'),
+                    ('ti-user-star','Dedicated Manager','A single point of contact for your account.'),
+                    ('ti-truck-delivery','Coordinated Delivery','Bulk logistics handled end-to-end.'),
+                ],
+            },
+            {
+                'icon':'ti-home','title':'Home Delivery','slug':'home-delivery','color':'#0891b2','order':6,
+                'featured':False,'price':'Free above ₹999',
+                'short':'Fast and safe delivery to your doorstep across Gujarat and beyond. Same-day in Surat.',
+                'desc':'''Shop online and get your electronics delivered safely to your door. Orders above ₹999 ship free, with same-day delivery available in Surat and 2–3 day delivery across Gujarat.\n\nAll items are securely packed and insured in transit, with real-time order tracking.''',
+                'features':[
+                    ('ti-rocket','Same-Day in Surat','Order before noon for same-day delivery.'),
+                    ('ti-map-2','Wide Coverage','100+ cities across Gujarat and beyond.'),
+                    ('ti-box-seal','Secure Packaging','Damage-proof, insured shipping.'),
+                    ('ti-gps','Live Tracking','Track your order in real time.'),
+                ],
+            },
+            {
+                'icon':'ti-building-community','title':'Corporate Solutions','slug':'corporate','color':'#4f46e5','order':7,
+                'featured':False,'price':'On request',
+                'short':'End-to-end electronics procurement and support for offices and enterprise businesses.',
+                'desc':'''From IT procurement to fleet device management, our corporate solutions team partners with enterprises to source, deploy and maintain electronics at scale.\n\nWe offer annual maintenance contracts, asset tagging, on-site support and consolidated billing tailored to your organisation.''',
+                'features':[
+                    ('ti-briefcase','IT Procurement','Source devices at enterprise scale.'),
+                    ('ti-tools','AMC & Support','Annual maintenance and on-site service.'),
+                    ('ti-clipboard-list','Asset Management','Tagging and lifecycle tracking.'),
+                ],
+            },
         ]
-        for icon, title, slug, desc in services_data:
-            Service.objects.get_or_create(slug=slug, defaults={'icon': icon, 'title': title, 'short_description': desc, 'is_active': True})
-        self.stdout.write(self.style.SUCCESS('  ✓ Services'))
+        for sd in services_data:
+            svc, created = Service.objects.get_or_create(slug=sd['slug'], defaults={
+                'icon': sd['icon'], 'title': sd['title'], 'color': sd['color'], 'order': sd['order'],
+                'short_description': sd['short'], 'description': sd['desc'],
+                'price_info': sd['price'], 'is_featured': sd['featured'], 'is_active': True,
+                'meta_title': f"{sd['title']} | TechZone",
+                'meta_description': sd['short'],
+            })
+            if created:
+                for i, (fi, ft, fdesc) in enumerate(sd['features']):
+                    ServiceFeature.objects.create(service=svc, icon=fi, title=ft, description=fdesc, order=i)
+        self.stdout.write(self.style.SUCCESS('  ✓ Services (7) with features'))
 
         # ── Serving Areas ───────────────────────────────────────
         cities = ['Ahmedabad','Surat','Vadodara','Rajkot','Gandhinagar','Anand','Nadiad',
                   'Sānand','Mehsana','Bharuch','Navsari','Vapi','Morbi','Junagadh','Bhavnagar']
         featured = {'Ahmedabad','Surat','Vadodara','Rajkot'}
+        area_detail = {
+            'Surat':     ('+91 98765 43210', '395003', 'Shop No. 12, Electronics Market, Ring Road, Surat'),
+            'Ahmedabad': ('+91 98765 43211', '380001', 'CG Road Electronics Hub, Ahmedabad'),
+            'Vadodara':  ('+91 98765 43212', '390001', 'Alkapuri Tech Plaza, Vadodara'),
+            'Rajkot':    ('+91 98765 43213', '360001', 'Yagnik Road Electronics Centre, Rajkot'),
+        }
         for city in cities:
-            ServingArea.objects.get_or_create(city=city, defaults={'is_active': True, 'is_featured': city in featured})
+            phone, pin, addr = area_detail.get(city, ('', '', ''))
+            ServingArea.objects.get_or_create(city=city, defaults={
+                'is_active': True, 'is_featured': city in featured,
+                'contact_phone': phone, 'pincodes': pin, 'address': addr,
+                'description': f'TechZone delivers electronics and provides installation, repair and warranty support across {city}. Enjoy fast doorstep delivery and trusted local service.' if city in featured else '',
+            })
         self.stdout.write(self.style.SUCCESS('  ✓ Serving areas'))
+
+        # ── FAQ Categories + General FAQs (Module 6) ────────────
+        faq_groups = [
+            ('Orders & Delivery', 'ti-truck', [
+                ('How long does delivery take?', 'Same-day delivery in Surat for orders placed before noon, and 2–3 business days across the rest of Gujarat.'),
+                ('Is delivery free?', 'Delivery is free on all orders above ₹999. A nominal fee applies to smaller orders.'),
+                ('Can I track my order?', 'Yes. You will receive a tracking link via SMS and email once your order ships.'),
+            ]),
+            ('Payments & Pricing', 'ti-credit-card', [
+                ('What payment methods do you accept?', 'We accept UPI, all major credit/debit cards, net banking and cash on delivery in select cities.'),
+                ('Do you offer EMI?', 'Yes, no-cost and standard EMI options are available on eligible products and cards.'),
+                ('Do prices include GST?', 'All listed prices are inclusive of GST. A proper tax invoice is provided with every purchase.'),
+            ]),
+            ('Warranty & Returns', 'ti-shield-check', [
+                ('What is your return policy?', 'We offer 7-day hassle-free returns on most products in original condition and packaging.'),
+                ('How do warranty claims work?', 'Our team coordinates the entire warranty claim with the manufacturer on your behalf. Just bring your invoice.'),
+                ('Can I buy extended warranty?', 'Yes, extended warranty and protection plans can be added at the time of purchase.'),
+            ]),
+            ('Products & Support', 'ti-headset', [
+                ('Are all products genuine?', 'Absolutely. Every product is 100% authentic and carries the official manufacturer warranty.'),
+                ('Do you offer installation?', 'Yes, professional installation is available for TVs, appliances and networking equipment.'),
+                ('How can I get product advice?', 'Our specialists offer free consultations in-store, by phone, or on WhatsApp.'),
+            ]),
+        ]
+        for order, (name, icon, faqs) in enumerate(faq_groups):
+            cat, _ = FAQCategory.objects.get_or_create(name=name, defaults={'icon': icon, 'order': order, 'is_active': True})
+            for i, (q, a) in enumerate(faqs):
+                GeneralFAQ.objects.get_or_create(category=cat, question=q, defaults={'answer': a, 'order': i, 'is_active': True})
+        self.stdout.write(self.style.SUCCESS('  ✓ FAQ categories + FAQs'))
+
+        # ── CMS Flat Pages (Module 6) ───────────────────────────
+        flatpages = [
+            ('Privacy Policy', 'privacy-policy', 'ti-lock', 1,
+             '''At TechZone, your privacy matters. This policy explains what information we collect, how we use it and the choices you have.\n\nWe collect only the information needed to process your orders, provide support and improve your experience — such as your name, contact details and order history. We never sell your personal data to third parties.\n\nYou may request access to, correction of, or deletion of your personal data at any time by contacting us.'''),
+            ('Terms of Service', 'terms-of-service', 'ti-file-text', 2,
+             '''By using the TechZone website and services, you agree to these terms.\n\nAll product information, pricing and availability are subject to change without notice. We strive for accuracy but are not liable for typographical errors.\n\nOrders are subject to acceptance and availability. Warranty terms are governed by the respective manufacturers.'''),
+            ('Shipping & Returns', 'shipping-returns', 'ti-truck-return', 3,
+             '''We offer fast, insured shipping across Gujarat and beyond. Orders above ₹999 ship free.\n\nReturns are accepted within 7 days of delivery for products in original, unused condition with all packaging and accessories. Refunds are processed to the original payment method within 5–7 business days of inspection.\n\nCertain items such as opened software and personal-care electronics are non-returnable for hygiene reasons.'''),
+            ('Warranty Policy', 'warranty-policy', 'ti-shield-check', 4,
+             '''Every product sold by TechZone carries the official manufacturer warranty. Warranty duration varies by product and brand and is listed on each product page.\n\nTo make a claim, retain your TechZone invoice and contact our support team — we coordinate the entire process with the manufacturer on your behalf.\n\nExtended warranty plans are available for purchase on eligible products.'''),
+        ]
+        for title, slug, icon, order, content in flatpages:
+            FlatPage.objects.get_or_create(slug=slug, defaults={
+                'title': title, 'icon': icon, 'order': order, 'content': content,
+                'show_in_footer': True, 'is_active': True,
+                'meta_title': f'{title} | TechZone',
+                'meta_description': content[:160],
+            })
+        self.stdout.write(self.style.SUCCESS('  ✓ CMS flat pages'))
+
+        # ── Blog (Module 6) ─────────────────────────────────────
+        blog_cats = [
+            ('Buying Guides', 'ti-clipboard-check', '#2563eb', 'In-depth guides to help you choose the right electronics.'),
+            ('Reviews', 'ti-star', '#f59e0b', 'Hands-on reviews of the latest gadgets.'),
+            ('Tech News', 'ti-news', '#dc2626', 'The latest happenings in the world of electronics.'),
+            ('Tips & Tricks', 'ti-bulb', '#059669', 'Get the most out of your devices.'),
+        ]
+        cat_objs = {}
+        for order, (name, icon, color, desc) in enumerate(blog_cats):
+            c, _ = BlogCategory.objects.get_or_create(name=name, defaults={
+                'icon': icon, 'color': color, 'description': desc, 'order': order, 'is_active': True,
+            })
+            cat_objs[name] = c
+
+        admin_user = User.objects.filter(username='admin').first()
+        posts = [
+            ('Buying Guides', 'How to Choose the Right Laptop in 2026',
+             'From processor and RAM to display and battery, here is everything you need to know before buying your next laptop.',
+             ['laptops','buying-guide','2026'], True,
+             '''Choosing a laptop can feel overwhelming with so many options. Let's break it down into what actually matters.\n\nFirst, decide your use case. For everyday tasks and browsing, an Intel Core i5 or equivalent with 8GB RAM and a 512GB SSD is plenty. For creative work or gaming, look at a Core i7/i9 with a dedicated GPU and 16GB+ RAM.\n\nDisplay quality matters more than people think — a Full HD IPS panel is the minimum, while OLED offers stunning colour for creators. Finally, balance battery life against performance: ultrabooks last all day, while powerful machines trade battery for speed.\n\nVisit any TechZone store for a free consultation and hands-on demo before you decide.'''),
+            ('Reviews', 'iPhone 15 Pro Max Review: Titanium Done Right',
+             'We spent two weeks with the iPhone 15 Pro Max. Here is our honest take on the camera, performance and battery.',
+             ['apple','iphone','review'], True,
+             '''The iPhone 15 Pro Max is the most refined iPhone Apple has made. The switch to titanium makes it noticeably lighter, and the matte finish feels premium without being slippery.\n\nThe A17 Pro chip is blisteringly fast — console-quality games run beautifully. The 5x telephoto camera is the headline feature, delivering crisp zoomed shots that earlier iPhones simply couldn't.\n\nBattery life comfortably lasts a full day of heavy use. The move to USB-C is long overdue and welcome. At its price, it's a significant investment, but for power users it's worth every rupee.'''),
+            ('Tech News', '5G Expansion Across Gujarat: What It Means for You',
+             '5G coverage is rapidly expanding across Gujarat. Here is how it affects your next smartphone purchase.',
+             ['5g','networking','gujarat'], False,
+             '''5G networks are now live across all major cities in Gujarat, bringing dramatically faster speeds and lower latency.\n\nFor most users, this means quicker downloads, smoother video calls and better streaming. If you're buying a new phone, choosing a 5G-capable model future-proofs your purchase.\n\nThe good news: 5G phones are now available across every price segment, from budget to flagship. Our team can help you pick a 5G phone that fits your budget.'''),
+            ('Tips & Tricks', '7 Ways to Extend Your Smartphone Battery Life',
+             'Simple, practical tips to make your phone last longer between charges — no apps required.',
+             ['battery','tips','smartphones'], False,
+             '''Battery anxiety is real, but a few habits can make a big difference.\n\n1. Lower your screen brightness or use auto-brightness.\n2. Enable dark mode on OLED screens.\n3. Turn off background app refresh for apps you rarely use.\n4. Disable always-on display if you don't need it.\n5. Use Wi-Fi instead of mobile data when possible.\n6. Keep your software updated for efficiency improvements.\n7. Avoid extreme temperatures — heat is a battery killer.\n\nFollow these and you'll easily squeeze extra hours out of every charge.'''),
+            ('Buying Guides', 'OLED vs QLED: Which TV Technology Is Right for You?',
+             'The two leading TV technologies compared — picture quality, brightness, price and ideal use cases.',
+             ['tv','oled','qled','buying-guide'], False,
+             '''OLED and QLED are the two premium TV technologies, and they excel in different areas.\n\nOLED panels produce perfect blacks because each pixel lights itself — ideal for dark rooms and movie lovers. QLED, on the other hand, gets much brighter, making it better for bright living rooms and HDR highlights.\n\nFor gaming, both now offer 120Hz and low latency. QLED tends to be more affordable at larger sizes, while OLED commands a premium for its contrast.\n\nOur recommendation: choose OLED for cinematic viewing in controlled lighting, and QLED for bright rooms and value at large sizes.'''),
+        ]
+        for cat_name, title, excerpt, tags, featured_flag, content in posts:
+            post, created = BlogPost.objects.get_or_create(title=title, defaults={
+                'category': cat_objs.get(cat_name), 'author': admin_user,
+                'excerpt': excerpt, 'content': content,
+                'status': 'published', 'is_featured': featured_flag,
+                'meta_title': f'{title} | TechZone Blog',
+                'meta_description': excerpt,
+            })
+            if created and tags:
+                post.tags.add(*tags)
+        self.stdout.write(self.style.SUCCESS('  ✓ Blog categories + posts'))
 
         # ── Admin User ──────────────────────────────────────────
         if not User.objects.filter(username='admin').exists():

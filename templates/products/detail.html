@@ -40,6 +40,35 @@
 .rv-scroll{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
 .rv-scroll::-webkit-scrollbar{display:none;}
 </style>
+
+{# ── Product structured data (schema.org/Product) for rich SEO results ── #}
+{% spaceless %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ product.name|escapejs }}",
+  "sku": "{{ product.sku|escapejs }}",
+  "description": "{{ product.short_description|default:product.meta_description|default:product.name|escapejs }}",
+  "image": [{% for img in product.images.all %}"{{ request.scheme }}://{{ request.get_host }}{{ img.image.url }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+  {% if product.brand %}"brand": {"@type": "Brand", "name": "{{ product.brand.name|escapejs }}"},{% endif %}
+  {% if product.category %}"category": "{{ product.category.name|escapejs }}",{% endif %}
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ request.scheme }}://{{ request.get_host }}{{ request.path }}",
+    "priceCurrency": "INR",
+    "price": "{{ product.effective_price }}",
+    "itemCondition": "https://schema.org/{% if product.condition == 'new' %}NewCondition{% elif product.condition == 'refurbished' %}RefurbishedCondition{% else %}UsedCondition{% endif %}",
+    "availability": "https://schema.org/{% if product.is_in_stock %}InStock{% else %}OutOfStock{% endif %}"
+  }{% if product.review_count %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ product.average_rating }}",
+    "reviewCount": "{{ product.review_count }}"
+  }{% endif %}
+}
+</script>
+{% endspaceless %}
 {% endblock %}
 
 {% block content %}
@@ -74,6 +103,8 @@
                  alt="{{ img.alt_text|default:product.name }}"
                  class="max-w-full max-h-full object-contain cursor-zoom-in select-none"
                  onclick="openZoom(this.src)"
+                 decoding="async"
+                 {% if forloop.first %}fetchpriority="high"{% endif %}
                  loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
           </div>
           {% endfor %}
@@ -88,7 +119,7 @@
         <div class="swiper-wrapper">
           {% for img in product.images.all %}
           <div class="swiper-slide rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-1.5" style="width:72px;height:72px;">
-            <img src="{{ img.image.url }}" alt="" class="w-full h-full object-contain">
+            <img src="{{ img.image.url }}" alt="" class="w-full h-full object-contain" loading="lazy" decoding="async">
           </div>
           {% endfor %}
         </div>
@@ -633,7 +664,7 @@
     </button>
     <div class="flex items-center gap-3 mb-6">
       {% if product.primary_image %}
-      <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" class="w-14 h-14 object-contain rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-1 flex-shrink-0">
+      <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" class="w-14 h-14 object-contain rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 p-1 flex-shrink-0" loading="lazy" decoding="async">
       {% endif %}
       <div>
         <h3 class="font-bold text-gray-900 dark:text-white">Send Enquiry</h3>

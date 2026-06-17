@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from .models import Banner, Testimonial, WhyChooseUs, Brand
 from .forms import ContactForm, NewsletterForm
@@ -8,17 +8,21 @@ from products.models import Category, Product
 
 
 def homepage(request):
-    from pages.models import Service
+    from pages.models import Service, ServingArea
+    from django.core.cache import cache
 
-    hero_banners      = Banner.objects.filter(banner_type='hero', is_active=True)[:3]
-    promo_banners     = Banner.objects.filter(banner_type='promo', is_active=True)[:4]
+    # Product lists change often (stock/featured flags) — query live.
     featured_products = Product.objects.filter(is_featured=True, is_active=True).select_related('category', 'brand').prefetch_related('images')[:8]
     trending_products = Product.objects.filter(is_trending=True, is_active=True).select_related('category', 'brand').prefetch_related('images')[:8]
     new_arrivals      = Product.objects.filter(is_new_arrival=True, is_active=True).order_by('-created_at').select_related('category', 'brand').prefetch_related('images')[:8]
-    featured_categories = Category.objects.filter(is_featured=True, is_active=True, parent=None)[:10]
-    featured_brands   = Brand.objects.filter(is_featured=True, is_active=True)[:12]
-    testimonials      = Testimonial.objects.filter(is_active=True)[:6]
-    why_choose_us     = WhyChooseUs.objects.filter(is_active=True)[:6]
+
+    # Rarely-changing display lists — cache for 10 minutes to cut DB hits.
+    hero_banners        = cache.get_or_set('home_hero_banners',  lambda: list(Banner.objects.filter(banner_type='hero', is_active=True)[:3]), 600)
+    promo_banners       = cache.get_or_set('home_promo_banners', lambda: list(Banner.objects.filter(banner_type='promo', is_active=True)[:4]), 600)
+    featured_categories = cache.get_or_set('home_featured_cats', lambda: list(Category.objects.filter(is_featured=True, is_active=True, parent=None)[:10]), 600)
+    featured_brands     = cache.get_or_set('home_featured_brands', lambda: list(Brand.objects.filter(is_featured=True, is_active=True)[:12]), 600)
+    testimonials        = cache.get_or_set('home_testimonials',  lambda: list(Testimonial.objects.filter(is_active=True)[:6]), 600)
+    why_choose_us       = cache.get_or_set('home_why_choose_us', lambda: list(WhyChooseUs.objects.filter(is_active=True)[:6]), 600)
 
     # Services for homepage — from DB or hardcoded fallback
     homepage_services = list(Service.objects.filter(is_active=True).order_by('order')[:6])
@@ -44,6 +48,7 @@ def homepage(request):
         'testimonials':       testimonials,
         'why_choose_us':      why_choose_us,
         'homepage_services':  homepage_services,
+        'serving_areas':      ServingArea.objects.filter(is_active=True).order_by('-is_featured', 'city')[:10],
         'serving_area_cities': ['Ahmedabad','Surat','Vadodara','Rajkot','Gandhinagar','Anand','Nadiad','Bharuch','Navsari','Vapi'],
         'contact_form':       ContactForm(),
         'newsletter_form':    NewsletterForm(),
@@ -53,19 +58,36 @@ def homepage(request):
     return render(request, 'core/homepage.html', context)
 
 
+def _notify_inquiry(inquiry):
+    """Best-effort email notification to the business (console backend in dev)."""
+    from django.core.mail import send_mail
+    from django.conf import settings
+    try:
+        send_mail(
+            subject=f'[{inquiry.get_inquiry_type_display()}] {inquiry.subject}',
+            message=(f'From: {inquiry.name} <{inquiry.email}> {inquiry.phone}\n\n{inquiry.message}'),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.DEFAULT_FROM_EMAIL],
+            fail_silently=True,
+        )
+    except Exception:
+        pass
+
+
 @require_POST
 def contact_submit(request):
     form = ContactForm(request.POST)
     if form.is_valid():
         inquiry = form.save()
+        _notify_inquiry(inquiry)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': 'Thank you! We will get back to you shortly.'})
         messages.success(request, 'Thank you for reaching out! We will contact you within 24 hours.')
-        return redirect('core:homepage')
+        return redirect(request.META.get('HTTP_REFERER', 'core:homepage'))
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'success': False, 'errors': form.errors})
     messages.error(request, 'Please correct the errors below.')
-    return redirect('core:homepage')
+    return redirect(request.META.get('HTTP_REFERER', 'core:homepage'))
 
 
 @require_POST
@@ -97,10 +119,17 @@ def contact_page(request):
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Message sent successfully!')
+            inquiry = form.save()
+            _notify_inquiry(inquiry)
+            messages.success(request, 'Message sent successfully! Our team will get back to you within 24 hours.')
             form = ContactForm()
-    return render(request, 'pages/contact.html', {'form': form, 'page_title': 'Contact Us'})
+        else:
+            messages.error(request, 'Please correct the errors below and try again.')
+    return render(request, 'pages/contact.html', {
+        'form':             form,
+        'page_title':       'Contact Us',
+        'meta_description': 'Get in touch with TechZone — call, WhatsApp, email or visit our store. We respond within 24 hours.',
+    })
 
 
 def about_page(request):
@@ -111,6 +140,20 @@ def about_page(request):
         'testimonials': testimonials,
         'page_title': 'About TechZone',
     })
+
+
+def robots_txt(request):
+    host  = request.get_host()
+    lines = [
+        'User-agent: *',
+        'Disallow: /admin/',
+        'Disallow: /products/ajax/',
+        'Disallow: /pages/services/*/inquiry/',
+        'Allow: /',
+        '',
+        f'Sitemap: {request.scheme}://{host}/sitemap.xml',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain')
 
 
 def handler404(request, exception):

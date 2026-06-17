@@ -3,8 +3,13 @@ TechZone Electronics - Base Settings
 """
 import os
 from pathlib import Path
+import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Load environment variables from a .env file at the project root (if present).
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / '.env')
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production-xyz123')
 
@@ -14,10 +19,10 @@ ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
-    # Django CMS Admin style (must be before django.contrib.admin)
-    
     # Django core
-    'django.contrib.admin',
+    # Custom branded admin site with dashboard (Module 11).
+    # Replaces 'django.contrib.admin'; @admin.register still targets it.
+    'core.admin_site.TechZoneAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -27,11 +32,14 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
 
     # Third party
-                            
+    'taggit',
+    'rest_framework',
+
     # Local apps
     'core',
     'products',
     'pages',
+    'blog',
 ]
 
 MIDDLEWARE = [
@@ -114,6 +122,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
 
+# Frontend CSS strategy (Module 12).
+# False -> Tailwind via CDN (zero-build dev default).
+# True  -> compiled /static/css/app.css (run `npm install && npm run build` first).
+TAILWIND_COMPILED = os.environ.get('TAILWIND_COMPILED', 'False') == 'True'
+
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -135,5 +148,41 @@ CACHES = {
 # Session
 SESSION_COOKIE_AGE = 86400 * 30  # 30 days
 
-# Security
+# ── Django REST Framework (public read API) ────────────────────────
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 24,
+    'DEFAULT_FILTER_BACKENDS': [
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.AnonRateThrottle'],
+    'DEFAULT_THROTTLE_RATES': {'anon': '120/min'},
+}
+
+# ── Security ───────────────────────────────────────────────────────
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+
+# CSRF trusted origins (comma-separated env var, e.g. "https://techzone.in,https://www.techzone.in")
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
+]
+
+# Hardening applied automatically when DEBUG is off (production)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# ── Caching (production overrides via env / production.py) ──────────
+CACHE_MIDDLEWARE_SECONDS = int(os.environ.get('CACHE_MIDDLEWARE_SECONDS', 300))
+CACHE_MIDDLEWARE_KEY_PREFIX = 'techzone'

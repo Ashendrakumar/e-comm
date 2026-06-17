@@ -2,41 +2,144 @@
 {% load static %}
 {% block title %}Contact Us — TechZone{% endblock %}
 {% block content %}
-<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-12 text-white text-center">
-  <h1 class="text-3xl font-extrabold mb-2">Contact Us</h1>
-  <p class="text-blue-200">We'd love to hear from you. Get in touch with our team.</p>
-</div>
-<div class="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-2 gap-10">
-  <div>
-    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Get in Touch</h2>
-    {% if messages %}{% for msg in messages %}<div class="mb-4 p-3 rounded-xl bg-green-50 text-green-700 text-sm">{{ msg }}</div>{% endfor %}{% endif %}
-    <form method="post" class="space-y-4">
-      {% csrf_token %}
-      <div class="grid grid-cols-2 gap-4">
-        <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Name *</label><input type="text" name="name" required class="form-input"></div>
-        <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Phone</label><input type="tel" name="phone" class="form-input"></div>
-      </div>
-      <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Email *</label><input type="email" name="email" required class="form-input"></div>
-      <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Inquiry Type</label>
-        <select name="inquiry_type" class="form-select">
-          <option value="general">General</option><option value="product">Product</option>
-          <option value="service">Service</option><option value="bulk">Bulk Order</option><option value="support">Support</option>
-        </select>
-      </div>
-      <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Subject *</label><input type="text" name="subject" required class="form-input"></div>
-      <div><label class="block text-xs font-bold text-gray-500 mb-1.5">Message *</label><textarea name="message" required rows="5" class="form-textarea"></textarea></div>
-      <button type="submit" class="w-full btn-primary justify-center py-3 rounded-xl">Send Message <i class="ti ti-send"></i></button>
-    </form>
+
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
   </div>
-  <div class="space-y-5">
-    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Our Details</h2>
-    {% if site_settings.phone %}<div class="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800"><div class="w-10 h-10 bg-blue-50 dark:bg-blue-950 rounded-xl flex items-center justify-center"><i class="ti ti-phone text-primary-600"></i></div><div><p class="text-xs text-gray-500">Phone</p><a href="tel:{{ site_settings.phone }}" class="font-bold text-gray-900 dark:text-white hover:text-primary-600">{{ site_settings.phone }}</a></div></div>{% endif %}
-    {% if site_settings.email %}<div class="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800"><div class="w-10 h-10 bg-purple-50 dark:bg-purple-950 rounded-xl flex items-center justify-center"><i class="ti ti-mail text-purple-600"></i></div><div><p class="text-xs text-gray-500">Email</p><a href="mailto:{{ site_settings.email }}" class="font-bold text-gray-900 dark:text-white hover:text-primary-600">{{ site_settings.email }}</a></div></div>{% endif %}
-    {% if site_settings.address %}<div class="flex items-start gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800"><div class="w-10 h-10 bg-green-50 dark:bg-green-950 rounded-xl flex items-center justify-center flex-shrink-0"><i class="ti ti-map-pin text-green-600"></i></div><div><p class="text-xs text-gray-500">Address</p><p class="font-bold text-gray-900 dark:text-white text-sm">{{ site_settings.address }}</p></div></div>{% endif %}
-    {% if site_settings.working_hours %}<div class="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800"><div class="w-10 h-10 bg-orange-50 dark:bg-orange-950 rounded-xl flex items-center justify-center"><i class="ti ti-clock text-orange-500"></i></div><div><p class="text-xs text-gray-500">Working Hours</p><p class="font-bold text-gray-900 dark:text-white text-sm">{{ site_settings.working_hours }}</p></div></div>{% endif %}
-    {% if site_settings.google_maps_embed %}
-    <div class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 h-64">{{ site_settings.google_maps_embed|safe }}</div>
+  <div class="relative">
+    <nav class="flex items-center justify-center gap-2 text-xs text-white/70 mb-5">
+      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
+      <i class="ti ti-chevron-right text-[10px]"></i>
+      <span class="text-white font-semibold">Contact</span>
+    </nav>
+    <h1 class="text-4xl font-extrabold mb-3">Get in Touch</h1>
+    <p class="text-blue-200 text-lg max-w-xl mx-auto">We'd love to hear from you. Our team responds within 24 hours.</p>
+  </div>
+</div>
+
+<!-- Quick contact cards -->
+<div class="max-w-7xl mx-auto px-4 -mt-8 relative z-10">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    {% if site_settings.phone %}
+    <a href="tel:{{ site_settings.phone }}" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 text-center hover:shadow-lg hover:-translate-y-1 transition-all">
+      <div class="w-12 h-12 bg-blue-50 dark:bg-blue-950 rounded-xl flex items-center justify-center mx-auto mb-3"><i class="ti ti-phone text-primary-600 text-xl"></i></div>
+      <p class="text-xs text-gray-400 mb-0.5">Call Us</p>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">{{ site_settings.phone }}</p>
+    </a>
+    {% endif %}
+    {% if site_settings.whatsapp %}
+    <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 text-center hover:shadow-lg hover:-translate-y-1 transition-all">
+      <div class="w-12 h-12 bg-green-50 dark:bg-green-950 rounded-xl flex items-center justify-center mx-auto mb-3"><i class="ti ti-brand-whatsapp text-green-600 text-xl"></i></div>
+      <p class="text-xs text-gray-400 mb-0.5">WhatsApp</p>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">Chat Now</p>
+    </a>
+    {% endif %}
+    {% if site_settings.email %}
+    <a href="mailto:{{ site_settings.email }}" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 text-center hover:shadow-lg hover:-translate-y-1 transition-all">
+      <div class="w-12 h-12 bg-purple-50 dark:bg-purple-950 rounded-xl flex items-center justify-center mx-auto mb-3"><i class="ti ti-mail text-purple-600 text-xl"></i></div>
+      <p class="text-xs text-gray-400 mb-0.5">Email</p>
+      <p class="font-bold text-gray-900 dark:text-white text-sm truncate">{{ site_settings.email }}</p>
+    </a>
+    {% endif %}
+    {% if site_settings.working_hours %}
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 text-center">
+      <div class="w-12 h-12 bg-orange-50 dark:bg-orange-950 rounded-xl flex items-center justify-center mx-auto mb-3"><i class="ti ti-clock text-orange-500 text-xl"></i></div>
+      <p class="text-xs text-gray-400 mb-0.5">Working Hours</p>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">{{ site_settings.working_hours }}</p>
+    </div>
     {% endif %}
   </div>
 </div>
+
+<div class="max-w-7xl mx-auto px-4 py-14 grid grid-cols-1 lg:grid-cols-5 gap-10">
+
+  <!-- Form -->
+  <div class="lg:col-span-3">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Send Us a Message</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-6">Fill out the form below and we'll respond as soon as possible.</p>
+
+    <form id="contact-form" method="post" action="{% url 'core:contact' %}" class="space-y-4">
+      {% csrf_token %}
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 mb-1.5">Name *</label>
+          {{ form.name }}
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 mb-1.5">Phone</label>
+          {{ form.phone }}
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 mb-1.5">Email *</label>
+          {{ form.email }}
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 mb-1.5">Inquiry Type</label>
+          {{ form.inquiry_type }}
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 mb-1.5">Subject *</label>
+        {{ form.subject }}
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 mb-1.5">Message *</label>
+        {{ form.message }}
+      </div>
+      <button type="submit" class="btn-primary w-full justify-center py-3 rounded-xl text-base">Send Message <i class="ti ti-send"></i></button>
+      <p id="contact-msg" class="hidden text-sm text-center"></p>
+    </form>
+  </div>
+
+  <!-- Details + map -->
+  <div class="lg:col-span-2 space-y-5">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+      <h3 class="font-bold text-gray-900 dark:text-white mb-4">Visit Our Store</h3>
+      {% if site_settings.address %}
+      <p class="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <i class="ti ti-map-pin text-primary-500 text-lg flex-shrink-0 mt-0.5"></i>
+        <span class="leading-relaxed">{{ site_settings.address }}</span>
+      </p>
+      {% endif %}
+      <div class="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+        {% for sl in social_links %}
+        <a href="{{ sl.url }}" target="_blank" rel="noopener" class="w-10 h-10 bg-gray-100 dark:bg-gray-800 hover:bg-primary-600 hover:text-white text-gray-500 rounded-xl flex items-center justify-center transition-all">
+          <i class="ti {{ sl.get_icon_class }}"></i>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Google Map -->
+    <div class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 h-72">
+      {% if site_settings.google_maps_embed %}
+        {{ site_settings.google_maps_embed|safe }}
+      {% else %}
+        <iframe class="w-full h-full" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q={{ site_settings.address|default:'Surat, Gujarat'|urlencode }}&output=embed"></iframe>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('contact-form').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const form = e.target, btn = form.querySelector('button[type=submit]'), msg = document.getElementById('contact-msg');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 animate-spin"></i> Sending...';
+  try {
+    const res = await fetch('{% url "core:contact_submit" %}', {method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrfToken}});
+    const data = await res.json();
+    msg.classList.remove('hidden');
+    if(data.success){ form.reset(); msg.className='text-sm text-center text-green-600 font-medium'; msg.textContent=data.message; }
+    else { msg.className='text-sm text-center text-red-500'; msg.textContent='Please check the form and try again.'; }
+  } catch(err){ msg.classList.remove('hidden'); msg.className='text-sm text-center text-red-500'; msg.textContent='Something went wrong. Please try again.'; }
+  btn.disabled = false; btn.innerHTML = 'Send Message <i class="ti ti-send"></i>';
+});
+</script>
 {% endblock %}

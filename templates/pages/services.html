@@ -24,16 +24,19 @@
   <!-- Services from database -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for svc in services %}
-    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-7 hover:shadow-xl hover:-translate-y-1 transition-all">
-      <div class="w-14 h-14 bg-primary-100 dark:bg-primary-950 rounded-2xl flex items-center justify-center mb-5">
-        <i class="ti {{ svc.icon }} text-2xl text-primary-600"></i>
+    <a href="{{ svc.get_absolute_url }}" class="group block bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-7 hover:shadow-xl hover:-translate-y-1 transition-all">
+      <div class="flex items-start justify-between mb-5">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:{{ svc.color|default:'#2563eb' }}1a;">
+          <i class="ti {{ svc.icon }} text-2xl" style="color:{{ svc.color|default:'#2563eb' }};"></i>
+        </div>
+        {% if svc.price_info %}<span class="badge bg-primary-50 dark:bg-primary-950 text-primary-600">{{ svc.price_info }}</span>{% endif %}
       </div>
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">{{ svc.title }}</h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">{{ svc.short_description }}</p>
-      <a href="{% url 'core:contact' %}" class="inline-flex items-center gap-2 text-primary-600 font-semibold text-sm hover:underline">
-        Get Started <i class="ti ti-arrow-right text-xs"></i>
-      </a>
-    </div>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3 group-hover:text-primary-600 transition-colors">{{ svc.title }}</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5 line-clamp-3">{{ svc.short_description }}</p>
+      <span class="inline-flex items-center gap-2 text-primary-600 font-semibold text-sm group-hover:gap-3 transition-all">
+        Learn More <i class="ti ti-arrow-right text-xs"></i>
+      </span>
+    </a>
     {% endfor %}
   </div>
 

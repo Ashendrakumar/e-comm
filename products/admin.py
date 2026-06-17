@@ -1,5 +1,7 @@
+from decimal import Decimal
 from django.contrib import admin
 from django.utils.html import format_html
+from core.admin_mixins import ExportCsvMixin
 from .models import (Category, Product, ProductImage, ProductAttribute,
                      ProductAttributeValue, ProductVariant, Review,
                      ReviewImage, FAQ, ProductInquiry)
@@ -91,6 +93,8 @@ class ProductAdmin(admin.ModelAdmin):
     inlines        = [ProductImageInline, ProductAttributeValueInline, ProductVariantInline, FAQInline]
     readonly_fields = ('views_count', 'created_at', 'updated_at', 'sku')
     list_per_page  = 25
+    actions = ['mark_featured', 'unmark_featured', 'mark_trending',
+               'mark_out_of_stock', 'restock_default', 'apply_10_discount', 'clear_discount']
     fieldsets = (
         ('Basic',       {'fields': ('name', 'slug', 'sku', 'category', 'brand', 'condition', 'color')}),
         ('Description', {'fields': ('short_description', 'description')}),
@@ -132,6 +136,46 @@ class ProductAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('category', 'brand').prefetch_related('images')
 
+    # ── Bulk actions ──────────────────────────────────────────────
+    @admin.action(description='⭐ Mark as featured')
+    def mark_featured(self, request, queryset):
+        n = queryset.update(is_featured=True)
+        self.message_user(request, f'{n} product(s) marked featured.')
+
+    @admin.action(description='Remove featured flag')
+    def unmark_featured(self, request, queryset):
+        n = queryset.update(is_featured=False)
+        self.message_user(request, f'{n} product(s) un-featured.')
+
+    @admin.action(description='🔥 Mark as trending')
+    def mark_trending(self, request, queryset):
+        n = queryset.update(is_trending=True)
+        self.message_user(request, f'{n} product(s) marked trending.')
+
+    @admin.action(description='🚫 Mark out of stock')
+    def mark_out_of_stock(self, request, queryset):
+        n = queryset.update(stock=0)
+        self.message_user(request, f'{n} product(s) set to 0 stock.')
+
+    @admin.action(description='Restock to 10 units')
+    def restock_default(self, request, queryset):
+        n = queryset.update(stock=10)
+        self.message_user(request, f'{n} product(s) restocked to 10.')
+
+    @admin.action(description='💸 Apply 10% discount')
+    def apply_10_discount(self, request, queryset):
+        count = 0
+        for p in queryset:
+            p.sale_price = (p.price * Decimal('0.90')).quantize(Decimal('0.01'))
+            p.save(update_fields=['sale_price'])
+            count += 1
+        self.message_user(request, f'10% discount applied to {count} product(s).')
+
+    @admin.action(description='Clear discount (sale price)')
+    def clear_discount(self, request, queryset):
+        n = queryset.update(sale_price=None)
+        self.message_user(request, f'Discount cleared on {n} product(s).')
+
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
@@ -154,12 +198,13 @@ class ReviewAdmin(admin.ModelAdmin):
 
 
 @admin.register(ProductInquiry)
-class ProductInquiryAdmin(admin.ModelAdmin):
+class ProductInquiryAdmin(ExportCsvMixin, admin.ModelAdmin):
     list_display  = ('name', 'email', 'phone', 'product', 'status', 'created_at')
     list_editable = ('status',)
     list_filter   = ('status',)
     search_fields = ('name', 'email', 'product__name')
     readonly_fields = ('created_at',)
+    actions       = ['export_as_csv']
 
 
 @admin.register(ProductAttribute)

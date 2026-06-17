@@ -1,0 +1,38 @@
+{% comment %}
+Reusable breadcrumb component.
+Usage:
+  {% include "partials/breadcrumbs.html" with crumbs=my_crumbs %}
+where my_crumbs is a list of {"title": ..., "url": ...} dicts.
+The last item is rendered as the current (non-linked) page.
+Emits a visual bar + JSON-LD BreadcrumbList for SEO.
+{% endcomment %}
+{% if crumbs %}
+<nav aria-label="Breadcrumb" class="text-xs text-gray-400 dark:text-gray-500">
+  <ol class="flex items-center flex-wrap gap-2">
+    {% for c in crumbs %}
+    <li class="flex items-center gap-2">
+      {% if not forloop.last and c.url %}
+        <a href="{{ c.url }}" class="hover:text-primary-600 transition-colors">{{ c.title }}</a>
+        <i class="ti ti-chevron-right text-[10px]"></i>
+      {% else %}
+        <span class="text-gray-600 dark:text-gray-300 font-medium truncate max-w-xs">{{ c.title }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {% for c in crumbs %}{
+      "@type": "ListItem",
+      "position": {{ forloop.counter }},
+      "name": "{{ c.title|escapejs }}"{% if c.url %},
+      "item": "{{ request.scheme }}://{{ request.get_host }}{{ c.url }}"{% endif %}
+    }{% if not forloop.last %},{% endif %}{% endfor %}
+  ]
+}
+</script>
+{% endif %}

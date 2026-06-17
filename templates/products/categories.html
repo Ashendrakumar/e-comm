@@ -54,7 +54,7 @@
          style="background:linear-gradient(135deg,{{ cat.color|default:'#1d4ed8' }}ee,{{ cat.color|default:'#1e40af' }});">
         {% if cat.banner %}
         <img src="{{ cat.banner.url }}" alt="{{ cat.name }}"
-             class="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500">
+             class="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500" loading="lazy" decoding="async">
         {% endif %}
         <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
         <div class="relative z-10 p-5">

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from .admin_mixins import ExportCsvMixin
 from .models import Brand, Banner, Testimonial, NewsletterSubscription, SocialLink, WhyChooseUs, ContactInquiry, SiteSettings
 
 
@@ -54,19 +55,37 @@ class WhyChooseUsAdmin(admin.ModelAdmin):
 
 
 @admin.register(NewsletterSubscription)
-class NewsletterAdmin(admin.ModelAdmin):
+class NewsletterAdmin(ExportCsvMixin, admin.ModelAdmin):
     list_display = ('email', 'is_active', 'subscribed_at')
     list_filter = ('is_active',)
     readonly_fields = ('subscribed_at',)
+    actions = ['export_as_csv']
 
 
 @admin.register(ContactInquiry)
-class ContactInquiryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'subject', 'inquiry_type', 'status', 'created_at')
-    list_filter = ('status', 'inquiry_type')
-    search_fields = ('name', 'email', 'subject')
+class ContactInquiryAdmin(ExportCsvMixin, admin.ModelAdmin):
+    list_display   = ('name', 'email', 'phone', 'subject', 'inquiry_type', 'status', 'created_at')
+    list_filter    = ('status', 'inquiry_type', 'created_at')
+    search_fields  = ('name', 'email', 'phone', 'subject', 'message')
     readonly_fields = ('created_at', 'updated_at')
-    list_editable = ('status',)
+    list_editable  = ('status',)
+    date_hierarchy = 'created_at'
+    actions        = ['mark_resolved', 'mark_in_progress', 'export_as_csv']
+    fieldsets = (
+        ('Contact', {'fields': ('name', 'email', 'phone')}),
+        ('Inquiry', {'fields': ('inquiry_type', 'subject', 'message')}),
+        ('Management', {'fields': ('status', 'admin_notes', 'created_at', 'updated_at')}),
+    )
+
+    @admin.action(description='Mark selected as Resolved')
+    def mark_resolved(self, request, queryset):
+        updated = queryset.update(status='resolved')
+        self.message_user(request, f'{updated} inquiry(ies) marked resolved.')
+
+    @admin.action(description='Mark selected as In Progress')
+    def mark_in_progress(self, request, queryset):
+        updated = queryset.update(status='in_progress')
+        self.message_user(request, f'{updated} inquiry(ies) marked in progress.')
 
 
 @admin.register(SocialLink)

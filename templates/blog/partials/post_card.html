@@ -1,0 +1,35 @@
+<article class="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col">
+  <a href="{{ post.get_absolute_url }}" class="block relative aspect-[16/10] overflow-hidden bg-gray-100 dark:bg-gray-800">
+    {% if post.featured_image %}
+      <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy"
+           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+    {% else %}
+      <div class="w-full h-full flex items-center justify-center text-primary-300 dark:text-gray-700">
+        <i class="ti ti-news text-5xl"></i>
+      </div>
+    {% endif %}
+    {% if post.category %}
+    <span class="absolute top-3 left-3 badge text-white" style="background:{{ post.category.color|default:'#2563eb' }};">
+      {{ post.category.name }}
+    </span>
+    {% endif %}
+  </a>
+  <div class="p-5 flex flex-col flex-1">
+    <div class="flex items-center gap-3 text-xs text-gray-400 mb-2.5">
+      <span class="flex items-center gap-1"><i class="ti ti-calendar"></i>{{ post.published_at|date:"M d, Y" }}</span>
+      <span class="flex items-center gap-1"><i class="ti ti-clock"></i>{{ post.reading_minutes }} min read</span>
+    </div>
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2 leading-snug line-clamp-2">
+      <a href="{{ post.get_absolute_url }}" class="hover:text-primary-600 transition-colors">{{ post.title }}</a>
+    </h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-4 line-clamp-2">{{ post.excerpt }}</p>
+    <div class="mt-auto flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
+      <span class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <i class="ti ti-user-circle text-base"></i>{{ post.display_author }}
+      </span>
+      <a href="{{ post.get_absolute_url }}" class="text-primary-600 font-semibold text-sm hover:underline flex items-center gap-1">
+        Read <i class="ti ti-arrow-right text-xs"></i>
+      </a>
+    </div>
+  </div>
+</article>

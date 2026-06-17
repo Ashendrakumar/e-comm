@@ -85,11 +85,9 @@
         <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Services</h4>
         <ul class="space-y-2.5 text-sm">
           <li><a href="{% url 'pages:services' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>All Services</a></li>
-          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Product Consultation</a></li>
-          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Installation</a></li>
-          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Device Repair</a></li>
-          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Warranty Support</a></li>
-          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Bulk Orders</a></li>
+          {% for svc in footer_services %}
+          <li><a href="{{ svc.get_absolute_url }}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>{{ svc.title }}</a></li>
+          {% endfor %}
         </ul>
       </div>
 
@@ -99,10 +97,13 @@
         <ul class="space-y-2.5 text-sm">
           <li><a href="{% url 'core:homepage' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Home</a></li>
           <li><a href="{% url 'core:about' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>About Us</a></li>
+          <li><a href="{% url 'blog:list' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Blog &amp; News</a></li>
+          <li><a href="{% url 'pages:faqs' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>FAQs</a></li>
           <li><a href="{% url 'core:contact' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Contact</a></li>
           <li><a href="{% url 'pages:serving_areas' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Serving Areas</a></li>
-          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Privacy Policy</a></li>
-          <li><a href="#" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Terms of Service</a></li>
+          {% for fp in footer_pages %}
+          <li><a href="{{ fp.get_absolute_url }}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>{{ fp.title }}</a></li>
+          {% endfor %}
         </ul>
       </div>
 
@@ -130,7 +131,7 @@
         {% for brand in featured_brands %}
         <a href="{% url 'products:list' %}?brand={{ brand.pk }}" class="group">
           {% if brand.logo %}
-          <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="h-8 w-auto object-contain filter brightness-75 group-hover:brightness-100 transition-all">
+          <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="h-8 w-auto object-contain filter brightness-75 group-hover:brightness-100 transition-all" loading="lazy" decoding="async">
           {% else %}
           <span class="text-xs text-gray-500 group-hover:text-gray-300 font-semibold transition-colors">{{ brand.name }}</span>
           {% endif %}

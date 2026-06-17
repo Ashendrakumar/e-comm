@@ -23,7 +23,6 @@ settings/local.py
 # Python
 # =========================
 *.so
-.venv/
 .Python
 build/
 develop-eggs/

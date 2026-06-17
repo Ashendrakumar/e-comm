@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Serving Areas — TechZone{% endblock %}
+{% block meta_description %}TechZone delivers electronics, installation and repair services across {{ areas.count }}+ cities in Gujarat. Find service availability in your city.{% endblock %}
 {% block content %}
 
 <div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white text-center relative overflow-hidden">
@@ -24,35 +25,90 @@
     <div class="inline-flex items-center gap-2 bg-primary-50 dark:bg-primary-950 border border-primary-100 dark:border-primary-900 text-primary-700 dark:text-primary-300 px-5 py-3 rounded-full text-sm font-semibold mb-4">
       <i class="ti ti-map-pin"></i> 100+ Cities Covered
     </div>
-    <p class="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">We provide doorstep delivery, installation and service support across all major cities in Gujarat.</p>
+    <p class="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">We provide doorstep delivery, installation and service support across all major cities in Gujarat. Click a city to see local service details.</p>
   </div>
 
   {% if areas %}
+  <!-- Featured cities -->
+  {% if featured_areas %}
+  <div class="mb-12">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+      <i class="ti ti-star-filled text-accent-500"></i> Featured Cities
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {% for area in featured_areas %}
+      <a href="{{ area.get_absolute_url }}"
+         class="group relative bg-gradient-to-br from-primary-600 to-primary-800 text-white rounded-2xl p-6 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all">
+        <div class="absolute -right-6 -bottom-6 opacity-15"><i class="ti ti-map-2 text-8xl"></i></div>
+        <div class="relative">
+          <div class="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur">
+            <i class="ti ti-map-pin text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-1">{{ area.city }}</h3>
+          <p class="text-blue-200 text-sm mb-4">{{ area.state }}</p>
+          {% if area.contact_phone %}
+          <p class="text-xs text-blue-100 flex items-center gap-1.5 mb-3"><i class="ti ti-phone"></i>{{ area.contact_phone }}</p>
+          {% endif %}
+          <span class="inline-flex items-center gap-1.5 text-sm font-semibold group-hover:gap-2.5 transition-all">
+            View Details <i class="ti ti-arrow-right text-xs"></i>
+          </span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- All cities -->
+  <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+    <i class="ti ti-map-pins text-primary-600"></i> All Cities We Serve
+  </h2>
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-12">
     {% for area in areas %}
-    <div class="group flex items-center gap-2.5 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all cursor-pointer">
+    <a href="{{ area.get_absolute_url }}"
+       class="group flex items-center gap-2.5 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all">
       <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900 group-hover:bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
         <i class="ti ti-map-pin text-primary-600 group-hover:text-white text-sm transition-colors"></i>
       </div>
       <div>
-        <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">{{ area.city }}</span>
+        <span class="font-semibold text-sm text-gray-800 dark:text-gray-200 group-hover:text-primary-600 transition-colors">{{ area.city }}</span>
         <p class="text-xs text-gray-400">{{ area.state }}</p>
       </div>
-    </div>
+    </a>
     {% endfor %}
   </div>
   {% else %}
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-12">
     {% for city in default_cities %}
-    <div class="group flex items-center gap-2.5 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all">
-      <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900 group-hover:bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
-        <i class="ti ti-map-pin text-primary-600 group-hover:text-white text-sm transition-colors"></i>
+    <div class="group flex items-center gap-2.5 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
+      <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center flex-shrink-0">
+        <i class="ti ti-map-pin text-primary-600 text-sm"></i>
       </div>
       <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">{{ city }}</span>
     </div>
     {% endfor %}
   </div>
   {% endif %}
+
+  <!-- Service availability strip -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+    <div class="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+      <i class="ti ti-truck text-3xl text-primary-600 mb-2 block"></i>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">Doorstep Delivery</p>
+    </div>
+    <div class="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+      <i class="ti ti-tool text-3xl text-primary-600 mb-2 block"></i>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">Installation</p>
+    </div>
+    <div class="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+      <i class="ti ti-device-mobile text-3xl text-primary-600 mb-2 block"></i>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">Device Repair</p>
+    </div>
+    <div class="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
+      <i class="ti ti-headset text-3xl text-primary-600 mb-2 block"></i>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">Local Support</p>
+    </div>
+  </div>
 
   <div class="bg-primary-600 rounded-3xl p-10 text-white text-center">
     <h2 class="text-2xl font-bold mb-3">Don't See Your City?</h2>

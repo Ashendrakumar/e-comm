@@ -18,12 +18,23 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.sitemaps.views import sitemap
+from core.sitemaps import SITEMAPS
+from core.views import robots_txt
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
     path('products/', include('products.urls')),
+    path('blog/', include('blog.urls')),
     path('pages/', include('pages.urls')),
+
+    # Public REST API (Module 14)
+    path('api/v1/', include('techzone.api_urls')),
+
+    # SEO
+    path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS}, name='django.contrib.sitemaps.views.sitemap'),
+    path('robots.txt', robots_txt, name='robots_txt'),
 ]
 
 if settings.DEBUG:

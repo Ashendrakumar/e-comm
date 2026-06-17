@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}FAQs — TechZone{% endblock %}
+{% block content %}
+
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative">
+    <nav class="flex items-center justify-center gap-2 text-xs text-white/70 mb-5">
+      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
+      <i class="ti ti-chevron-right text-[10px]"></i>
+      <span class="text-white font-semibold">FAQs</span>
+    </nav>
+    <h1 class="text-4xl font-extrabold mb-3">Frequently Asked Questions</h1>
+    <p class="text-blue-200 text-lg max-w-xl mx-auto">Everything you need to know about shopping with TechZone</p>
+  </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 py-12" x-data="{ open: null }">
+
+  {% if not categories and not uncategorised %}
+  <div class="text-center py-16">
+    <i class="ti ti-help-circle text-6xl text-gray-300 dark:text-gray-700 mb-4 block"></i>
+    <p class="text-gray-500 dark:text-gray-400">No FAQs published yet. Please check back soon.</p>
+  </div>
+  {% endif %}
+
+  {% for cat in categories %}
+  {% if cat.faqs.all %}
+  <section class="mb-10">
+    <h2 class="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white mb-5">
+      <i class="ti {{ cat.icon|default:'ti-help-circle' }} text-primary-600"></i> {{ cat.name }}
+    </h2>
+    <div class="space-y-3">
+      {% for faq in cat.faqs.all %}
+      {% if faq.is_active %}
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <button @click="open === '{{ cat.id }}-{{ faq.id }}' ? open = null : open = '{{ cat.id }}-{{ faq.id }}'"
+                class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left">
+          <span class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ faq.question }}</span>
+          <i class="ti ti-chevron-down text-gray-400 transition-transform flex-shrink-0"
+             :class="open === '{{ cat.id }}-{{ faq.id }}' ? 'rotate-180' : ''"></i>
+        </button>
+        <div x-show="open === '{{ cat.id }}-{{ faq.id }}'" x-cloak x-transition class="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+          {{ faq.answer|safe|linebreaks }}
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% endfor %}
+
+  {% if uncategorised %}
+  <section class="mb-10">
+    <h2 class="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white mb-5">
+      <i class="ti ti-help-circle text-primary-600"></i> General
+    </h2>
+    <div class="space-y-3">
+      {% for faq in uncategorised %}
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <button @click="open === 'g-{{ faq.id }}' ? open = null : open = 'g-{{ faq.id }}'"
+                class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left">
+          <span class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ faq.question }}</span>
+          <i class="ti ti-chevron-down text-gray-400 transition-transform flex-shrink-0" :class="open === 'g-{{ faq.id }}' ? 'rotate-180' : ''"></i>
+        </button>
+        <div x-show="open === 'g-{{ faq.id }}'" x-cloak x-transition class="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+          {{ faq.answer|safe|linebreaks }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Still have questions -->
+  <div class="mt-12 text-center bg-primary-50 dark:bg-primary-950 rounded-3xl p-10 border border-primary-100 dark:border-primary-900">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Still have questions?</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-6">Our support team is happy to help you out.</p>
+    <a href="{% url 'core:contact' %}" class="btn-primary text-base px-8 py-3.5 rounded-xl">Contact Support <i class="ti ti-arrow-right"></i></a>
+  </div>
+</div>
+{% endblock %}

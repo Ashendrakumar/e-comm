@@ -1,14 +1,33 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="en" class="scroll-smooth" id="html-root">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ page_title|default:"TechZone — Premium Electronics" }}{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}{{ meta_description|default:site_settings.meta_description }}{% endblock %}">
+  {% if meta_keywords or site_settings.meta_keywords %}<meta name="keywords" content="{{ meta_keywords|default:site_settings.meta_keywords }}">{% endif %}
+  <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:site_name" content="{{ site_settings.site_name|default:'TechZone' }}">
+  <meta property="og:title" content="{% block og_title %}{{ page_title|default:'TechZone — Premium Electronics' }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ meta_description|default:site_settings.meta_description }}{% endblock %}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+  {% block og_image %}{% if site_settings.logo %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}">{% endif %}{% endblock %}
+  <meta name="twitter:card" content="summary_large_image">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  {% if use_compiled_css %}
+  {# Production: compiled Tailwind build (run `npm run build`). #}
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% else %}
+  {# Dev default: Tailwind via CDN (zero-build). #}
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -24,8 +43,11 @@
       }
     }
   </script>
+  {% endif %}
   <style>
     [x-cloak]{display:none!important}
+    .skip-link{position:absolute;left:-9999px;top:auto;z-index:100;background:#2563eb;color:#fff;padding:10px 16px;border-radius:0 0 8px 0;font-weight:600}
+    .skip-link:focus{left:0;top:0}
     .product-card:hover .product-actions{opacity:1;transform:translateY(0)}
     .product-actions{opacity:0;transform:translateY(10px);transition:all .3s ease}
     .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -55,12 +77,25 @@
     .dark .section-subtitle{color:#9ca3af}
   </style>
   {% block extra_head %}{% endblock %}
+
+  {% if site_settings.google_analytics_id %}
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_settings.google_analytics_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ site_settings.google_analytics_id }}');
+  </script>
+  {% endif %}
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased" id="body">
 
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
 {% include "partials/header.html" %}
 
-<main>
+<main id="main-content" tabindex="-1">
   {% if messages %}
   <div class="fixed top-20 right-4 z-50 space-y-2" id="toast-container">
     {% for message in messages %}

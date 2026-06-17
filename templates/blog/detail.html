@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ post.meta_title|default:post.title }} — TechZone Blog{% endblock %}
+{% block meta_description %}{{ post.meta_description|default:post.excerpt }}{% endblock %}
+
+{% block extra_head %}
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.excerpt }}">
+{% if post.featured_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}">{% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{ post.title|escapejs }}",
+  "datePublished": "{{ post.published_at|date:'c' }}",
+  "dateModified": "{{ post.updated_at|date:'c' }}",
+  "author": {"@type": "Person", "name": "{{ post.display_author|escapejs }}"},
+  "description": "{{ post.excerpt|escapejs }}"
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <!-- Breadcrumb -->
+  <div class="mb-6">
+    {% include "partials/breadcrumbs.html" with crumbs=breadcrumbs %}
+  </div>
+
+  <div class="grid lg:grid-cols-4 gap-8">
+    <article class="lg:col-span-3">
+      <!-- Header -->
+      {% if post.category %}
+      <a href="{{ post.category.get_absolute_url }}" class="badge text-white" style="background:{{ post.category.color }};">{{ post.category.name }}</a>
+      {% endif %}
+      <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mt-4 mb-4 leading-tight">{{ post.title }}</h1>
+      <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+        <span class="flex items-center gap-1.5"><i class="ti ti-user-circle text-base"></i>{{ post.display_author }}</span>
+        <span class="flex items-center gap-1.5"><i class="ti ti-calendar text-base"></i>{{ post.published_at|date:"F d, Y" }}</span>
+        <span class="flex items-center gap-1.5"><i class="ti ti-clock text-base"></i>{{ post.reading_minutes }} min read</span>
+        <span class="flex items-center gap-1.5"><i class="ti ti-eye text-base"></i>{{ post.views_count }} views</span>
+      </div>
+
+      <!-- Featured image -->
+      {% if post.featured_image %}
+      <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="w-full rounded-2xl mb-8 object-cover max-h-[460px]" loading="eager" fetchpriority="high" decoding="async">
+      {% endif %}
+
+      <!-- Body -->
+      <div class="prose-content text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
+        {{ post.content|safe|linebreaks }}
+      </div>
+
+      <!-- Tags -->
+      {% if post.tags.all %}
+      <div class="flex flex-wrap items-center gap-2 mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+        <i class="ti ti-tags text-gray-400"></i>
+        {% for tag in post.tags.all %}
+        <a href="{% url 'blog:list' %}?tag={{ tag.name|urlencode }}"
+           class="text-xs px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-primary-100 hover:text-primary-700 transition-colors">#{{ tag.name }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Share -->
+      <div class="flex items-center gap-3 mt-6">
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Share:</span>
+        <a target="_blank" rel="noopener" href="https://wa.me/?text={{ post.title|urlencode }}%20{{ request.scheme }}://{{ request.get_host }}{{ post.get_absolute_url }}"
+           class="w-9 h-9 rounded-xl bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors"><i class="ti ti-brand-whatsapp"></i></a>
+        <a target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}{{ post.get_absolute_url }}"
+           class="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors"><i class="ti ti-brand-facebook"></i></a>
+        <a target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ request.scheme }}://{{ request.get_host }}{{ post.get_absolute_url }}"
+           class="w-9 h-9 rounded-xl bg-gray-800 hover:bg-black text-white flex items-center justify-center transition-colors"><i class="ti ti-brand-x"></i></a>
+        <button onclick="navigator.clipboard.writeText('{{ request.scheme }}://{{ request.get_host }}{{ post.get_absolute_url }}');this.querySelector('i').className='ti ti-check'"
+           class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-600 dark:text-gray-300 flex items-center justify-center transition-colors"><i class="ti ti-link"></i></button>
+      </div>
+
+      <!-- Comments -->
+      <section id="comments" class="mt-12 pt-8 border-t border-gray-100 dark:border-gray-800">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
+          Comments <span class="text-gray-400 font-normal">({{ comments.count }})</span>
+        </h3>
+
+        {% for comment in comments %}
+        <div class="flex items-start gap-3 mb-5">
+          <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-950 flex items-center justify-center flex-shrink-0 text-primary-600 font-bold">
+            {{ comment.name|first|upper }}
+          </div>
+          <div class="flex-1 bg-gray-50 dark:bg-gray-800/50 rounded-2xl px-4 py-3">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">{{ comment.name }}</span>
+              <span class="text-xs text-gray-400">{{ comment.created_at|date:"M d, Y" }}</span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{{ comment.content }}</p>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-gray-400 mb-6">Be the first to comment.</p>
+        {% endfor %}
+
+        {% if post.allow_comments %}
+        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 mt-8">
+          <h4 class="font-bold text-gray-900 dark:text-white mb-4">Leave a Comment</h4>
+          <form method="post" action="{% url 'blog:comment' post.slug %}" class="space-y-4">
+            {% csrf_token %}
+            <div class="grid sm:grid-cols-2 gap-4">
+              {{ comment_form.name }}
+              {{ comment_form.email }}
+            </div>
+            {{ comment_form.content }}
+            <button type="submit" class="btn-primary"><i class="ti ti-send"></i> Post Comment</button>
+          </form>
+        </div>
+        {% else %}
+        <p class="text-sm text-gray-400 italic">Comments are closed for this post.</p>
+        {% endif %}
+      </section>
+    </article>
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+      {% include "blog/partials/sidebar.html" %}
+    </div>
+  </div>
+
+  <!-- Related posts -->
+  {% if related_posts %}
+  <section class="mt-16 pt-10 border-t border-gray-100 dark:border-gray-800">
+    <h2 class="section-title mb-8">Related Articles</h2>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for post in related_posts %}
+        {% include "blog/partials/post_card.html" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

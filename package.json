@@ -1,0 +1,13 @@
+{
+  "name": "techzone-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TailwindCSS build pipeline for TechZone Electronics (Module 12).",
+  "scripts": {
+    "dev": "tailwindcss -i ./static_src/input.css -o ./static/css/app.css --watch",
+    "build": "tailwindcss -i ./static_src/input.css -o ./static/css/app.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

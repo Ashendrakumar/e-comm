@@ -1,0 +1,52 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+{% if dashboard %}
+<style>
+  .tz-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:0 0 26px;}
+  .tz-card{background:var(--body-bg,#fff);border:1px solid var(--hairline-color,#e5e7eb);border-radius:12px;padding:16px 18px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .tz-card .tz-icon{font-size:20px;}
+  .tz-card .tz-val{font-size:28px;font-weight:800;line-height:1.1;margin-top:6px;color:var(--body-fg,#1f2937);}
+  .tz-card .tz-label{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;margin-top:2px;}
+  .tz-card .tz-sub{font-size:12px;color:#2563eb;margin-top:4px;}
+  .tz-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:26px;}
+  @media(max-width:900px){.tz-cols{grid-template-columns:1fr;}}
+  .tz-panel{background:var(--body-bg,#fff);border:1px solid var(--hairline-color,#e5e7eb);border-radius:12px;padding:16px 18px;}
+  .tz-panel h2{font-size:14px;margin:0 0 12px;color:var(--body-fg,#374151);}
+  .tz-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--hairline-color,#eee);font-size:13px;}
+  .tz-row:last-child{border-bottom:0;}
+  .tz-badge{font-weight:700;color:#2563eb;}
+  .tz-warn{color:#dc2626;font-weight:700;}
+</style>
+
+<h1>{{ index_title }}</h1>
+
+<div class="tz-cards">
+  {% for c in dashboard.cards %}
+  <div class="tz-card">
+    <span class="tz-icon">{{ c.icon }}</span>
+    <div class="tz-val">{{ c.value }}</div>
+    <div class="tz-label">{{ c.label }}</div>
+    {% if c.sub %}<div class="tz-sub">{{ c.sub }}</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="tz-cols">
+  <div class="tz-panel">
+    <h2>📊 Top categories (by active products)</h2>
+    {% for cat in dashboard.top_categories %}
+      <div class="tz-row"><span>{{ cat.name }}</span><span class="tz-badge">{{ cat.count }}</span></div>
+    {% empty %}<p>No categories yet.</p>{% endfor %}
+  </div>
+  <div class="tz-panel">
+    <h2>⚠️ Low stock (≤ 5)</h2>
+    {% for p in dashboard.low_stock %}
+      <div class="tz-row"><span>{{ p.name|truncatechars:40 }}</span><span class="tz-warn">{{ p.stock }}</span></div>
+    {% empty %}<p>All products well stocked. 🎉</p>{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{{ block.super }}
+{% endblock %}

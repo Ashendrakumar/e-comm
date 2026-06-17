@@ -50,17 +50,17 @@
           <input type="text" name="q" value="{{ request.GET.q }}"
             placeholder="Search products, brands, categories..."
             class="flex-1 px-4 py-2.5 text-sm bg-transparent outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400">
-          <button type="submit" class="px-4 bg-primary-600 text-white hover:bg-primary-700 transition-colors flex items-center">
-            <i class="ti ti-search text-sm"></i>
+          <button type="submit" aria-label="Search" class="px-4 bg-primary-600 text-white hover:bg-primary-700 transition-colors flex items-center">
+            <i class="ti ti-search text-sm" aria-hidden="true"></i>
           </button>
         </div>
       </form>
 
       <!-- Right actions -->
       <div class="flex items-center gap-2 ml-auto">
-        <button onclick="toggleDark()" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400" title="Toggle theme">
-          <i class="ti ti-sun text-lg dark:hidden"></i>
-          <i class="ti ti-moon text-lg hidden dark:block"></i>
+        <button onclick="toggleDark()" aria-label="Toggle dark mode" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400" title="Toggle theme">
+          <i class="ti ti-sun text-lg dark:hidden" aria-hidden="true"></i>
+          <i class="ti ti-moon text-lg hidden dark:block" aria-hidden="true"></i>
         </button>
         {% if site_settings.whatsapp %}
         <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank"
@@ -80,8 +80,8 @@
           <span class="hidden lg:inline">Sign In</span>
         </a>
         {% endif %}
-        <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <i class="ti ti-menu-2 text-xl text-gray-700 dark:text-gray-300"></i>
+        <button onclick="toggleMobileMenu()" aria-label="Open menu" aria-controls="mobile-menu" class="md:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <i class="ti ti-menu-2 text-xl text-gray-700 dark:text-gray-300" aria-hidden="true"></i>
         </button>
       </div>
     </div>
@@ -160,6 +160,9 @@
       <a href="{% url 'pages:services' %}" class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
         <i class="ti ti-tool text-sm"></i> Services
       </a>
+      <a href="{% url 'blog:list' %}" class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
+        <i class="ti ti-news text-sm"></i> Blog
+      </a>
       <a href="{% url 'core:contact' %}" class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
         <i class="ti ti-headset text-sm"></i> Contact
       </a>
@@ -199,6 +202,12 @@
       {% endfor %}
       <a href="{% url 'pages:services' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
         <i class="ti ti-tool text-gray-400"></i> Services
+      </a>
+      <a href="{% url 'blog:list' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
+        <i class="ti ti-news text-gray-400"></i> Blog &amp; News
+      </a>
+      <a href="{% url 'pages:faqs' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
+        <i class="ti ti-help-circle text-gray-400"></i> FAQs
       </a>
       <a href="{% url 'core:contact' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800">
         <i class="ti ti-headset text-gray-400"></i> Contact Us

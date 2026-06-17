@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page_title }} — TechZone{% endblock %}
+{% block content %}
+
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4">
+    <nav class="flex items-center gap-2 text-xs text-white/70 mb-5">
+      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
+      <i class="ti ti-chevron-right text-[10px]"></i>
+      <a href="{% url 'pages:serving_areas' %}" class="hover:text-white">Serving Areas</a>
+      <i class="ti ti-chevron-right text-[10px]"></i>
+      <span class="text-white font-semibold">{{ area.city }}</span>
+    </nav>
+    <div class="flex items-center gap-3">
+      <i class="ti ti-map-pin text-3xl"></i>
+      <h1 class="text-4xl font-extrabold">Electronics in {{ area.city }}</h1>
+    </div>
+    <p class="text-blue-200 text-lg mt-2">{{ area.city }}, {{ area.state }} — delivery, installation &amp; repair</p>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-12">
+  <div class="grid lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-8">
+      <div class="prose-content text-gray-700 dark:text-gray-300 leading-relaxed">
+        {% if area.description %}
+          {{ area.description|safe|linebreaks }}
+        {% else %}
+          <p>TechZone proudly serves customers across <strong>{{ area.city }}, {{ area.state }}</strong> with our full range of
+          electronics, expert consultation, professional installation and reliable repair services. Enjoy fast doorstep
+          delivery and dedicated local support.</p>
+        {% endif %}
+      </div>
+
+      <!-- Service availability -->
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Available in {{ area.city }}</h2>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div class="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4"><i class="ti ti-truck text-primary-600 text-xl"></i><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Doorstep Delivery</span></div>
+          <div class="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4"><i class="ti ti-tool text-primary-600 text-xl"></i><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Installation</span></div>
+          <div class="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4"><i class="ti ti-device-mobile text-primary-600 text-xl"></i><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Device Repair</span></div>
+          <div class="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4"><i class="ti ti-shield-check text-primary-600 text-xl"></i><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Warranty Support</span></div>
+        </div>
+      </div>
+
+      {% if area.pincodes %}
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Pincodes Served</h2>
+        <div class="flex flex-wrap gap-2">
+          {% for pin in area.pincode_list %}
+          <span class="text-xs px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">{{ pin }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Map -->
+      {% if area.map_embed %}
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Find Us on the Map</h2>
+        <div class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 aspect-video">
+          {{ area.map_embed|safe }}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar contact -->
+    <div class="lg:col-span-1">
+      <div class="sticky top-24 space-y-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+          <h3 class="font-bold text-gray-900 dark:text-white mb-4">{{ area.city }} Contact</h3>
+          <div class="space-y-3 text-sm">
+            <a href="tel:{{ area.contact_phone|default:site_settings.phone }}" class="flex items-center gap-3 text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors">
+              <i class="ti ti-phone text-primary-500 text-lg"></i>{{ area.contact_phone|default:site_settings.phone }}
+            </a>
+            <a href="mailto:{{ area.contact_email|default:site_settings.email }}" class="flex items-center gap-3 text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors">
+              <i class="ti ti-mail text-primary-500 text-lg"></i>{{ area.contact_email|default:site_settings.email }}
+            </a>
+            {% if area.address %}
+            <p class="flex items-start gap-3 text-gray-600 dark:text-gray-400">
+              <i class="ti ti-map-pin text-primary-500 text-lg mt-0.5"></i><span class="leading-relaxed">{{ area.address }}</span>
+            </p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Area inquiry form -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+          <h3 class="font-bold text-gray-900 dark:text-white mb-1">Enquire in {{ area.city }}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Send us a message and our {{ area.city }} team will respond shortly.</p>
+          <form id="area-form" method="post" action="{% url 'core:contact_submit' %}" class="space-y-3">
+            {% csrf_token %}
+            <input type="hidden" name="inquiry_type" value="general">
+            <input type="hidden" name="subject" value="Service enquiry — {{ area.city }}">
+            <input type="text" name="name" required placeholder="Your Name" class="form-input">
+            <input type="email" name="email" required placeholder="Your Email" class="form-input">
+            <input type="tel" name="phone" placeholder="Phone Number" class="form-input">
+            <textarea name="message" required rows="3" placeholder="How can we help in {{ area.city }}?" class="form-textarea"></textarea>
+            <button type="submit" class="btn-primary w-full justify-center"><i class="ti ti-send"></i> Send Enquiry</button>
+            <p id="area-form-msg" class="hidden text-sm text-center"></p>
+          </form>
+        </div>
+
+        {% if site_settings.whatsapp %}
+        <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi,%20I'm%20in%20{{ area.city|urlencode }}%20and%20need%20help" target="_blank"
+           class="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-2xl font-medium text-sm transition-colors">
+          <i class="ti ti-brand-whatsapp text-lg"></i> Chat on WhatsApp
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Other areas -->
+  {% if other_areas %}
+  <section class="mt-14 pt-10 border-t border-gray-100 dark:border-gray-800">
+    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Other Cities We Serve</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      {% for a in other_areas %}
+      <a href="{{ a.get_absolute_url }}" class="flex items-center gap-2 p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all">
+        <i class="ti ti-map-pin text-primary-600 text-sm"></i>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ a.city }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+<script>
+document.getElementById('area-form').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const form = e.target, btn = form.querySelector('button[type=submit]'), msg = document.getElementById('area-form-msg');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 animate-spin"></i> Sending...';
+  try {
+    const res = await fetch(form.action, {method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrfToken}});
+    const data = await res.json();
+    msg.classList.remove('hidden');
+    if(data.success){ form.reset(); msg.className='text-sm text-center text-green-600'; msg.textContent=data.message; }
+    else { msg.className='text-sm text-center text-red-500'; msg.textContent='Please check your details and try again.'; }
+  } catch(err){ msg.classList.remove('hidden'); msg.className='text-sm text-center text-red-500'; msg.textContent='Something went wrong. Please try again.'; }
+  btn.disabled = false; btn.innerHTML = '<i class="ti ti-send"></i> Send Enquiry';
+});
+</script>
+{% endblock %}

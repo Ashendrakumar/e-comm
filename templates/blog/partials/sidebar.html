@@ -1,0 +1,64 @@
+<aside class="space-y-6">
+  <!-- Search -->
+  <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+    <h4 class="font-bold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">Search</h4>
+    <form action="{% url 'blog:list' %}" method="get" class="flex rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <input type="text" name="q" value="{{ query }}" placeholder="Search articles..."
+             class="flex-1 px-3 py-2.5 text-sm bg-transparent outline-none dark:text-gray-300">
+      <button type="submit" class="px-4 bg-primary-600 text-white hover:bg-primary-700"><i class="ti ti-search text-sm"></i></button>
+    </form>
+  </div>
+
+  <!-- Categories -->
+  {% if categories %}
+  <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+    <h4 class="font-bold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">Categories</h4>
+    <ul class="space-y-1">
+      {% for cat in categories %}
+      <li>
+        <a href="{{ cat.get_absolute_url }}"
+           class="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors
+           {% if active_category.pk == cat.pk %}bg-primary-50 dark:bg-primary-950 text-primary-600 font-semibold{% else %}text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %}">
+          <span class="flex items-center gap-2"><i class="ti {{ cat.icon|default:'ti-news' }}" style="color:{{ cat.color }};"></i>{{ cat.name }}</span>
+          <span class="text-xs text-gray-400">{{ cat.post_count }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Popular posts -->
+  {% if popular_posts %}
+  <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+    <h4 class="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wide">Popular Posts</h4>
+    <div class="space-y-4">
+      {% for p in popular_posts %}
+      <a href="{{ p.get_absolute_url }}" class="flex items-start gap-3 group">
+        <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0">
+          {% if p.featured_image %}
+            <img src="{{ p.featured_image.url }}" alt="{{ p.title }}" loading="lazy" class="w-full h-full object-cover">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center text-gray-300"><i class="ti ti-news"></i></div>
+          {% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-primary-600 transition-colors line-clamp-2 leading-snug">{{ p.title }}</p>
+          <p class="text-xs text-gray-400 mt-1">{{ p.published_at|date:"M d, Y" }}</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- CTA -->
+  <div class="bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl p-6 text-white">
+    <i class="ti ti-headset text-3xl mb-3 block"></i>
+    <h4 class="font-bold text-lg mb-2">Need Expert Advice?</h4>
+    <p class="text-sm text-blue-100 mb-4">Our specialists help you pick the right electronics.</p>
+    <a href="{% url 'core:contact' %}" class="inline-flex items-center gap-2 bg-white text-primary-700 font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-blue-50 transition-colors">
+      Contact Us <i class="ti ti-arrow-right text-xs"></i>
+    </a>
+  </div>
+</aside>

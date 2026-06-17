@@ -20,7 +20,7 @@
 {% if category.banner %}
 <div class="cat-banner">
   <img src="{{ category.banner.url }}" alt="{{ category.name }}"
-       class="absolute inset-0 w-full h-full object-cover object-center">
+       class="absolute inset-0 w-full h-full object-cover object-center" loading="eager" fetchpriority="high" decoding="async">
   <div class="cat-banner-overlay"></div>
   <div class="relative z-10 w-full max-w-7xl mx-auto px-6 pb-8 pt-20">
     <nav class="flex items-center gap-2 text-xs text-white/70 mb-4 flex-wrap">

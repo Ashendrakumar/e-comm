@@ -1,62 +1,102 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Service, ServingArea, HomepageBanner, HomepageSection
+from core.admin_mixins import ExportCsvMixin
+from .models import (
+    Service, ServiceFeature, ServiceInquiry,
+    ServingArea, FlatPage, FAQCategory, GeneralFAQ,
+)
+
+
+class ServiceFeatureInline(admin.TabularInline):
+    model  = ServiceFeature
+    extra  = 1
+    fields = ('icon', 'title', 'description', 'order')
 
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ('title', 'is_active', 'order')
-    list_editable = ('is_active', 'order')
+    list_display        = ('title', 'price_info', 'is_active', 'is_featured', 'order')
+    list_editable       = ('is_active', 'is_featured', 'order')
+    list_filter         = ('is_active', 'is_featured')
+    search_fields       = ('title', 'short_description')
     prepopulated_fields = {'slug': ('title',)}
+    inlines             = [ServiceFeatureInline]
+    fieldsets = (
+        ('Basics', {
+            'fields': ('title', 'slug', 'icon', 'color', 'short_description', 'description')
+        }),
+        ('Media', {
+            'fields': ('image', 'banner')
+        }),
+        ('Call To Action', {
+            'fields': ('price_info', 'cta_text', 'cta_link')
+        }),
+        ('Display', {
+            'fields': ('is_active', 'is_featured', 'order')
+        }),
+        ('SEO', {
+            'classes': ('collapse',),
+            'fields': ('meta_title', 'meta_description', 'meta_keywords')
+        }),
+    )
+
+
+@admin.register(ServiceInquiry)
+class ServiceInquiryAdmin(ExportCsvMixin, admin.ModelAdmin):
+    list_display  = ('name', 'service', 'phone', 'city', 'status', 'created_at')
+    list_filter   = ('status', 'service', 'created_at')
+    list_editable = ('status',)
+    search_fields = ('name', 'email', 'phone', 'message')
+    readonly_fields = ('created_at',)
+    date_hierarchy  = 'created_at'
+    actions         = ['export_as_csv']
 
 
 @admin.register(ServingArea)
 class ServingAreaAdmin(admin.ModelAdmin):
-    list_display = ('city', 'state', 'is_active', 'is_featured')
-    list_editable = ('is_active', 'is_featured')
+    list_display        = ('city', 'state', 'contact_phone', 'is_active', 'is_featured')
+    list_editable       = ('is_active', 'is_featured')
+    list_filter         = ('state', 'is_active', 'is_featured')
+    search_fields       = ('city', 'pincodes')
     prepopulated_fields = {'slug': ('city',)}
-
-
-@admin.register(HomepageBanner)
-class HomepageBannerAdmin(admin.ModelAdmin):
-    list_display = ('title', 'is_active', 'order', '_preview')
-    list_editable = ('is_active', 'order')
-    readonly_fields = ('created_at', 'updated_at', '_preview')
     fieldsets = (
-        ('Content', {'fields': ('title', 'subtitle', 'link', 'link_text')}),
-        ('Images', {'fields': ('image', 'image_mobile', '_preview')}),
-        ('Badge', {'fields': ('badge_text', 'badge_color')}),
-        ('Status', {'fields': ('is_active', 'order', 'created_at', 'updated_at')}),
+        ('Location', {'fields': ('city', 'slug', 'state', 'description')}),
+        ('Contact', {'fields': ('contact_phone', 'contact_email', 'address', 'pincodes')}),
+        ('Map & SEO', {'fields': ('map_embed', 'meta_title', 'meta_description')}),
+        ('Display', {'fields': ('is_active', 'is_featured')}),
     )
 
-    def _preview(self, obj):
-        if obj.image:
-            return format_html(
-                '<img src="{}" width="100" height="auto" style="border-radius: 4px;" />',
-                obj.image.url
-            )
-        return 'No image'
-    _preview.short_description = 'Preview'
 
-
-@admin.register(HomepageSection)
-class HomepageSectionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'section_type', 'is_active', 'order')
-    list_editable = ('is_active', 'order')
-    list_filter = ('section_type', 'is_active')
-    readonly_fields = ('created_at', 'updated_at')
+@admin.register(FlatPage)
+class FlatPageAdmin(admin.ModelAdmin):
+    list_display        = ('title', 'slug', 'show_in_footer', 'is_active', 'order', 'updated_at')
+    list_editable       = ('show_in_footer', 'is_active', 'order')
+    search_fields       = ('title', 'content')
+    prepopulated_fields = {'slug': ('title',)}
     fieldsets = (
-        ('Identity', {'fields': ('name', 'section_type')}),
-        ('Content', {'fields': ('title', 'subtitle', 'content'), 'classes': ('wide',)}),
-        ('Display', {'fields': ('template', 'is_active', 'order')}),
-        ('Metadata', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
+        ('Content', {'fields': ('title', 'slug', 'icon', 'content')}),
+        ('Display', {'fields': ('show_in_footer', 'is_active', 'order')}),
+        ('SEO', {'classes': ('collapse',), 'fields': ('meta_title', 'meta_description', 'meta_keywords')}),
     )
 
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        if db_field.name == 'content':
-            kwargs['widget'] = admin.widgets.AdminTextareaWidget()
-        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
-    class Media:
-        js = ('js/admin_draggable.js',)
+class GeneralFAQInline(admin.TabularInline):
+    model  = GeneralFAQ
+    extra  = 1
+    fields = ('question', 'answer', 'order', 'is_active')
 
+
+@admin.register(FAQCategory)
+class FAQCategoryAdmin(admin.ModelAdmin):
+    list_display        = ('name', 'order', 'is_active')
+    list_editable       = ('order', 'is_active')
+    prepopulated_fields = {'slug': ('name',)}
+    inlines             = [GeneralFAQInline]
+
+
+@admin.register(GeneralFAQ)
+class GeneralFAQAdmin(admin.ModelAdmin):
+    list_display  = ('question', 'category', 'order', 'is_active')
+    list_editable = ('order', 'is_active')
+    list_filter   = ('category', 'is_active')
+    search_fields = ('question', 'answer')

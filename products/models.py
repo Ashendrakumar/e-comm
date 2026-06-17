@@ -3,6 +3,7 @@ from django.utils.text import slugify
 from django.urls import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
+from core.validators import validate_image_file
 import uuid
 
 
@@ -120,6 +121,14 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['is_active', 'is_featured']),
+            models.Index(fields=['is_active', 'is_trending']),
+            models.Index(fields=['is_active', '-created_at']),
+            models.Index(fields=['category', 'is_active']),
+            models.Index(fields=['brand', 'is_active']),
+            models.Index(fields=['price']),
+        ]
 
     def __str__(self):
         return self.name
@@ -193,7 +202,7 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product    = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image      = models.ImageField(upload_to='products/')
+    image      = models.ImageField(upload_to='products/', validators=[validate_image_file])
     alt_text   = models.CharField(max_length=200, blank=True)
     is_primary = models.BooleanField(default=False)
     order      = models.PositiveIntegerField(default=0)
@@ -263,7 +272,7 @@ class Review(models.Model):
 
 
 class ReviewImage(models.Model):
-    image      = models.ImageField(upload_to='reviews/')
+    image      = models.ImageField(upload_to='reviews/', validators=[validate_image_file])
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self): return f'Review image {self.pk}'
