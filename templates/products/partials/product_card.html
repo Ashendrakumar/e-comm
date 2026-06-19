@@ -1,34 +1,34 @@
 {% load static %}
-<div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative flex flex-col">
+<div class="product-card bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden group hover:shadow-2xl hover:shadow-primary-500/10 hover:border-primary-200 dark:hover:border-primary-800 hover:-translate-y-1.5 transition-all duration-300 relative flex flex-col {% if not product.is_in_stock %}opacity-90{% endif %}">
 
   <!-- Badges -->
   <div class="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+    {% if product.discount_percent %}
+    <span class="badge bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-sm shadow-red-500/30">-{{ product.discount_percent }}%</span>
+    {% endif %}
     {% if product.is_new_arrival %}
     <span class="badge bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">New</span>
-    {% endif %}
-    {% if product.discount_percent %}
-    <span class="badge bg-red-100 text-red-600 dark:bg-red-900/60 dark:text-red-300">-{{ product.discount_percent }}%</span>
     {% endif %}
     {% if product.is_trending %}
     <span class="badge bg-orange-100 text-orange-600 dark:bg-orange-900/60 dark:text-orange-300">🔥 Hot</span>
     {% endif %}
     {% if not product.is_in_stock %}
-    <span class="badge bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400">Out of Stock</span>
+    <span class="badge bg-gray-700 text-white dark:bg-gray-200 dark:text-gray-900">Sold Out</span>
     {% endif %}
   </div>
 
   <!-- Wishlist -->
-  <button class="wishlist-btn absolute top-3 right-3 z-10 w-8 h-8 bg-white dark:bg-gray-800 rounded-full shadow-md flex items-center justify-center text-gray-400 hover:text-red-500 hover:scale-110 transition-all"
-          data-product="{{ product.pk }}" title="Add to wishlist">
-    <i class="ti ti-heart text-sm"></i>
+  <button class="wishlist-btn absolute top-3 right-3 z-10 w-9 h-9 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center text-gray-400 hover:text-red-500 hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100"
+          data-product="{{ product.pk }}" title="Add to wishlist" aria-label="Add to wishlist">
+    <i class="ti ti-heart text-base"></i>
   </button>
 
   <!-- Image -->
-  <a href="{{ product.get_absolute_url }}" class="card-img block aspect-[4/3] bg-gray-50 dark:bg-gray-800 overflow-hidden flex-shrink-0">
+  <a href="{{ product.get_absolute_url }}" class="card-img block aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 overflow-hidden flex-shrink-0 relative">
     {% if product.primary_image %}
     <img src="{{ product.primary_image.image.url }}"
          alt="{{ product.primary_image.alt_text|default:product.name }}"
-         class="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500"
+         class="w-full h-full object-contain p-3 group-hover:scale-110 transition-transform duration-500 ease-out {% if not product.is_in_stock %}grayscale{% endif %}"
          loading="lazy">
     {% else %}
     <div class="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-700">
@@ -60,7 +60,7 @@
     {% endif %}
 
     <a href="{{ product.get_absolute_url }}" class="block">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 mb-2 hover:text-primary-600 transition-colors leading-snug">
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 line-clamp-2 mb-2 hover:text-primary-600 dark:hover:text-primary-400 transition-colors leading-snug">
         {{ product.name }}
       </h3>
     </a>
@@ -82,17 +82,24 @@
     {% endif %}
 
     <!-- Price -->
-    <div class="flex items-center gap-2 mt-auto pt-2">
-      {% if product.sale_price %}
-      <span class="text-base font-extrabold text-gray-900 dark:text-white">₹{{ product.sale_price|floatformat:0 }}</span>
-      <span class="text-xs text-gray-400 line-through">₹{{ product.price|floatformat:0 }}</span>
-      {% else %}
-      <span class="text-base font-extrabold text-gray-900 dark:text-white">₹{{ product.price|floatformat:0 }}</span>
-      {% endif %}
+    <div class="mt-auto pt-2">
+      <div class="flex items-baseline gap-2 flex-wrap">
+        {% if product.sale_price %}
+        <span class="text-lg font-extrabold text-gray-900 dark:text-white">₹{{ product.sale_price|floatformat:0 }}</span>
+        <span class="text-xs text-gray-400 line-through">₹{{ product.price|floatformat:0 }}</span>
+        {% if product.savings_amount %}
+        <span class="text-[11px] font-semibold text-green-600 dark:text-green-400">Save ₹{{ product.savings_amount|floatformat:0 }}</span>
+        {% endif %}
+        {% else %}
+        <span class="text-lg font-extrabold text-gray-900 dark:text-white">₹{{ product.price|floatformat:0 }}</span>
+        {% endif %}
+      </div>
     </div>
 
     {% if product.is_low_stock %}
-    <p class="text-[11px] text-orange-500 font-semibold mt-1">Only {{ product.stock }} left!</p>
+    <p class="text-[11px] text-orange-500 font-semibold mt-1 flex items-center gap-1">
+      <i class="ti ti-flame text-xs"></i> Only {{ product.stock }} left!
+    </p>
     {% endif %}
   </div>
 </div>
