@@ -9,13 +9,15 @@
       </a>
       {% endif %}
       {% if site_settings.email %}
-      <a href="mailto:{{ site_settings.email }}" class="flex items-center gap-1.5 hover:text-blue-200 transition-colors">
+      <a href="mailto:{{ site_settings.email }}"
+        class="flex items-center gap-1.5 hover:text-blue-200 transition-colors">
         <i class="ti ti-mail text-sm"></i> {{ site_settings.email }}
       </a>
       {% endif %}
     </div>
     <div class="flex items-center gap-4">
-      {% if site_settings.working_hours %}<span class="flex items-center gap-1.5"><i class="ti ti-clock text-sm"></i> {{ site_settings.working_hours }}</span>{% endif %}
+      {% if site_settings.working_hours %}<span class="flex items-center gap-1.5"><i class="ti ti-clock text-sm"></i>
+        {{ site_settings.working_hours }}</span>{% endif %}
       {% for sl in social_links %}
       <a href="{{ sl.url }}" target="_blank" rel="noopener" class="hover:text-blue-200 transition-colors">
         <i class="ti {{ sl.get_icon_class }} text-sm"></i>
@@ -26,61 +28,68 @@
 </div>
 
 <!-- Sticky Header -->
-<header class="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800" id="main-header">
+<header class="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800"
+  id="main-header">
   <div class="max-w-7xl mx-auto px-4">
     <div class="flex items-center h-16 gap-4">
 
       <!-- Logo -->
       <a href="{% url 'core:homepage' %}" class="flex items-center gap-2 flex-shrink-0">
         {% if site_settings.logo %}
-          <img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" class="h-9 w-auto">
+        <img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" class="h-9 w-auto">
         {% else %}
-          <div class="flex items-center gap-2">
-            <div class="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
-              <i class="ti ti-cpu text-white text-lg"></i>
-            </div>
-            <span class="font-bold text-lg text-primary-600 dark:text-primary-400 tracking-tight hidden sm:block">TechZone</span>
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+            <i class="ti ti-cpu text-white text-lg"></i>
           </div>
+          <span
+            class="font-bold text-lg text-primary-600 dark:text-primary-400 tracking-tight hidden sm:block">TechZone</span>
+        </div>
         {% endif %}
       </a>
 
       <!-- Search -->
       <form action="{% url 'products:list' %}" method="get" class="flex-1 max-w-xl hidden md:flex">
-        <div class="flex w-full rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden focus-within:border-primary-500 focus-within:shadow-md transition-all bg-white dark:bg-gray-800">
-          <input type="text" name="q" value="{{ request.GET.q }}"
-            placeholder="Search products, brands, categories..."
+        <div
+          class="flex w-full rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden focus-within:border-primary-500 focus-within:shadow-md transition-all bg-white dark:bg-gray-800">
+          <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search products, brands, categories..."
             class="flex-1 px-4 py-2.5 text-sm bg-transparent outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400">
-          <button type="submit" aria-label="Search" class="px-4 bg-primary-600 text-white hover:bg-primary-700 transition-colors flex items-center">
+          <!-- <button type="submit" aria-label="Search" class="px-4 bg-primary-600 text-white hover:bg-primary-700 transition-colors flex items-center">
             <i class="ti ti-search text-sm" aria-hidden="true"></i>
-          </button>
+          </button> -->
         </div>
       </form>
 
       <!-- Right actions -->
       <div class="flex items-center gap-2 ml-auto">
-        <button onclick="toggleDark()" aria-label="Toggle dark mode" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400" title="Toggle theme">
+        <button onclick="toggleDark()" aria-label="Toggle dark mode"
+          class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-400"
+          title="Toggle theme">
           <i class="ti ti-sun text-lg dark:hidden" aria-hidden="true"></i>
           <i class="ti ti-moon text-lg hidden dark:block" aria-hidden="true"></i>
         </button>
         {% if site_settings.whatsapp %}
         <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank"
-           class="hidden md:flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors">
+          class="hidden md:flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-xl text-sm font-medium transition-colors">
           <i class="ti ti-brand-whatsapp"></i>
           <span class="hidden lg:inline">WhatsApp</span>
         </a>
         {% endif %}
         {% if user.is_authenticated %}
-        <a href="/admin/" class="hidden md:flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors">
+        <a href="/admin/"
+          class="hidden md:flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors">
           <i class="ti ti-user-circle text-lg"></i>
           <span class="hidden lg:inline">{{ user.get_short_name|default:user.username }}</span>
         </a>
         {% else %}
-        <a href="/admin/" class="hidden md:flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors">
+        <a href="/admin/"
+          class="hidden md:flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors">
           <i class="ti ti-login text-lg"></i>
           <span class="hidden lg:inline">Sign In</span>
         </a>
         {% endif %}
-        <button onclick="toggleMobileMenu()" aria-label="Open menu" aria-controls="mobile-menu" class="md:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+        <button onclick="toggleMobileMenu()" aria-label="Open menu" aria-controls="mobile-menu"
+          class="md:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <i class="ti ti-menu-2 text-xl text-gray-700 dark:text-gray-300" aria-hidden="true"></i>
         </button>
       </div>
@@ -91,35 +100,40 @@
 
       <!-- All Products -->
       <a href="{% url 'products:list' %}"
-         class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
+        class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50  dark:hover:bg-gray-800 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
         <i class="ti ti-layout-grid text-sm"></i> All Products
       </a>
 
       <!-- Categories with mega-menu -->
       <div class="relative group">
         <a href="{% url 'products:categories' %}"
-           class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
+          class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50  dark:hover:bg-gray-800 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
           <i class="ti ti-category text-sm"></i> Categories <i class="ti ti-chevron-down text-xs ml-0.5 opacity-60"></i>
         </a>
         <!-- Mega dropdown -->
-        <div class="absolute top-full left-0 hidden group-hover:block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl min-w-[520px] p-5 z-50">
+        <div
+          class="absolute top-full left-0 hidden group-hover:block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl min-w-[520px] p-5 z-50">
           <div class="grid grid-cols-3 gap-2">
-            {% for cat in nav_categories %}
+            {% for cat in categories %}
             <a href="{{ cat.get_absolute_url }}"
-               class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-950 group/item transition-colors">
+              class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-primary-50  dark:hover:bg-gray-800 group/item transition-colors">
               <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                   style="background:{{ cat.color|default:'#2563eb' }}20;">
-                <i class="ti {{ cat.icon|default:'ti-tag' }} text-sm" style="color:{{ cat.color|default:'#2563eb' }};"></i>
+                style="background:{{ cat.color|default:'#2563eb' }}20;">
+                <i class="ti {{ cat.icon|default:'ti-tag' }} text-sm"
+                  style="color:{{ cat.color|default:'#2563eb' }};"></i>
               </div>
               <div>
-                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover/item:text-primary-600 transition-colors leading-tight">{{ cat.name }}</p>
+                <p
+                  class="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover/item:text-primary-600 transition-colors leading-tight">
+                  {{ cat.name }}</p>
                 <p class="text-[11px] text-gray-400">{{ cat.total_product_count }} items</p>
               </div>
             </a>
             {% endfor %}
           </div>
           <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
-            <a href="{% url 'products:categories' %}" class="flex items-center justify-center gap-2 text-sm text-primary-600 font-semibold hover:underline">
+            <a href="{% url 'products:categories' %}"
+              class="flex items-center justify-center gap-2 text-sm text-primary-600 font-semibold hover:underline">
               View All Categories <i class="ti ti-arrow-right text-xs"></i>
             </a>
           </div>
@@ -130,17 +144,18 @@
       {% for cat in nav_categories %}
       <div class="relative group">
         <a href="{{ cat.get_absolute_url }}"
-           class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
+          class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50  dark:hover:bg-gray-800 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
           {% if cat.icon %}<i class="ti {{ cat.icon }} text-sm"></i>{% endif %}
           {{ cat.name }}
           {% if cat.children.count %}<i class="ti ti-chevron-down text-xs ml-0.5 opacity-60"></i>{% endif %}
         </a>
         {% if cat.children.count %}
-        <div class="absolute top-full left-0 hidden group-hover:block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl min-w-48 py-2 z-50">
+        <div
+          class="absolute top-full left-0 hidden group-hover:block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl min-w-48 py-2 z-50">
           {% for child in cat.children.all %}
           {% if child.is_active %}
           <a href="{{ child.get_absolute_url }}"
-             class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 transition-colors">
+            class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-gray-800 transition-colors">
             {% if child.icon %}<i class="ti {{ child.icon }} text-sm text-gray-400"></i>{% endif %}
             {{ child.name }}
             <span class="ml-auto text-[11px] text-gray-400">{{ child.product_count }}</span>
@@ -148,7 +163,8 @@
           {% endif %}
           {% endfor %}
           <div class="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
-            <a href="{{ cat.get_absolute_url }}" class="flex items-center gap-2 px-4 py-2 text-xs text-primary-600 font-semibold hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors">
+            <a href="{{ cat.get_absolute_url }}"
+              class="flex items-center gap-2 px-4 py-2 text-xs text-primary-600 font-semibold hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors">
               All {{ cat.name }} <i class="ti ti-arrow-right text-xs"></i>
             </a>
           </div>
@@ -157,13 +173,16 @@
       </div>
       {% endfor %}
 
-      <a href="{% url 'pages:services' %}" class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
+      <a href="{% url 'pages:services' %}"
+        class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50  dark:hover:bg-gray-800 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
         <i class="ti ti-tool text-sm"></i> Services
       </a>
-      <a href="{% url 'blog:list' %}" class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
+      <a href="{% url 'blog:list' %}"
+        class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50  dark:hover:bg-gray-800 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
         <i class="ti ti-news text-sm"></i> Blog
       </a>
-      <a href="{% url 'core:contact' %}" class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
+      <a href="{% url 'core:contact' %}"
+        class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 hover:bg-primary-50  dark:hover:bg-gray-800 transition-colors border-b-2 border-transparent hover:border-primary-500 whitespace-nowrap">
         <i class="ti ti-headset text-sm"></i> Contact
       </a>
     </nav>
@@ -182,41 +201,50 @@
     </div>
     <form action="{% url 'products:list' %}" method="get" class="p-4 border-b border-gray-100 dark:border-gray-800">
       <div class="flex rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <input type="text" name="q" placeholder="Search products..." class="flex-1 px-3 py-2.5 text-sm bg-transparent outline-none dark:text-gray-300">
+        <input type="text" name="q" placeholder="Search products..."
+          class="flex-1 px-3 py-2.5 text-sm bg-transparent outline-none dark:text-gray-300">
         <button type="submit" class="px-4 bg-primary-600 text-white"><i class="ti ti-search text-sm"></i></button>
       </div>
     </form>
     <nav class="flex-1 py-2">
-      <a href="{% url 'products:list' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
+      <a href="{% url 'products:list' %}"
+        class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
         <i class="ti ti-layout-grid text-gray-400"></i> All Products
       </a>
-      <a href="{% url 'products:categories' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
+      <a href="{% url 'products:categories' %}"
+        class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
         <i class="ti ti-category text-gray-400"></i> All Categories
       </a>
       {% for cat in nav_categories %}
-      <a href="{{ cat.get_absolute_url }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
+      <a href="{{ cat.get_absolute_url }}"
+        class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
         <i class="ti {{ cat.icon|default:'ti-tag' }} text-gray-400"></i>
         <span>{{ cat.name }}</span>
-        <span class="ml-auto text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{{ cat.total_product_count }}</span>
+        <span class="ml-auto text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{{
+          cat.total_product_count }}</span>
       </a>
       {% endfor %}
-      <a href="{% url 'pages:services' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
+      <a href="{% url 'pages:services' %}"
+        class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
         <i class="ti ti-tool text-gray-400"></i> Services
       </a>
-      <a href="{% url 'blog:list' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
+      <a href="{% url 'blog:list' %}"
+        class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
         <i class="ti ti-news text-gray-400"></i> Blog &amp; News
       </a>
-      <a href="{% url 'pages:faqs' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
+      <a href="{% url 'pages:faqs' %}"
+        class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
         <i class="ti ti-help-circle text-gray-400"></i> FAQs
       </a>
-      <a href="{% url 'core:contact' %}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800">
+      <a href="{% url 'core:contact' %}"
+        class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800">
         <i class="ti ti-headset text-gray-400"></i> Contact Us
       </a>
     </nav>
     {% if site_settings.whatsapp %}
     <div class="p-4 border-t border-gray-200 dark:border-gray-800">
       <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank"
-         class="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-medium transition-colors text-sm">
+        class="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-medium transition-colors text-sm">
         <i class="ti ti-brand-whatsapp"></i> Chat on WhatsApp
       </a>
     </div>

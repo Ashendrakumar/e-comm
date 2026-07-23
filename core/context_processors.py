@@ -15,7 +15,11 @@ def _build_nav_context():
         'nav_categories': list(Category.objects
                                .filter(is_active=True, parent=None, show_in_nav=True)
                                .prefetch_related('children')
-                               .order_by('order', 'name')[:10]),
+                               .order_by('order', 'name')[:5]),
+                                'categories': list(Category.objects
+                               .filter(is_active=True, parent=None)
+                               .prefetch_related('children')
+                               .order_by('order', 'name')[:12]),
         'featured_brands': list(Brand.objects.filter(is_featured=True, is_active=True)[:8]),
         'social_links':    list(SocialLink.objects.filter(is_active=True)),
         'footer_pages':    list(FlatPage.objects.filter(is_active=True, show_in_footer=True).order_by('order')),
