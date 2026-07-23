@@ -91,21 +91,7 @@
         <!-- If no subcategories, show featured products from this category -->
         {% with featured=cat.get_featured_products %}
         {% for product in featured|slice:":4" %}
-        <a href="{{ product.get_absolute_url }}"
-           class="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:shadow-md hover:-translate-y-1 transition-all overflow-hidden">
-          <div class="aspect-square bg-gray-50 dark:bg-gray-800 p-2 flex items-center justify-center">
-            {% if product.primary_image %}
-            <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}"
-                 class="h-full object-contain group-hover:scale-105 transition-transform" loading="lazy">
-            {% else %}
-            <i class="ti ti-photo-off text-2xl text-gray-300"></i>
-            {% endif %}
-          </div>
-          <div class="p-2">
-            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 line-clamp-1">{{ product.name }}</p>
-            <p class="text-xs font-bold text-primary-600 mt-0.5">₹{{ product.effective_price|floatformat:0 }}</p>
-          </div>
-        </a>
+        {% include "products/partials/product_card.html" %}
         {% endfor %}
         {% endwith %}
         {% endfor %}

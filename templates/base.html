@@ -149,19 +149,13 @@ document.querySelectorAll('.product-swiper').forEach(el=>{
 if(document.querySelector('.brand-swiper')){
   new Swiper('.brand-swiper',{slidesPerView:3,spaceBetween:16,autoplay:{delay:2500},loop:true,breakpoints:{480:{slidesPerView:4},768:{slidesPerView:6},1024:{slidesPerView:8}}});
 }
-// Wishlist toggle
-document.querySelectorAll('.wishlist-btn').forEach(btn=>{
-  btn.addEventListener('click',async(e)=>{
-    e.preventDefault();
-    const pid=btn.dataset.product;
-    const res=await fetch(`/products/ajax/wishlist/toggle/${pid}/`,{method:'POST',headers:{'X-CSRFToken':csrfToken,'X-Requested-With':'XMLHttpRequest'}});
-    const data=await res.json();
-    const icon=btn.querySelector('i');
-    if(data.status==='added'){icon.classList.add('text-red-500');btn.setAttribute('title','Remove from wishlist')}
-    else{icon.classList.remove('text-red-500');btn.setAttribute('title','Add to wishlist')}
-  });
-});
+// Expose CSRF token globally for shared product-card scripts.
+window.csrfToken=csrfToken;
 </script>
+
+{# Shared product-card behaviour (Quick View · Compare · Wishlist) — available on every page #}
+{% include "products/partials/product_card_scripts.html" %}
+
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>

@@ -697,6 +697,11 @@
       <div id="inquiry-msg" class="hidden text-sm font-semibold p-3 rounded-xl text-center"></div>
     </form>
   </div>
+</div>
+<!-- ═══ END INQUIRY MODAL ══════════════════════════════════════ -->
+
+<!-- ═══ RELATED PRODUCT SECTIONS ═══════════════════════════════ -->
+<div class="max-w-7xl mx-auto px-4 pb-16">
 
   <!-- ═══ MODULE 5 — FREQUENTLY VIEWED TOGETHER ═══════════════ -->
   {% if fvt_products %}
@@ -1011,36 +1016,8 @@ async function toggleWishlistBtn(btn){
   }catch{ showToast('Something went wrong','error'); }
 }
 
-// ── Compare (reuse module 3 logic) ────────────────────────
-let compareItems = JSON.parse(localStorage.getItem('tzCompare')||'[]');
-function toggleCompare(id,name){
-  const idx = compareItems.findIndex(p=>p.id===id);
-  const btn = document.querySelector(`.compare-btn[data-id="${id}"]`);
-  if(idx>-1){
-    compareItems.splice(idx,1);
-    if(btn){ btn.classList.remove('text-primary-600','border-primary-400','bg-primary-50'); }
-    showToast('Removed from compare','info');
-  } else {
-    if(compareItems.length>=3){ showToast('Max 3 products for comparison','warning'); return; }
-    compareItems.push({id,name});
-    if(btn){ btn.classList.add('text-primary-600','border-primary-400','bg-primary-50','dark:bg-primary-950'); }
-    showToast(`Added to compare! <a href="/products/compare/?${compareItems.map(p=>'ids='+p.id).join('&')}" class="underline font-bold">Compare now →</a>`,'success');
-  }
-  localStorage.setItem('tzCompare',JSON.stringify(compareItems));
-}
-compareItems.forEach(item=>{
-  const btn=document.querySelector(`.compare-btn[data-id="${item.id}"]`);
-  if(btn) btn.classList.add('text-primary-600','border-primary-400','bg-primary-50','dark:bg-primary-950');
-});
-
-// ── Toast ──────────────────────────────────────────────────
-function showToast(msg,type='info'){
-  const colors={success:'bg-green-500',error:'bg-red-500',warning:'bg-orange-500',info:'bg-primary-600'};
-  const t=document.createElement('div');
-  t.className=`fixed top-20 right-4 z-[9999] ${colors[type]||colors.info} text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold max-w-xs`;
-  t.innerHTML=msg;
-  document.body.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},4000);
-}
+// Compare (toggleCompare / compare bar) and showToast() are provided globally by
+// products/partials/product_card_scripts.html — the compare button on this page
+// (.compare-btn[data-id]) is styled by the shared updateCompareUI() automatically.
 </script>
 {% endblock %}

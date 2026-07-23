@@ -20,12 +20,7 @@
 #product-grid.list-mode .product-card .card-img{width:140px!important;min-width:140px!important;flex-shrink:0!important;aspect-ratio:unset!important;}
 #product-grid.list-mode .product-card .card-actions{display:none!important;}
 #product-grid.list-mode .product-card .card-info{flex:1;padding:14px!important;}
-/* ── Quick view modal ─────────────────────── */
-#qv-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
-#qv-modal.open{display:flex;}
-/* ── Compare bar ──────────────────────────── */
-#compare-bar{transform:translateY(100%);transition:transform .3s ease;z-index:40;}
-#compare-bar.show{transform:translateY(0);}
+/* Quick-view modal & compare-bar styles are shared — see products/partials/product_card_scripts.html */
 /* ── Skeleton ─────────────────────────────── */
 .skeleton{background:linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%);background-size:200% 100%;animation:shimmer 1.3s infinite;border-radius:12px;}
 .dark .skeleton{background:linear-gradient(90deg,#1f2937 25%,#374151 50%,#1f2937 75%);background-size:200% 100%;}
@@ -359,63 +354,13 @@
   </div>
 </div>
 
-<!-- ═══ QUICK VIEW MODAL ════════════════════════════════════ -->
-<div id="qv-modal" onclick="if(event.target===this)closeQV()">
-  <div class="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto fade-in">
-    <button onclick="closeQV()"
-            class="absolute top-4 right-4 z-10 w-9 h-9 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-      <i class="ti ti-x text-sm text-gray-600 dark:text-gray-400"></i>
-    </button>
-    <div id="qv-content" class="p-6 md:p-8">
-      <div class="flex items-center justify-center h-48">
-        <div class="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ COMPARE BAR ═════════════════════════════════════════ -->
-<div id="compare-bar" class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t-2 border-primary-500 shadow-2xl py-3 px-4">
-  <div class="max-w-7xl mx-auto flex items-center gap-4 flex-wrap">
-    <p class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 flex-shrink-0">
-      <i class="ti ti-arrows-diff text-primary-600 text-lg"></i>
-      Compare <span id="cmp-count" class="text-primary-600">(0/3)</span>
-    </p>
-    <div class="flex gap-3 flex-1 min-w-0" id="cmp-slots">
-      {% for i in "123" %}
-      <div class="cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 min-w-[120px] h-10">
-        <span class="cmp-name text-xs truncate">Empty slot</span>
-      </div>
-      {% endfor %}
-    </div>
-    <div class="flex gap-2 flex-shrink-0">
-      <button onclick="clearCompare()" class="btn-outline text-sm py-2 px-4 rounded-xl">Clear</button>
-      <button onclick="goCompare()" id="cmp-go-btn" disabled
-              class="btn-primary text-sm py-2 px-5 rounded-xl opacity-50 cursor-not-allowed">
-        Compare Now
-      </button>
-    </div>
-  </div>
-</div>
+{# Quick View modal & Compare bar are provided globally by products/partials/product_card_scripts.html #}
 
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-// ── CSRF ───────────────────────────────────────────────────────────
-const CSRF = document.cookie.split(';').reduce((a,c)=>{
-  const[k,v]=c.trim().split('=');return k==='csrftoken'?decodeURIComponent(v):a;},'');
-
-// ── Toast ──────────────────────────────────────────────────────────
-function showToast(msg, type='info'){
-  const colors={success:'bg-green-500',error:'bg-red-500',warning:'bg-orange-500',info:'bg-primary-600'};
-  const t=document.createElement('div');
-  t.className=`fixed top-20 right-4 z-[9999] ${colors[type]||colors.info} text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold fade-in flex items-center gap-2 max-w-xs`;
-  const icons={success:'ti-circle-check',error:'ti-circle-x',warning:'ti-alert-triangle',info:'ti-info-circle'};
-  t.innerHTML=`<i class="ti ${icons[type]||icons.info} text-base flex-shrink-0"></i><span>${msg}</span>`;
-  document.body.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3500);
-}
+// showToast() and CSRF are provided globally by products/partials/product_card_scripts.html
 
 // ── Grid / List toggle ─────────────────────────────────────────────
 function setView(v){
@@ -488,132 +433,8 @@ document.querySelectorAll('#filter-form input[type=checkbox], #filter-form input
   el.addEventListener('change',()=>doAjaxFilter());
 });
 
-// ── Quick View ─────────────────────────────────────────────────────
-async function openQV(slug){
-  const modal=document.getElementById('qv-modal');
-  const content=document.getElementById('qv-content');
-  modal.classList.add('open');
-  document.body.style.overflow='hidden';
-  content.innerHTML='<div class="flex items-center justify-center h-48"><div class="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div></div>';
-  try{
-    const res=await fetch(`/products/ajax/quick-view/${slug}/`,{headers:{'X-Requested-With':'XMLHttpRequest'}});
-    content.innerHTML=await res.text();
-  }catch{content.innerHTML='<p class="text-center text-gray-500 py-12">Could not load product details.</p>';}
-}
-function closeQV(){
-  document.getElementById('qv-modal').classList.remove('open');
-  document.body.style.overflow='';
-}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeQV();});
-// Global alias used by product cards
-function openQuickView(slug){openQV(slug);}
-
-// ── Compare ────────────────────────────────────────────────────────
-let compareItems=JSON.parse(localStorage.getItem('tzCompare')||'[]');
-
-function updateCompareUI(){
-  const slots=document.querySelectorAll('.cmp-slot');
-  const countEl=document.getElementById('cmp-count');
-  const goBtn=document.getElementById('cmp-go-btn');
-  countEl.textContent=`(${compareItems.length}/3)`;
-  goBtn.disabled=compareItems.length<2;
-  goBtn.className=compareItems.length>=2
-    ?'btn-primary text-sm py-2 px-5 rounded-xl'
-    :'btn-primary text-sm py-2 px-5 rounded-xl opacity-50 cursor-not-allowed';
-
-  slots.forEach((slot,i)=>{
-    const nameEl=slot.querySelector('.cmp-name');
-    if(compareItems[i]){
-      slot.className='cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-primary-50 dark:bg-primary-950 rounded-xl text-sm border-2 border-primary-300 dark:border-primary-700 min-w-[120px] h-10';
-      nameEl.className='cmp-name text-xs font-semibold text-primary-700 dark:text-primary-300 truncate flex-1';
-      nameEl.textContent=compareItems[i].name;
-      // Add remove btn
-      let rmBtn=slot.querySelector('.cmp-rm');
-      if(!rmBtn){
-        rmBtn=document.createElement('button');
-        rmBtn.className='cmp-rm flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-primary-200 dark:bg-primary-800 hover:bg-red-200 dark:hover:bg-red-800 transition-colors';
-        rmBtn.innerHTML='<i class="ti ti-x text-[10px] text-primary-600 dark:text-primary-400"></i>';
-        slot.appendChild(rmBtn);
-      }
-      const itemId=compareItems[i].id;
-      rmBtn.onclick=()=>toggleCompare(itemId,'');
-    } else {
-      slot.className='cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 min-w-[120px] h-10';
-      nameEl.className='cmp-name text-xs truncate';
-      nameEl.textContent='Empty slot';
-      const rmBtn=slot.querySelector('.cmp-rm');
-      if(rmBtn) rmBtn.remove();
-    }
-  });
-
-  // Show/hide bar
-  const bar=document.getElementById('compare-bar');
-  if(compareItems.length>0) bar.classList.add('show');
-  else bar.classList.remove('show');
-
-  // Update compare buttons on cards
-  document.querySelectorAll('.compare-btn').forEach(btn=>{
-    const id=btn.dataset.id;
-    const active=compareItems.some(p=>p.id===id);
-    btn.classList.toggle('text-primary-600',active);
-    btn.classList.toggle('dark:text-primary-400',active);
-    btn.classList.toggle('bg-primary-50',active);
-    btn.classList.toggle('dark:bg-primary-950',active);
-  });
-}
-
-function toggleCompare(id,name){
-  const idx=compareItems.findIndex(p=>p.id===id);
-  if(idx>-1){
-    compareItems.splice(idx,1);
-    showToast('Removed from compare','info');
-  } else {
-    if(compareItems.length>=3){showToast('Max 3 products for comparison','warning');return;}
-    compareItems.push({id,name});
-    showToast('Added to compare','success');
-  }
-  localStorage.setItem('tzCompare',JSON.stringify(compareItems));
-  updateCompareUI();
-}
-
-function clearCompare(){
-  compareItems=[];
-  localStorage.setItem('tzCompare','[]');
-  updateCompareUI();
-  showToast('Compare list cleared','info');
-}
-
-function goCompare(){
-  if(compareItems.length<2){showToast('Select at least 2 products','warning');return;}
-  window.location.href='/products/compare/?'+compareItems.map(p=>'ids='+p.id).join('&');
-}
-
-// Init compare on page load
-updateCompareUI();
-
-// ── Wishlist ───────────────────────────────────────────────────────
-document.addEventListener('click',async e=>{
-  const btn=e.target.closest('.wishlist-btn');
-  if(!btn)return; e.preventDefault();
-  const pid=btn.dataset.product;
-  try{
-    const res=await fetch(`/products/ajax/wishlist/toggle/${pid}/`,{
-      method:'POST',
-      headers:{'X-CSRFToken':CSRF,'X-Requested-With':'XMLHttpRequest'}
-    });
-    if(res.status===302||res.url.includes('login')){
-      showToast('Sign in to save wishlist items','info'); return;
-    }
-    const data=await res.json();
-    const icon=btn.querySelector('i');
-    if(data.status==='added'){
-      icon.className='ti ti-heart-filled text-red-500 text-sm';
-      showToast('Added to wishlist ❤️','success');
-    } else {
-      icon.className='ti ti-heart text-sm';
-      showToast('Removed from wishlist','info');
-    }
-  }catch{showToast('Something went wrong','error');}
-});
+// Quick View, Compare and Wishlist behaviour is shared globally
+// (see products/partials/product_card_scripts.html). doAjaxFilter() above
+// calls the global updateCompareUI() after injecting new cards.
 </script>
 {% endblock %}
