@@ -6,26 +6,66 @@
 
 {% block extra_head %}
 <style>
-/* ── Filter sidebar ───────────────────────── */
-.filter-section{padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #f3f4f6;}
+/* ── Filter panel ─────────────────────────────────────────── */
+.filter-section{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #f3f4f6;}
 .dark .filter-section{border-color:#1f2937;}
 .filter-section:last-child{border:none;padding-bottom:0;margin-bottom:0;}
-.filter-label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:#4b5563;transition:color .15s;}
+.filter-label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:#4b5563;transition:color .15s;border-radius:8px;}
 .dark .filter-label{color:#d1d5db;}
 .filter-label:hover{color:#2563eb;}
-.filter-label input{width:15px;height:15px;accent-color:#2563eb;flex-shrink:0;cursor:pointer;}
-/* ── List mode ────────────────────────────── */
+.filter-label input[type=radio],.filter-label input[type=checkbox]{width:15px;height:15px;accent-color:#2563eb;flex-shrink:0;cursor:pointer;}
+.filter-count{font-size:11px;color:#9ca3af;background:#f3f4f6;padding:1px 7px;border-radius:9999px;flex-shrink:0;}
+.dark .filter-count{background:#1f2937;}
+/* ── Accordion ────────────────────────────────────────────── */
+.acc-head{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9ca3af;padding:2px 0 10px;cursor:pointer;background:none;border:none;transition:color .15s;}
+.acc-head:hover{color:#2563eb;}
+.acc-chevron{font-size:14px;transition:transform .25s ease;}
+.acc-body{max-height:600px;overflow:hidden;transition:max-height .3s ease,opacity .2s ease;opacity:1;}
+.filter-section.collapsed .acc-body{max-height:0!important;opacity:0;}
+.filter-section.collapsed .acc-chevron{transform:rotate(-90deg);}
+/* ── Price presets ────────────────────────────────────────── */
+.price-preset{font-size:11px;font-weight:600;padding:4px 10px;border-radius:9999px;border:1.5px solid #e5e7eb;color:#4b5563;background:#fff;transition:all .15s;cursor:pointer;}
+.dark .price-preset{border-color:#374151;background:#1f2937;color:#d1d5db;}
+.price-preset:hover{border-color:#2563eb;color:#2563eb;}
+.price-preset.active{background:#2563eb;border-color:#2563eb;color:#fff;}
+/* ── Rating options ───────────────────────────────────────── */
+.rating-option input{width:15px;height:15px;accent-color:#2563eb;cursor:pointer;}
+.rating-option:has(input:checked){color:#2563eb;font-weight:600;}
+/* ── Discount chips ───────────────────────────────────────── */
+.discount-chip{position:relative;cursor:pointer;}
+.discount-chip input{position:absolute;opacity:0;pointer-events:none;}
+.discount-chip span{display:inline-block;font-size:12px;font-weight:600;padding:5px 12px;border-radius:9999px;border:1.5px solid #e5e7eb;color:#4b5563;transition:all .15s;}
+.dark .discount-chip span{border-color:#374151;color:#d1d5db;}
+.discount-chip:hover span{border-color:#2563eb;color:#2563eb;}
+.discount-chip input:checked+span{background:#2563eb;border-color:#2563eb;color:#fff;}
+/* ── Colour swatches ──────────────────────────────────────── */
+.color-swatch{display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px 4px 4px;border-radius:9999px;border:1.5px solid #e5e7eb;transition:all .15s;}
+.dark .color-swatch{border-color:#374151;}
+.color-swatch:hover{border-color:#2563eb;}
+.color-swatch .swatch-dot{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0;box-shadow:inset 0 0 0 2px #fff;}
+.color-swatch .swatch-name{font-size:12px;color:#4b5563;text-transform:capitalize;}
+.dark .color-swatch .swatch-name{color:#d1d5db;}
+.color-swatch input{position:absolute;opacity:0;pointer-events:none;}
+.color-swatch:has(input:checked){border-color:#2563eb;background:#eff6ff;}
+.dark .color-swatch:has(input:checked){background:#1e3a8a33;}
+/* ── Custom scrollbar ─────────────────────────────────────── */
+.custom-scroll::-webkit-scrollbar{width:6px;}
+.custom-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:9999px;}
+.dark .custom-scroll::-webkit-scrollbar-thumb{background:#374151;}
+.custom-scroll{scrollbar-width:thin;}
+/* ── List mode ────────────────────────────────────────────── */
 #product-grid.list-mode{display:flex!important;flex-direction:column!important;gap:10px!important;}
 #product-grid.list-mode .product-card{display:flex!important;flex-direction:row!important;height:auto!important;min-height:130px!important;}
 #product-grid.list-mode .product-card .card-img{width:140px!important;min-width:140px!important;flex-shrink:0!important;aspect-ratio:unset!important;}
 #product-grid.list-mode .product-card .card-actions{display:none!important;}
 #product-grid.list-mode .product-card .card-info{flex:1;padding:14px!important;}
 /* Quick-view modal & compare-bar styles are shared — see products/partials/product_card_scripts.html */
-/* ── Skeleton ─────────────────────────────── */
+/* ── Skeleton loader ──────────────────────────────────────── */
 .skeleton{background:linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%);background-size:200% 100%;animation:shimmer 1.3s infinite;border-radius:12px;}
 .dark .skeleton{background:linear-gradient(90deg,#1f2937 25%,#374151 50%,#1f2937 75%);background-size:200% 100%;}
+.skeleton-card{height:280px;border-radius:16px;}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-/* ── Fade in ──────────────────────────────── */
+/* ── Fade in ──────────────────────────────────────────────── */
 .fade-in{animation:fadeIn .3s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 </style>
@@ -56,8 +96,8 @@
       </div>
 
       <!-- Active filter chips -->
-      {% if active_chips %}
-      <div class="flex flex-wrap gap-2 items-center">
+      <div class="flex flex-wrap gap-2 items-center" id="chip-wrap">
+        {% if active_chips %}
         {% for chip in active_chips %}
         <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
           {{ chip.label }}
@@ -71,8 +111,8 @@
            class="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1 font-medium px-2 py-1.5">
           <i class="ti ti-x text-xs"></i> Clear all
         </a>
+        {% endif %}
       </div>
-      {% endif %}
     </div>
   </div>
 </div>
@@ -101,113 +141,9 @@
               <a href="{% url 'products:list' %}" class="text-xs text-primary-600 hover:underline font-semibold">Clear all</a>
             </div>
 
-            <!-- Keyword search -->
-            <div class="filter-section">
-              <div class="relative">
-                <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
-                <input type="text" name="q" value="{{ q }}" placeholder="Search products..."
-                       class="form-input pl-9 py-2 text-sm" id="search-input">
-              </div>
-            </div>
+            {% include "products/partials/filter_panel.html" %}
 
-            <!-- Category -->
-            <div class="filter-section">
-              <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Category</p>
-              <div class="space-y-0.5 max-h-52 overflow-y-auto pr-1 custom-scroll">
-                <label class="filter-label font-medium">
-                  <input type="radio" name="category" value="" {% if not request.GET.category %}checked{% endif %}>
-                  All Categories
-                </label>
-                {% for cat in root_cats %}
-                <label class="filter-label">
-                  <input type="radio" name="category" value="{{ cat.slug }}"
-                         {% if request.GET.category == cat.slug %}checked{% endif %}>
-                  <span class="flex-1">{{ cat.name }}</span>
-                  <span class="text-[11px] text-gray-400">{{ cat.total_product_count }}</span>
-                </label>
-                {% for sub in cat.children.all %}{% if sub.is_active %}
-                <label class="filter-label pl-5">
-                  <input type="radio" name="category" value="{{ sub.slug }}"
-                         {% if request.GET.category == sub.slug %}checked{% endif %}>
-                  <span class="flex-1 text-gray-500 dark:text-gray-400">└ {{ sub.name }}</span>
-                  <span class="text-[11px] text-gray-400">{{ sub.product_count }}</span>
-                </label>
-                {% endif %}{% endfor %}
-                {% endfor %}
-              </div>
-            </div>
-
-            <!-- Availability -->
-            <div class="filter-section">
-              <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Availability</p>
-              <label class="filter-label justify-between">
-                <span class="flex items-center gap-2">
-                  <input type="checkbox" name="in_stock" value="1" {% if request.GET.in_stock %}checked{% endif %}> In Stock Only
-                </span>
-                <span class="text-[11px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full">{{ in_stock_count }}</span>
-              </label>
-              <label class="filter-label justify-between">
-                <span class="flex items-center gap-2">
-                  <input type="checkbox" name="on_sale" value="1" {% if request.GET.on_sale %}checked{% endif %}> On Sale
-                </span>
-                <span class="text-[11px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full">{{ on_sale_count }}</span>
-              </label>
-              <label class="filter-label justify-between">
-                <span class="flex items-center gap-2">
-                  <input type="checkbox" name="new_arrival" value="1" {% if request.GET.new_arrival %}checked{% endif %}> New Arrivals
-                </span>
-                <span class="text-[11px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full">{{ new_count }}</span>
-              </label>
-            </div>
-
-            <!-- Brand -->
-            {% if sidebar_brands %}
-            <div class="filter-section">
-              <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Brand</p>
-              <div class="space-y-0.5 max-h-48 overflow-y-auto pr-1 custom-scroll">
-                {% for brand in sidebar_brands %}
-                <label class="filter-label">
-                  <input type="checkbox" name="brand" value="{{ brand.pk }}"
-                         {% if brand.pk|stringformat:"s" in selected_brands %}checked{% endif %}>
-                  <span class="flex-1">{{ brand.name }}</span>
-                </label>
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
-
-            <!-- Price Range -->
-            <div class="filter-section">
-              <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Price Range</p>
-              <div class="flex gap-2">
-                <div class="relative flex-1">
-                  <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">₹</span>
-                  <input type="number" name="min_price" placeholder="Min" value="{{ request.GET.min_price }}"
-                         class="form-input text-xs py-2 pl-6 pr-2 w-full" min="0">
-                </div>
-                <div class="relative flex-1">
-                  <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">₹</span>
-                  <input type="number" name="max_price" placeholder="Max" value="{{ request.GET.max_price }}"
-                         class="form-input text-xs py-2 pl-6 pr-2 w-full" min="0">
-                </div>
-              </div>
-              {% if price_range.min_price and price_range.max_price %}
-              <p class="text-[11px] text-gray-400 mt-1.5 text-right">
-                ₹{{ price_range.min_price|floatformat:0 }} – ₹{{ price_range.max_price|floatformat:0 }}
-              </p>
-              {% endif %}
-            </div>
-
-            <!-- Condition -->
-            <div class="filter-section">
-              <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Condition</p>
-              <label class="filter-label"><input type="radio" name="condition" value="" {% if not request.GET.condition %}checked{% endif %}> All</label>
-              <label class="filter-label"><input type="radio" name="condition" value="new" {% if request.GET.condition == 'new' %}checked{% endif %}> New</label>
-              <label class="filter-label"><input type="radio" name="condition" value="refurbished" {% if request.GET.condition == 'refurbished' %}checked{% endif %}> Refurbished</label>
-              <label class="filter-label"><input type="radio" name="condition" value="open_box" {% if request.GET.condition == 'open_box' %}checked{% endif %}> Open Box</label>
-            </div>
-
-            <button type="submit" class="w-full btn-primary justify-center py-2.5 text-sm rounded-xl mt-1">
+            <button type="submit" class="w-full btn-primary justify-center py-2.5 text-sm rounded-xl mt-4">
               <i class="ti ti-search text-sm"></i> Apply Filters
             </button>
           </div>
@@ -227,36 +163,30 @@
         <div class="flex items-center gap-2 flex-wrap">
 
           <!-- Mobile filter -->
-          <button onclick="document.getElementById('mob-filter').classList.remove('hidden')"
+          <button onclick="openMobileFilter()"
                   class="lg:hidden flex items-center gap-2 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium bg-white dark:bg-gray-900 hover:border-primary-400 transition-colors">
             <i class="ti ti-adjustments-horizontal text-primary-600"></i> Filters
             {% if active_chips %}<span class="w-5 h-5 rounded-full bg-primary-600 text-white text-[10px] font-bold flex items-center justify-center">{{ active_chips|length }}</span>{% endif %}
           </button>
 
-          <!-- Sort -->
-          <form method="get" id="sort-form">
-            {% for k,v in request.GET.items %}{% if k != 'sort' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
-            <select name="sort" onchange="this.form.submit()"
-                    class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900">
-              <option value="-created_at"  {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
-              <option value="price"        {% if sort == 'price' %}selected{% endif %}>Price: Low → High</option>
-              <option value="-price"       {% if sort == '-price' %}selected{% endif %}>Price: High → Low</option>
-              <option value="name"         {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
-              <option value="-name"        {% if sort == '-name' %}selected{% endif %}>Name Z–A</option>
-              <option value="-views_count" {% if sort == '-views_count' %}selected{% endif %}>Most Popular</option>
-            </select>
-          </form>
+          <!-- Sort (AJAX) -->
+          <select id="sort-select" onchange="doAjaxFilter()"
+                  class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900">
+            <option value="-created_at"  {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
+            <option value="price"        {% if sort == 'price' %}selected{% endif %}>Price: Low → High</option>
+            <option value="-price"       {% if sort == '-price' %}selected{% endif %}>Price: High → Low</option>
+            <option value="name"         {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
+            <option value="-name"        {% if sort == '-name' %}selected{% endif %}>Name Z–A</option>
+            <option value="-views_count" {% if sort == '-views_count' %}selected{% endif %}>Most Popular</option>
+          </select>
 
-          <!-- Per page -->
-          <form method="get" id="perpage-form" class="hidden md:block">
-            {% for k,v in request.GET.items %}{% if k != 'per_page' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
-            <select name="per_page" onchange="this.form.submit()"
-                    class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900">
-              <option value="12" {% if per_page == 12 %}selected{% endif %}>12 / page</option>
-              <option value="24" {% if per_page == 24 %}selected{% endif %}>24 / page</option>
-              <option value="48" {% if per_page == 48 %}selected{% endif %}>48 / page</option>
-            </select>
-          </form>
+          <!-- Per page (AJAX) -->
+          <select id="perpage-select" onchange="doAjaxFilter()"
+                  class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900 hidden md:block">
+            <option value="12" {% if per_page == 12 %}selected{% endif %}>12 / page</option>
+            <option value="24" {% if per_page == 24 %}selected{% endif %}>24 / page</option>
+            <option value="48" {% if per_page == 48 %}selected{% endif %}>48 / page</option>
+          </select>
 
           <!-- Grid / List -->
           <div class="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
@@ -284,71 +214,26 @@
 
 <!-- ═══ MOBILE FILTER DRAWER ════════════════════════════════ -->
 <div id="mob-filter" class="hidden fixed inset-0 z-50 flex">
-  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"
-       onclick="document.getElementById('mob-filter').classList.add('hidden')"></div>
-  <div class="relative ml-auto w-80 max-w-full bg-white dark:bg-gray-900 h-full overflow-y-auto shadow-2xl flex flex-col">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMobileFilter()"></div>
+  <div class="relative ml-auto w-80 max-w-full bg-white dark:bg-gray-900 h-full overflow-y-auto shadow-2xl flex flex-col translate-x-full transition-transform duration-300" id="mob-panel">
     <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10">
       <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
         <i class="ti ti-adjustments-horizontal text-primary-600"></i> Filters
       </h3>
-      <button onclick="document.getElementById('mob-filter').classList.add('hidden')"
+      <button onclick="closeMobileFilter()"
               class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
         <i class="ti ti-x text-lg"></i>
       </button>
     </div>
     <div class="flex-1 p-5 overflow-y-auto">
-      <form method="get" class="space-y-5">
+      <form method="get" class="space-y-0">
         {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
-        <div>
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Search</p>
-          <input type="text" name="q" value="{{ q }}" placeholder="Search products..." class="form-input text-sm">
-        </div>
-        <div>
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Category</p>
-          <select name="category" class="form-select text-sm w-full">
-            <option value="">All Categories</option>
-            {% for cat in root_cats %}
-            <option value="{{ cat.slug }}" {% if request.GET.category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
-            {% for sub in cat.children.all %}{% if sub.is_active %}
-            <option value="{{ sub.slug }}" {% if request.GET.category == sub.slug %}selected{% endif %}>  └ {{ sub.name }}</option>
-            {% endif %}{% endfor %}
-            {% endfor %}
-          </select>
-        </div>
-        <div>
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Availability</p>
-          <label class="filter-label"><input type="checkbox" name="in_stock" value="1" {% if request.GET.in_stock %}checked{% endif %}> In Stock Only</label>
-          <label class="filter-label"><input type="checkbox" name="on_sale" value="1" {% if request.GET.on_sale %}checked{% endif %}> On Sale</label>
-          <label class="filter-label"><input type="checkbox" name="new_arrival" value="1" {% if request.GET.new_arrival %}checked{% endif %}> New Arrivals</label>
-        </div>
-        {% if sidebar_brands %}
-        <div>
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Brand</p>
-          {% for brand in sidebar_brands %}
-          <label class="filter-label">
-            <input type="checkbox" name="brand" value="{{ brand.pk }}" {% if brand.pk|stringformat:"s" in selected_brands %}checked{% endif %}> {{ brand.name }}
-          </label>
-          {% endfor %}
-        </div>
-        {% endif %}
-        <div>
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Price Range</p>
-          <div class="flex gap-2">
-            <input type="number" name="min_price" placeholder="Min ₹" value="{{ request.GET.min_price }}" class="form-input text-sm py-2 w-1/2">
-            <input type="number" name="max_price" placeholder="Max ₹" value="{{ request.GET.max_price }}" class="form-input text-sm py-2 w-1/2">
-          </div>
-        </div>
-        <div>
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Condition</p>
-          <label class="filter-label"><input type="radio" name="condition" value="" {% if not request.GET.condition %}checked{% endif %}> All</label>
-          <label class="filter-label"><input type="radio" name="condition" value="new" {% if request.GET.condition == 'new' %}checked{% endif %}> New</label>
-          <label class="filter-label"><input type="radio" name="condition" value="refurbished" {% if request.GET.condition == 'refurbished' %}checked{% endif %}> Refurbished</label>
-          <label class="filter-label"><input type="radio" name="condition" value="open_box" {% if request.GET.condition == 'open_box' %}checked{% endif %}> Open Box</label>
-        </div>
-        <button type="submit" class="w-full btn-primary justify-center py-3 rounded-xl text-sm font-semibold">
+        {% if request.GET.view %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
+        {% include "products/partials/filter_panel.html" %}
+        <button type="submit" class="w-full btn-primary justify-center py-3 rounded-xl text-sm font-semibold mt-5">
           <i class="ti ti-search"></i> Apply Filters
         </button>
-        <a href="{% url 'products:list' %}" class="block text-center text-sm text-gray-500 hover:text-primary-600 mt-1 transition-colors">Clear All</a>
+        <a href="{% url 'products:list' %}" class="block text-center text-sm text-gray-500 hover:text-primary-600 mt-2 transition-colors">Clear All</a>
       </form>
     </div>
   </div>
@@ -362,18 +247,32 @@
 <script>
 // showToast() and CSRF are provided globally by products/partials/product_card_scripts.html
 
+// ── Accordion toggle ───────────────────────────────────────────────
+function toggleAcc(btn){ btn.closest('.filter-section').classList.toggle('collapsed'); }
+
+// ── Mobile drawer (with slide animation) ───────────────────────────
+function openMobileFilter(){
+  const d=document.getElementById('mob-filter'), p=document.getElementById('mob-panel');
+  d.classList.remove('hidden');
+  requestAnimationFrame(()=>p.classList.remove('translate-x-full'));
+}
+function closeMobileFilter(){
+  const d=document.getElementById('mob-filter'), p=document.getElementById('mob-panel');
+  p.classList.add('translate-x-full');
+  setTimeout(()=>d.classList.add('hidden'),250);
+}
+
 // ── Grid / List toggle ─────────────────────────────────────────────
 function setView(v){
   const grid=document.getElementById('product-grid');
   const bG=document.getElementById('btn-grid');
   const bL=document.getElementById('btn-list');
-  if(!grid)return;
   if(v==='list'){
-    grid.classList.add('list-mode');
+    if(grid) grid.classList.add('list-mode');
     bG.className='px-3 py-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors';
     bL.className='px-3 py-2 bg-primary-600 text-white transition-colors border-l border-gray-200 dark:border-gray-700';
   } else {
-    grid.classList.remove('list-mode');
+    if(grid) grid.classList.remove('list-mode');
     bG.className='px-3 py-2 bg-primary-600 text-white transition-colors';
     bL.className='px-3 py-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-l border-gray-200 dark:border-gray-700';
   }
@@ -395,46 +294,101 @@ function removeFilterChip(key,val){
   else if(key==='brand'&&val){
     const kept=p.getAll('brand').filter(v=>v!==val);
     p.delete('brand'); kept.forEach(v=>p.append('brand',v));
+  } else if(key==='color'&&val){
+    const kept=p.getAll('color').filter(v=>v!==val);
+    p.delete('color'); kept.forEach(v=>p.append('color',v));
   } else {p.delete(key);}
   p.delete('page');
   window.location.search=p.toString();
 }
 
-// ── AJAX filter (auto-submit on checkbox/radio change) ────────────
-function doAjaxFilter(){
-  const form=document.getElementById('filter-form');
-  if(!form)return;
-  const params=new URLSearchParams(new FormData(form));
+// ── Skeleton loader ────────────────────────────────────────────────
+function showSkeleton(){
+  const grid=document.getElementById('product-grid');
+  if(!grid) return;
+  const n=Math.min(parseInt(document.getElementById('perpage-select')?.value||12,10),12);
+  grid.classList.remove('list-mode');
+  grid.innerHTML=Array.from({length:n}).map(()=>'<div class="skeleton skeleton-card"></div>').join('');
+}
+
+// ── Core AJAX loader ───────────────────────────────────────────────
+function ajaxLoad(params){
   const view=localStorage.getItem('pview')||'grid';
   params.set('view',view);
 
   const section=document.getElementById('products-section');
-  section.style.opacity='0.45';
+  showSkeleton();
+  section.style.opacity='0.6';
   section.style.pointerEvents='none';
+
+  // Reflect state in the URL so refresh / share / back-button work
+  history.replaceState({},'',window.location.pathname+'?'+params.toString());
 
   fetch('/products/ajax/filter/?'+params.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'}})
     .then(r=>r.json())
     .then(data=>{
       section.innerHTML=data.html+'<div id="pagination-section">'+data.pagination+'</div>';
-      document.getElementById('live-count').textContent=data.count;
-      document.getElementById('result-count').textContent=data.count;
+      const lc=document.getElementById('live-count'); if(lc) lc.textContent=data.count;
+      const rc=document.getElementById('result-count'); if(rc) rc.textContent=data.count;
       section.style.opacity='';
       section.style.pointerEvents='';
-      // Re-init compare buttons
-      updateCompareUI();
-      // Re-apply view
+      if(typeof updateCompareUI==='function') updateCompareUI();
       if(view==='list'){ const g=document.getElementById('product-grid'); if(g) g.classList.add('list-mode'); }
     })
     .catch(()=>{section.style.opacity='';section.style.pointerEvents='';});
 }
 
-// Auto AJAX on checkbox/radio
+// Build params from the desktop filter form + toolbar controls
+function collectParams(){
+  const form=document.getElementById('filter-form');
+  const params=new URLSearchParams(new FormData(form));
+  // Drop empty values so the URL stays clean
+  for(const k of [...params.keys()]){ if(params.get(k)==='') params.delete(k); }
+  const sort=document.getElementById('sort-select')?.value;
+  const per=document.getElementById('perpage-select')?.value;
+  if(sort) params.set('sort',sort);
+  if(per)  params.set('per_page',per);
+  params.delete('page');
+  return params;
+}
+
+// ── AJAX filter (called on every control change) ───────────────────
+function doAjaxFilter(){ ajaxLoad(collectParams()); }
+
+// Auto AJAX on checkbox / radio changes
 document.querySelectorAll('#filter-form input[type=checkbox], #filter-form input[type=radio]').forEach(el=>{
-  el.addEventListener('change',()=>doAjaxFilter());
+  el.addEventListener('change',doAjaxFilter);
+});
+
+// Debounced AJAX on text search + price number inputs
+let _debounce;
+document.querySelectorAll('#filter-form .js-live-search, #filter-form .js-live-price').forEach(el=>{
+  el.addEventListener('input',()=>{ clearTimeout(_debounce); _debounce=setTimeout(doAjaxFilter,500); });
+});
+
+// Price quick presets (desktop form only)
+document.querySelectorAll('#filter-form .price-preset').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const form=document.getElementById('filter-form');
+    form.querySelector('[name=min_price]').value=btn.dataset.min||'';
+    form.querySelector('[name=max_price]').value=btn.dataset.max||'';
+    document.querySelectorAll('#filter-form .price-preset').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    doAjaxFilter();
+  });
+});
+
+// AJAX pagination — intercept clicks inside the products section
+document.getElementById('products-section').addEventListener('click',e=>{
+  const link=e.target.closest('#pagination-wrap a');
+  if(!link) return;
+  e.preventDefault();
+  const params=new URLSearchParams(link.search);
+  ajaxLoad(params);
+  window.scrollTo({top:document.querySelector('.max-w-7xl').offsetTop-20,behavior:'smooth'});
 });
 
 // Quick View, Compare and Wishlist behaviour is shared globally
-// (see products/partials/product_card_scripts.html). doAjaxFilter() above
-// calls the global updateCompareUI() after injecting new cards.
+// (see products/partials/product_card_scripts.html).
 </script>
 {% endblock %}
