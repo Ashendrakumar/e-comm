@@ -37,7 +37,7 @@
 .spec-row:nth-child(even){background:#f9fafb;}
 .dark .spec-row:nth-child(even){background:#111827;}
 /* ── Recently viewed scroll ── */
-.rv-scroll{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+.rv-scroll{overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
 .rv-scroll::-webkit-scrollbar{display:none;}
 </style>
 
@@ -635,11 +635,9 @@
     <h2 class="text-xl font-extrabold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
       <i class="ti ti-history text-primary-600"></i> Recently Viewed
     </h2>
-    <div class="rv-scroll">
+    <div class="rv-scroll grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
       {% for rv_product in recently_viewed %}
-      <div class="flex-shrink-0 w-44">
         {% include "products/partials/product_card.html" with product=rv_product %}
-      </div>
       {% endfor %}
     </div>
   </section>
@@ -811,11 +809,9 @@
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Products you browsed in this session</p>
       </div>
     </div>
-    <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 scrollbar-hide">
       {% for rv_product in recently_viewed %}
-      <div class="flex-shrink-0 w-48">
         {% include "products/partials/product_card.html" with product=rv_product %}
-      </div>
       {% endfor %}
     </div>
   </section>
