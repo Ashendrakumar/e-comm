@@ -1,0 +1,34 @@
+{% load static %}
+
+<div class="bg-gray-50 dark:bg-gray-950 text-gray-500 dark:text-gray-400 text-xs py-2 hidden md:block border-b border-gray-100 dark:border-gray-900">
+  <div class="max-w-7xl mx-auto px-4 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      {% if site_settings.phone %}
+      <a href="tel:{{ site_settings.phone }}" class="flex items-center gap-1.5 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+        <i class="ti ti-phone text-sm"></i> {{ site_settings.phone }}
+      </a>
+      {% endif %}
+      {% if site_settings.email %}
+      <a href="mailto:{{ site_settings.email }}"
+        class="flex items-center gap-1.5 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+        <i class="ti ti-mail text-sm"></i> {{ site_settings.email }}
+      </a>
+      {% endif %}
+    </div>
+    <div class="flex items-center gap-4">
+      {% if site_settings.working_hours %}
+      <span class="flex items-center gap-1.5">
+        <i class="ti ti-clock text-sm"></i> {{ site_settings.working_hours }}
+      </span>
+      {% endif %}
+      <div class="flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-gray-800">
+        {% for sl in social_links %}
+        <a href="{{ sl.url }}" target="_blank" rel="noopener"
+          class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+          <i class="ti {{ sl.get_icon_class }} text-sm"></i>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

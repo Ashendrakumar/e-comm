@@ -73,6 +73,19 @@ def _apply_filters(qs, params):
 
 
 def _sidebar_context(base_qs, params):
+    # Build a normalized, deduplicated list of color labels (trimmed, case-insensitive)
+    raw_colors = base_qs.exclude(color='').values_list('color', flat=True)
+    color_list = []
+    _seen = set()
+    for c in raw_colors:
+        if not c:
+            continue
+        norm = c.strip().lower()
+        if not norm or norm in _seen:
+            continue
+        _seen.add(norm)
+        color_list.append(c.strip())
+
     return dict(
         price_range     = base_qs.aggregate(min_price=Min('price'), max_price=Max('price')),
         sidebar_brands  = Brand.objects.filter(is_active=True).order_by('name'),
@@ -80,7 +93,7 @@ def _sidebar_context(base_qs, params):
         in_stock_count  = base_qs.filter(stock__gt=0).count(),
         on_sale_count   = base_qs.filter(sale_price__isnull=False).count(),
         new_count       = base_qs.filter(is_new_arrival=True).count(),
-        color_list      = list(base_qs.exclude(color='').values_list('color', flat=True).distinct()),
+        color_list      = color_list,
         selected_brands = params.getlist('brand'),
         selected_colors = params.getlist('color'),
     )
@@ -186,8 +199,22 @@ def category_detail(request, slug):
     paginator     = Paginator(qs, per_page)
     page_obj      = paginator.get_page(request.GET.get('page', 1))
     chips         = _active_chips(request.GET, brands)
+    # Deduplicate color labels for the sidebar (trim + case-insensitive)
+    raw_colors = base_qs.exclude(color='').values_list('color', flat=True)
+    colors = []
+    _seen = set()
+    for c in raw_colors:
+        if not c:
+            continue
+        norm = c.strip().lower()
+        if not norm or norm in _seen:
+            continue
+        _seen.add(norm)
+        colors.append(c.strip())
+
     return render(request, 'products/category.html', {
-        'category': category, 'products': page_obj,
+        'category': category, 
+        'products': page_obj,
         'subcategories': category.children.filter(is_active=True),
         'siblings': category.get_siblings(), 'breadcrumbs': category.get_breadcrumbs(),
         'brands': brands, 'sidebar_brands': brands, 'price_range': price_range,
@@ -196,7 +223,7 @@ def category_detail(request, slug):
         'on_sale_count':  base_qs.filter(sale_price__isnull=False).count(),
         'active_chips': chips, 'per_page': per_page,
         'view_mode': request.GET.get('view', 'grid'),
-        'color_list': list(base_qs.exclude(color='').values_list('color', flat=True).distinct()),
+        'color_list': colors,
         'selected_brands': request.GET.getlist('brand'),
         'selected_colors': request.GET.getlist('color'),
         'root_cats': Category.objects.filter(is_active=True, parent=None).prefetch_related('children'),

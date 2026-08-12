@@ -160,3 +160,5 @@ public/static/
 *.bak
 *.tmp
 *.temp
+
+.claude/settings.local.json

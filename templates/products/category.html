@@ -94,14 +94,14 @@
 
 <!-- ═══════ SUBCATEGORY PILLS (sticky) ═══════ -->
 {% if subcategories %}
-<div class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-[111px] z-30 shadow-sm">
+<div class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-gray-900/70 border-b dark:border-gray-800 sticky top-[111px] z-30 shadow-sm">
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 overflow-x-auto scrollbar-hide">
-    <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex-shrink-0">Sub-categories:</span>
+    <span class="text-[11px] font-bold text-primary-400 uppercase tracking-wider flex-shrink-0">Sub-categories:</span>
     {% for sub in subcategories %}
     <a href="{{ sub.get_absolute_url }}"
-       class="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-700 dark:hover:text-primary-400 group">
+       class="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-700 dark:hover:text-primary-400 group">
       {% if sub.icon %}<i class="ti {{ sub.icon }} text-sm text-gray-400 group-hover:text-primary-500 transition-colors"></i>{% endif %}
-      {{ sub.name }}
+      <span class="hidden sm:inline-block" >{{ sub.name }}</span>
       <span class="text-[11px] bg-gray-100 dark:bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full">{{ sub.total_product_count }}</span>
     </a>
     {% endfor %}
@@ -126,59 +126,9 @@
             <a href="{{ category.get_absolute_url }}" class="text-xs text-primary-600 hover:underline font-semibold">Clear all</a>
           </div>
 
-          <!-- Availability -->
-          <div class="mb-5 pb-5 border-b border-gray-100 dark:border-gray-800">
-            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Availability</p>
-            <label class="filter-label justify-between group">
-              <span class="flex items-center gap-2"><input type="checkbox" name="in_stock" value="1" {% if request.GET.in_stock %}checked{% endif %}> In Stock Only</span>
-              <span class="text-[11px] text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">{{ in_stock_count }}</span>
-            </label>
-            <label class="filter-label justify-between group">
-              <span class="flex items-center gap-2"><input type="checkbox" name="on_sale" value="1" {% if request.GET.on_sale %}checked{% endif %}> On Sale</span>
-              <span class="text-[11px] text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">{{ on_sale_count }}</span>
-            </label>
-          </div>
+           {% include "products/partials/filter_panel.html" %}
 
-          <!-- Brand -->
-          {% if brands %}
-          <div class="mb-5 pb-5 border-b border-gray-100 dark:border-gray-800">
-            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Brand</p>
-            <div class="space-y-0.5 max-h-44 overflow-y-auto pr-1">
-              {% for brand in brands %}
-              <label class="filter-label">
-                <input type="checkbox" name="brand" value="{{ brand.pk }}"
-                  {% if brand.pk|stringformat:"s" in request.GET.brand %}checked{% endif %}>
-                <span>{{ brand.name }}</span>
-              </label>
-              {% endfor %}
-            </div>
-          </div>
-          {% endif %}
-
-          <!-- Price Range -->
-          <div class="mb-5 pb-5 border-b border-gray-100 dark:border-gray-800">
-            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Price Range</p>
-            <div class="flex gap-2">
-              <input type="number" name="min_price" placeholder="Min ₹" value="{{ request.GET.min_price }}"
-                     class="form-input text-xs py-2 px-2.5 w-1/2" min="0">
-              <input type="number" name="max_price" placeholder="Max ₹" value="{{ request.GET.max_price }}"
-                     class="form-input text-xs py-2 px-2.5 w-1/2" min="0">
-            </div>
-            {% if price_range.min_price and price_range.max_price %}
-            <p class="text-[11px] text-gray-400 mt-1.5">₹{{ price_range.min_price|floatformat:0 }} – ₹{{ price_range.max_price|floatformat:0 }}</p>
-            {% endif %}
-          </div>
-
-          <!-- Condition -->
-          <div class="mb-5">
-            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Condition</p>
-            <label class="filter-label"><input type="radio" name="condition" value="" {% if not request.GET.condition %}checked{% endif %}> All Conditions</label>
-            <label class="filter-label"><input type="radio" name="condition" value="new" {% if request.GET.condition == 'new' %}checked{% endif %}> New</label>
-            <label class="filter-label"><input type="radio" name="condition" value="refurbished" {% if request.GET.condition == 'refurbished' %}checked{% endif %}> Refurbished</label>
-            <label class="filter-label"><input type="radio" name="condition" value="open_box" {% if request.GET.condition == 'open_box' %}checked{% endif %}> Open Box</label>
-          </div>
-
-          <button type="submit" class="w-full btn-primary justify-center py-2.5 text-sm rounded-xl">
+          <button type="submit" class="w-full btn-primary justify-center py-2.5 mt-4 text-sm rounded-xl">
             <i class="ti ti-search text-sm"></i> Apply Filters
           </button>
         </div>
@@ -186,14 +136,16 @@
 
       <!-- Related categories (siblings) -->
       {% if siblings %}
-      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 ">
         <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Related Categories</p>
         {% for sib in siblings %}
         <a href="{{ sib.get_absolute_url }}"
-           class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-950 text-sm text-gray-700 dark:text-gray-300 hover:text-primary-600 transition-colors group">
-          {% if sib.icon %}<i class="ti {{ sib.icon }} text-sm text-gray-400 group-hover:text-primary-500 transition-colors"></i>{% endif %}
-          <span class="flex-1">{{ sib.name }}</span>
-          <span class="text-[11px] text-gray-400">{{ sib.product_count }}</span>
+          class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 text-sm dark:text-gray-300 hover:text-primary-600 transition-colors group">
+          {% if sib.icon %}
+            <i class="ti {{ sib.icon }} text-sm shrink-0"></i>
+          {% endif %}
+          <span class="flex-1 min-w-0 truncate">{{ sib.name }}</span>
+          <span class="text-[11px] shrink-0">{{ sib.product_count }}</span>
         </a>
         {% endfor %}
       </div>
@@ -201,7 +153,7 @@
 
       <!-- Parent category link -->
       {% if category.parent %}
-      <div class="bg-primary-50 dark:bg-primary-950 rounded-2xl border border-primary-100 dark:border-primary-900 p-4">
+      <div class="bg-primary-50 dark:bg-primary-900 rounded-2xl border border-primary-100 dark:border-primary-900 p-4">
         <p class="text-[11px] font-bold text-primary-500 uppercase tracking-wider mb-2">Parent Category</p>
         <a href="{{ category.parent.get_absolute_url }}"
            class="flex items-center gap-2 text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline">

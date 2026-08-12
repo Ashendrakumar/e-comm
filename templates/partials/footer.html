@@ -1,22 +1,7 @@
 {% load static %}
+
 <!-- Newsletter Banner -->
-<section class="bg-gradient-to-r from-primary-700 to-primary-900 dark:from-primary-900 dark:to-gray-900 py-12">
-  <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-8">
-    <div class="flex-1 text-center md:text-left">
-      <h3 class="text-white text-2xl font-bold mb-1">Stay Updated with TechZone</h3>
-      <p class="text-primary-200 text-sm">Get exclusive deals, new arrivals and tech news straight to your inbox.</p>
-    </div>
-    <form class="newsletter-form flex w-full md:w-auto gap-2" method="post" action="{% url 'core:newsletter_subscribe' %}">
-      {% csrf_token %}
-      <input type="email" name="email" placeholder="Your email address" required
-        class="flex-1 md:w-72 px-4 py-3 rounded-xl border-0 outline-none text-sm text-gray-800 bg-white">
-      <button type="submit" class="bg-accent-500 hover:bg-accent-600 text-white px-5 py-3 rounded-xl font-semibold text-sm transition-colors whitespace-nowrap flex items-center gap-2">
-        <i class="ti ti-send"></i> Subscribe
-      </button>
-    </form>
-    <p class="newsletter-msg hidden text-green-300 text-sm mt-2"></p>
-  </div>
-</section>
+{% include 'partials/newsletter.html' %}
 
 <!-- Main Footer -->
 <footer class="bg-gray-900 dark:bg-gray-950 text-gray-300 pt-14 pb-6">
@@ -26,10 +11,16 @@
       <!-- Brand column -->
       <div class="col-span-2 md:col-span-4 lg:col-span-1">
         <div class="flex items-center gap-2 mb-4">
-          <div class="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
-            <i class="ti ti-cpu text-white text-lg"></i>
-          </div>
-          <span class="font-bold text-xl text-white">TechZone</span>
+          {% if site_settings.logo %}
+            <img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" class="h-9 w-auto">
+          {% else %}
+            <div class="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+              <i class="ti ti-cpu text-white text-lg"></i>
+            </div>
+          {% endif %}
+          <span class="font-bold text-xl text-white">
+            {{ site_settings.site_name | default:"TechZone" }} 
+          </span>
         </div>
         <p class="text-sm leading-relaxed text-gray-400 mb-5">{{ site_settings.tagline }}</p>
         <div class="space-y-2.5 text-sm">
@@ -84,7 +75,7 @@
       <div>
         <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Services</h4>
         <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'pages:services' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>All Services</a></li>
+          <li><a href="{% url 'pages:services' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5 "><i class="ti ti-chevron-right text-xs text-gray-600"></i>All Services</a></li>
           {% for svc in footer_services %}
           <li><a href="{{ svc.get_absolute_url }}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>{{ svc.title }}</a></li>
           {% endfor %}
@@ -95,11 +86,9 @@
       <div>
         <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Quick Links</h4>
         <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'core:homepage' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Home</a></li>
           <li><a href="{% url 'core:about' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>About Us</a></li>
           <li><a href="{% url 'blog:list' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Blog &amp; News</a></li>
           <li><a href="{% url 'pages:faqs' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>FAQs</a></li>
-          <li><a href="{% url 'core:contact' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Contact</a></li>
           <li><a href="{% url 'pages:serving_areas' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Serving Areas</a></li>
           {% for fp in footer_pages %}
           <li><a href="{{ fp.get_absolute_url }}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>{{ fp.title }}</a></li>

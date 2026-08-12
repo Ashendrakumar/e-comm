@@ -1,58 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}All Products — TechZone{% endblock %}
+{% block title %}{{page_title}} — TechZone{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block extra_head %}
 <style>
-/* ── Filter panel ─────────────────────────────────────────── */
-.filter-section{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #f3f4f6;}
-.dark .filter-section{border-color:#1f2937;}
-.filter-section:last-child{border:none;padding-bottom:0;margin-bottom:0;}
-.filter-label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:#4b5563;transition:color .15s;border-radius:8px;}
-.dark .filter-label{color:#d1d5db;}
-.filter-label:hover{color:#2563eb;}
-.filter-label input[type=radio],.filter-label input[type=checkbox]{width:15px;height:15px;accent-color:#2563eb;flex-shrink:0;cursor:pointer;}
-.filter-count{font-size:11px;color:#9ca3af;background:#f3f4f6;padding:1px 7px;border-radius:9999px;flex-shrink:0;}
-.dark .filter-count{background:#1f2937;}
-/* ── Accordion ────────────────────────────────────────────── */
-.acc-head{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9ca3af;padding:2px 0 10px;cursor:pointer;background:none;border:none;transition:color .15s;}
-.acc-head:hover{color:#2563eb;}
-.acc-chevron{font-size:14px;transition:transform .25s ease;}
-.acc-body{max-height:600px;overflow:hidden;transition:max-height .3s ease,opacity .2s ease;opacity:1;}
-.filter-section.collapsed .acc-body{max-height:0!important;opacity:0;}
-.filter-section.collapsed .acc-chevron{transform:rotate(-90deg);}
-/* ── Price presets ────────────────────────────────────────── */
-.price-preset{font-size:11px;font-weight:600;padding:4px 10px;border-radius:9999px;border:1.5px solid #e5e7eb;color:#4b5563;background:#fff;transition:all .15s;cursor:pointer;}
-.dark .price-preset{border-color:#374151;background:#1f2937;color:#d1d5db;}
-.price-preset:hover{border-color:#2563eb;color:#2563eb;}
-.price-preset.active{background:#2563eb;border-color:#2563eb;color:#fff;}
-/* ── Rating options ───────────────────────────────────────── */
-.rating-option input{width:15px;height:15px;accent-color:#2563eb;cursor:pointer;}
-.rating-option:has(input:checked){color:#2563eb;font-weight:600;}
-/* ── Discount chips ───────────────────────────────────────── */
-.discount-chip{position:relative;cursor:pointer;}
-.discount-chip input{position:absolute;opacity:0;pointer-events:none;}
-.discount-chip span{display:inline-block;font-size:12px;font-weight:600;padding:5px 12px;border-radius:9999px;border:1.5px solid #e5e7eb;color:#4b5563;transition:all .15s;}
-.dark .discount-chip span{border-color:#374151;color:#d1d5db;}
-.discount-chip:hover span{border-color:#2563eb;color:#2563eb;}
-.discount-chip input:checked+span{background:#2563eb;border-color:#2563eb;color:#fff;}
-/* ── Colour swatches ──────────────────────────────────────── */
-.color-swatch{display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px 4px 4px;border-radius:9999px;border:1.5px solid #e5e7eb;transition:all .15s;}
-.dark .color-swatch{border-color:#374151;}
-.color-swatch:hover{border-color:#2563eb;}
-.color-swatch .swatch-dot{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0;box-shadow:inset 0 0 0 2px #fff;}
-.color-swatch .swatch-name{font-size:12px;color:#4b5563;text-transform:capitalize;}
-.dark .color-swatch .swatch-name{color:#d1d5db;}
-.color-swatch input{position:absolute;opacity:0;pointer-events:none;}
-.color-swatch:has(input:checked){border-color:#2563eb;background:#eff6ff;}
-.dark .color-swatch:has(input:checked){background:#1e3a8a33;}
-/* ── Custom scrollbar ─────────────────────────────────────── */
-.custom-scroll::-webkit-scrollbar{width:6px;}
-.custom-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:9999px;}
-.dark .custom-scroll::-webkit-scrollbar-thumb{background:#374151;}
-.custom-scroll{scrollbar-width:thin;}
 /* ── List mode ────────────────────────────────────────────── */
 #product-grid.list-mode{display:flex!important;flex-direction:column!important;gap:10px!important;}
 #product-grid.list-mode .product-card{display:flex!important;flex-direction:row!important;height:auto!important;min-height:130px!important;}
@@ -81,14 +34,14 @@
     <nav class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3">
       <a href="{% url 'core:homepage' %}" class="hover:text-primary-600 transition-colors">Home</a>
       <i class="ti ti-chevron-right text-[10px]"></i>
-      <span class="text-gray-900 dark:text-white font-semibold">All Products</span>
+      <span class="text-gray-900 dark:text-white font-semibold">{{page_title}}</span>
     </nav>
 
     <div class="flex items-start justify-between gap-4 flex-wrap">
       <div>
         <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white">
           {% if q %}Results for "<span class="text-primary-600">{{ q }}</span>"
-          {% else %}All Products{% endif %}
+          {% else %}{{page_title}}{% endif %}
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
           <span class="font-bold text-gray-900 dark:text-white" id="result-count">{{ total_count }}</span> products
@@ -99,7 +52,7 @@
       <div class="flex flex-wrap gap-2 items-center" id="chip-wrap">
         {% if active_chips %}
         {% for chip in active_chips %}
-        <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
+        <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-100 border border-primary-200 dark:border-primary-800">
           {{ chip.label }}
           <button onclick="removeFilterChip('{{ chip.key }}','{{ chip.val }}')"
                   class="hover:text-red-500 transition-colors leading-none">
@@ -170,7 +123,8 @@
           </button>
 
           <!-- Sort (AJAX) -->
-          <select id="sort-select" onchange="doAjaxFilter()"
+          <div>
+            <select id="sort-select" onchange="doAjaxFilter()"
                   class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900">
             <option value="-created_at"  {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
             <option value="price"        {% if sort == 'price' %}selected{% endif %}>Price: Low → High</option>
@@ -179,17 +133,20 @@
             <option value="-name"        {% if sort == '-name' %}selected{% endif %}>Name Z–A</option>
             <option value="-views_count" {% if sort == '-views_count' %}selected{% endif %}>Most Popular</option>
           </select>
+          </div>
 
           <!-- Per page (AJAX) -->
-          <select id="perpage-select" onchange="doAjaxFilter()"
+          <div>
+            <select id="perpage-select" onchange="doAjaxFilter()"
                   class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900 hidden md:block">
             <option value="12" {% if per_page == 12 %}selected{% endif %}>12 / page</option>
             <option value="24" {% if per_page == 24 %}selected{% endif %}>24 / page</option>
             <option value="48" {% if per_page == 48 %}selected{% endif %}>48 / page</option>
           </select>
+          </div>
 
           <!-- Grid / List -->
-          <div class="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+          <!-- <div class="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
             <button onclick="setView('grid')" id="btn-grid"
                     class="px-3 py-2 {% if view_mode != 'list' %}bg-primary-600 text-white{% else %}text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %} transition-colors">
               <i class="ti ti-layout-grid text-sm"></i>
@@ -198,7 +155,7 @@
                     class="px-3 py-2 {% if view_mode == 'list' %}bg-primary-600 text-white{% else %}text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %} transition-colors border-l border-gray-200 dark:border-gray-700">
               <i class="ti ti-list text-sm"></i>
             </button>
-          </div>
+          </div> -->
         </div>
       </div>
 
@@ -246,22 +203,6 @@
 {% block extra_scripts %}
 <script>
 // showToast() and CSRF are provided globally by products/partials/product_card_scripts.html
-
-// ── Accordion toggle ───────────────────────────────────────────────
-function toggleAcc(btn){ btn.closest('.filter-section').classList.toggle('collapsed'); }
-
-// ── Mobile drawer (with slide animation) ───────────────────────────
-function openMobileFilter(){
-  const d=document.getElementById('mob-filter'), p=document.getElementById('mob-panel');
-  d.classList.remove('hidden');
-  requestAnimationFrame(()=>p.classList.remove('translate-x-full'));
-}
-function closeMobileFilter(){
-  const d=document.getElementById('mob-filter'), p=document.getElementById('mob-panel');
-  p.classList.add('translate-x-full');
-  setTimeout(()=>d.classList.add('hidden'),250);
-}
-
 // ── Grid / List toggle ─────────────────────────────────────────────
 function setView(v){
   const grid=document.getElementById('product-grid');

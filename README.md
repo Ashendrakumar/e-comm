@@ -26,6 +26,8 @@ cp .env.example .env          # then edit values
 python manage.py migrate
 python manage.py seed_data
 python manage.py setup_roles  # optional: create staff permission groups
+python -m venv .venv
+.venv\Scripts\Activate.ps1 # in powersell
 python manage.py runserver
 ```
 
