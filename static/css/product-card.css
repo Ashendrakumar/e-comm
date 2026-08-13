@@ -19,8 +19,8 @@
    number of columns changes with the viewport.
    ══════════════════════════════════════════════════════════════════════════ */
 :root{
-  --pc-w:240px;                                        /* card width  — constant */
-  --pc-media:240px;                                    /* media box   — 1:1      */
+  --pc-w:280px;                                        /* card width  — constant */
+  --pc-media:280px;                                    /* media box   — 1:1      */
   --pc-info:152px;                                     /* info block  — constant */
   --pc-h:calc(var(--pc-media) + var(--pc-info) + 2px); /* + 1px border each side */
   --pc-gap:16px;

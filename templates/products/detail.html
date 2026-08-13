@@ -582,30 +582,22 @@
   {% if related_products %}
   <section class="mb-14">
     <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-      <div>
-        <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">Related Products</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">You might also like these</p>
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center">
+          <i class="ti ti-tags text-purple-600 dark:text-purple-400 text-lg"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">Related Products</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">You might also like these</p>
+        </div>
       </div>
+      
       <a href="{{ product.category.get_absolute_url }}" class="text-sm font-semibold text-primary-600 hover:underline flex items-center gap-1.5">
         View all in {{ product.category.name }} <i class="ti ti-arrow-right text-xs"></i>
       </a>
     </div>
     <div class="product-shelf">
       {% for rp in related_products %}{% include "products/partials/product_card.html" with product=rp %}{% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-  <!-- ═══ RECENTLY VIEWED ══════════════════════════════════════ -->
-  {% if recently_viewed %}
-  <section>
-    <h2 class="text-xl font-extrabold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
-      <i class="ti ti-history text-primary-600"></i> Recently Viewed
-    </h2>
-    <div class="product-rail">
-      {% for rv_product in recently_viewed %}
-        {% include "products/partials/product_card.html" with product=rv_product %}
-      {% endfor %}
     </div>
   </section>
   {% endif %}

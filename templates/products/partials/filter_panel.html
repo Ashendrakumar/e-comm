@@ -76,13 +76,13 @@
   <div class="acc-body">
     <div class="flex gap-2">
       <div class="relative flex-1">
-        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">₹</span>
-        <input type="number" name="min_price" placeholder="Min" value="{{ request.GET.min_price }}"
+        <label for="min_price" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">₹</label>
+        <input id="min_price" type="number" name="min_price" placeholder="Min" value="{{ request.GET.min_price }}"
                class="form-input text-xs py-2 pl-6 pr-2 w-full js-live-price" min="0">
       </div>
       <div class="relative flex-1">
-        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">₹</span>
-        <input type="number" name="max_price" placeholder="Max" value="{{ request.GET.max_price }}"
+        <label for="max_price" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">₹</label>
+        <input id="max_price" type="number" name="max_price" placeholder="Max" value="{{ request.GET.max_price }}"
                class="form-input text-xs py-2 pl-6 pr-2 w-full js-live-price" min="0">
       </div>
     </div>
@@ -102,7 +102,7 @@
 </div>
 
 <!-- ── Availability ───────────────────────────────────────── -->
-<div class="filter-section">
+<div class="filter-section collapsed">
   <button type="button" class="acc-head" onclick="toggleAcc(this)">
     <span>Availability</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
@@ -129,7 +129,7 @@
 </div>
 
 <!-- ── Discount ───────────────────────────────────────────── -->
-<div class="filter-section">
+<div class="filter-section collapsed">
   <button type="button" class="acc-head" onclick="toggleAcc(this)">
     <span>Discount</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
@@ -157,7 +157,7 @@
 
 <!-- ── Brand ──────────────────────────────────────────────── -->
 {% if sidebar_brands %}
-<div class="filter-section">
+<div class="filter-section collapsed">
   <button type="button" class="acc-head" onclick="toggleAcc(this)">
     <span>Brand</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
@@ -177,7 +177,7 @@
 
 <!-- ── Colour ─────────────────────────────────────────────── -->
 {% if color_list %}
-<div class="filter-section">
+<div class="filter-section collapsed">
   <button type="button" class="acc-head" onclick="toggleAcc(this)">
     <span>Colour</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
@@ -197,7 +197,7 @@
 {% endif %}
 
 <!-- ── Customer Rating ────────────────────────────────────── -->
-<div class="filter-section">
+<div class="filter-section collapsed">
   <button type="button" class="acc-head" onclick="toggleAcc(this)">
     <span>Customer Rating</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
@@ -222,7 +222,7 @@
 </div>
 
 <!-- ── Condition ──────────────────────────────────────────── -->
-<div class="filter-section">
+<div class="filter-section collapsed">
   <button type="button" class="acc-head" onclick="toggleAcc(this)">
     <span>Condition</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
