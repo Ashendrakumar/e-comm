@@ -21,13 +21,14 @@
 ## Quick Start
 
 ```bash
+python -m venv .venv
+.venv\Scripts\Activate.ps1    # PowerShell (use `source .venv/bin/activate` on macOS/Linux)
 pip install -r requirements.txt
 cp .env.example .env          # then edit values
 python manage.py migrate
 python manage.py seed_data
 python manage.py setup_roles  # optional: create staff permission groups
-python -m venv .venv
-.venv\Scripts\Activate.ps1 # in powersell
+npm install && npm run build  # frontend CSS -> static/css/app.css (see Static assets)
 python manage.py runserver
 ```
 
@@ -61,15 +62,56 @@ Migrations run automatically via `docker-entrypoint.sh`. Override secrets via en
 
 ---
 
-## Frontend build — Tailwind (Module 12)
+## Static assets & frontend build
 
-Dev uses the Tailwind **CDN** by default (zero-build). For an optimized production stylesheet:
+Templates contain **markup only** — no inline `<style>`/`<script>`. CSS and JS live in
+feature files under `static/` and are linked with `{% static %}`:
+
+| Asset | Loaded from | Applies to |
+|---|---|---|
+| `css/base.css` · `js/base.js` | `base.html` | every page (chrome, theme toggle, toasts, CSRF, swipers) |
+| `css/product-card.css` · `js/product-card.js` | `base.html` | every page (Quick View · Compare · Wishlist) |
+| `js/header.js` | `partials/header.html` | every page (slide-in mobile menu) |
+| `css/product-filters.css` · `js/product-filters.js` | the filter partials | product list + category |
+| `css/product-detail.css` · `js/product-detail.js` | `products/detail.html` | product detail |
+| `css/homepage.css` | `core/homepage.html` | homepage |
+| `css/product-category.css` | `products/category.html` | category |
+| `css/compare.css` · `js/compare.js` | `products/compare.html` | compare |
+| `js/ajax-form.js` | contact / service / area / homepage | any `<form data-ajax-form>` |
+| `css/tabler-icons.css` + `fonts/tabler-icons.woff2` | `base.html` | self-hosted icon font (preloaded) |
+
+Two things stay inline **on purpose**: the theme bootstrap in `<head>` (blocking, before
+the first stylesheet — moving it out reintroduces a light→dark flash on refresh) and the
+`ld+json` / `json_script` data payloads.
+
+### Commands
 
 ```bash
-npm install
-npm run build                  # -> static/css/app.css
-# then set TAILWIND_COMPILED=True so base.html links the compiled file
+npm install                                  # once — installs the Tailwind CLI
+npm run build                                # -> static/css/app.css (minified)
+npm run dev                                  # same, in watch mode while developing
+python manage.py collectstatic --no-input    # production / Docker only
 ```
+
+**Locally you do not need `collectstatic`.** With `DEBUG=True`, `django.contrib.staticfiles`
+serves `static/` straight off disk.
+
+### Notes
+
+- **`TAILWIND_COMPILED` auto-enables** as soon as `static/css/app.css` exists, so the compiled
+  bundle is used the moment you build it. Set `TAILWIND_COMPILED=False` to force the Tailwind
+  CDN runtime instead — handy if you are editing classes without a watcher, but it generates
+  CSS in the browser after first paint, so never ship it.
+- **Run `npm run build` (or `npm run dev`) after adding Tailwind classes.** With a compiled
+  bundle in place, a class that was never scanned simply will not exist.
+- **`tailwind.config.js` scans `static/js/**/*.js` as well as the templates**, because some
+  JS builds class strings at runtime (`setView`, `updateCompareUI`). Removing that glob purges
+  those utilities from the bundle.
+- **The Docker image does not build the CSS** — it only runs `collectstatic`. Either commit
+  `static/css/app.css` or add a node build stage before `docker compose up --build`.
+- Icons are vendored from `@tabler/icons-webfont` (pinned 3.46.0). To upgrade, re-download the
+  CSS + `woff2` at a pinned version and repoint the `@font-face` `src` at `../fonts/` — keep it
+  query-free so whitenoise's manifest storage can rewrite it.
 
 ---
 

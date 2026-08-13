@@ -88,11 +88,15 @@
         </a>
         {% endif %}
         {% empty %}
-        <!-- If no subcategories, show featured products from this category -->
+        <!-- If no subcategories, show featured products from this category.
+             Cards are a fixed size, so they get their own full-width rail
+             rather than sitting in the sub-category tile columns. -->
         {% with featured=cat.get_featured_products %}
-        {% for product in featured|slice:":4" %}
-        {% include "products/partials/product_card.html" %}
-        {% endfor %}
+        <div class="col-span-full product-rail">
+          {% for product in featured|slice:":4" %}
+          {% include "products/partials/product_card.html" %}
+          {% endfor %}
+        </div>
         {% endwith %}
         {% endfor %}
       </div>

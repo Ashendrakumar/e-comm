@@ -59,7 +59,11 @@
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Send Us a Message</h2>
     <p class="text-gray-500 dark:text-gray-400 mb-6">Fill out the form below and we'll respond as soon as possible.</p>
 
-    <form id="contact-form" method="post" action="{% url 'core:contact' %}" class="space-y-4">
+    <form id="contact-form" method="post" action="{% url 'core:contact' %}" class="space-y-4"
+          data-ajax-form data-ajax-url="{% url 'core:contact_submit' %}"
+          data-msg-target="#contact-msg"
+          data-msg-ok-class="text-sm text-center text-green-600 font-medium"
+          data-error-text="Please check the form and try again.">
       {% csrf_token %}
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
@@ -127,19 +131,5 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-document.getElementById('contact-form').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const form = e.target, btn = form.querySelector('button[type=submit]'), msg = document.getElementById('contact-msg');
-  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 animate-spin"></i> Sending...';
-  try {
-    const res = await fetch('{% url "core:contact_submit" %}', {method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrfToken}});
-    const data = await res.json();
-    msg.classList.remove('hidden');
-    if(data.success){ form.reset(); msg.className='text-sm text-center text-green-600 font-medium'; msg.textContent=data.message; }
-    else { msg.className='text-sm text-center text-red-500'; msg.textContent='Please check the form and try again.'; }
-  } catch(err){ msg.classList.remove('hidden'); msg.className='text-sm text-center text-red-500'; msg.textContent='Something went wrong. Please try again.'; }
-  btn.disabled = false; btn.innerHTML = 'Send Message <i class="ti ti-send"></i>';
-});
-</script>
+<script src="{% static 'js/ajax-form.js' %}"></script>
 {% endblock %}

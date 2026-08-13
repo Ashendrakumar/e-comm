@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Min, Max
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
@@ -16,13 +17,26 @@ from .related import (
     record_view,
 )
 from core.models import Brand
-import json
 
 
 # ─── filter helpers ───────────────────────────────────────────────────────────
+PER_PAGE_CHOICES = (12, 24, 48)
+
+
+def _per_page(params):
+    try:
+        value = int(params.get('per_page', 12))
+    except (TypeError, ValueError):
+        return 12
+    return value if value in PER_PAGE_CHOICES else 12
+
+
 def _apply_filters(qs, params):
     q         = params.get('q', '').strip()
-    cat_slug  = params.get('category', '')
+    # `scope_cat` is the category a page is locked to (the category route);
+    # `category` is the narrowing the visitor picked inside the filter panel.
+    # Falling back here is what lets one AJAX endpoint serve both routes.
+    cat_slug  = params.get('category', '').strip() or params.get('scope_cat', '').strip()
     brand_ids = params.getlist('brand')
     min_price = params.get('min_price', '')
     max_price = params.get('max_price', '')
@@ -72,31 +86,64 @@ def _apply_filters(qs, params):
     return qs.order_by(sort if sort in valid else '-created_at'), sort
 
 
-def _sidebar_context(base_qs, params):
-    # Build a normalized, deduplicated list of color labels (trimmed, case-insensitive)
-    raw_colors = base_qs.exclude(color='').values_list('color', flat=True)
-    color_list = []
-    _seen = set()
-    for c in raw_colors:
-        if not c:
+def _color_labels(base_qs):
+    """Normalized, deduplicated colour labels (trimmed, case-insensitive)."""
+    labels, seen = [], set()
+    for c in base_qs.exclude(color='').values_list('color', flat=True):
+        norm = (c or '').strip().lower()
+        if not norm or norm in seen:
             continue
-        norm = c.strip().lower()
-        if not norm or norm in _seen:
-            continue
-        _seen.add(norm)
-        color_list.append(c.strip())
+        seen.add(norm)
+        labels.append(c.strip())
+    return labels
 
+
+def _sidebar_context(base_qs, params, brands_qs=None):
+    """Facet data the shared filter panel renders, scoped to `base_qs`.
+
+    `brands_qs` lets the category route narrow the brand list to brands that
+    actually appear in that category; the all-products route passes nothing.
+    """
+    if brands_qs is None:
+        brands_qs = Brand.objects.filter(is_active=True).order_by('name')
     return dict(
         price_range     = base_qs.aggregate(min_price=Min('price'), max_price=Max('price')),
-        sidebar_brands  = Brand.objects.filter(is_active=True).order_by('name'),
-        root_cats       = Category.objects.filter(is_active=True, parent=None).prefetch_related('children'),
+        sidebar_brands  = brands_qs,
         in_stock_count  = base_qs.filter(stock__gt=0).count(),
         on_sale_count   = base_qs.filter(sale_price__isnull=False).count(),
         new_count       = base_qs.filter(is_new_arrival=True).count(),
-        color_list      = color_list,
+        color_list      = _color_labels(base_qs),
         selected_brands = params.getlist('brand'),
         selected_colors = params.getlist('color'),
     )
+
+
+def _filter_config(params, category=None):
+    """Route-specific configuration for products/partials/filter_panel.html.
+
+    Pass `category` on the category route: the panel then pins every request to
+    that category with a hidden `scope_cat` field and offers its sub-categories
+    for drilling down, instead of the whole category tree.
+    """
+    if category is not None:
+        subs = category.children.filter(is_active=True).prefetch_related('children')
+        cfg  = dict(
+            scope_cat     = category.slug,
+            show_category = subs.exists(),
+            cat_all_label = f'All {category.name}',
+            cat_options   = subs,
+            clear_url     = category.get_absolute_url(),
+        )
+    else:
+        cfg = dict(
+            scope_cat     = '',
+            show_category = True,
+            cat_all_label = 'All Categories',
+            cat_options   = Category.objects.filter(is_active=True, parent=None).prefetch_related('children'),
+            clear_url     = reverse('products:list'),
+        )
+    cfg['current_category'] = params.get('category', '').strip()
+    return cfg
 
 
 def _active_chips(params, brands_qs):
@@ -126,33 +173,51 @@ def _active_chips(params, brands_qs):
 
 # ─── product list ─────────────────────────────────────────────────────────────
 def product_list(request):
-    per_page = int(request.GET.get('per_page', 12))
-    per_page = per_page if per_page in (12, 24, 48) else 12
+    per_page = _per_page(request.GET)
     base_qs  = Product.objects.filter(is_active=True).select_related('category', 'brand').prefetch_related('images', 'reviews')
     qs, sort = _apply_filters(base_qs, request.GET)
     ctx      = _sidebar_context(base_qs, request.GET)
+    config   = _filter_config(request.GET)
     chips    = _active_chips(request.GET, ctx['sidebar_brands'])
     paginator = Paginator(qs, per_page)
     page_obj  = paginator.get_page(request.GET.get('page', 1))
     ctx.update(products=page_obj, sort=sort, q=request.GET.get('q', ''),
                total_count=paginator.count, active_chips=chips, per_page=per_page,
                view_mode=request.GET.get('view', 'grid'), page_title='All Products',
+               filter_config=config, clear_url=config['clear_url'],
                meta_description='Browse premium electronics at TechZone.')
     return render(request, 'products/list.html', ctx)
 
 
 # ─── AJAX filter ──────────────────────────────────────────────────────────────
 def ajax_filter(request):
-    per_page = int(request.GET.get('per_page', 12))
-    per_page = per_page if per_page in (12, 24, 48) else 12
+    """Serves every route that embeds the shared filter panel.
+
+    The panel sends `scope_cat` when the page is pinned to a category, so no
+    per-route endpoint is needed: _apply_filters resolves the scope, and the
+    chips / "Clear all" link follow the same scope.
+    """
+    per_page = _per_page(request.GET)
     base_qs  = Product.objects.filter(is_active=True).select_related('category', 'brand').prefetch_related('images', 'reviews')
     qs, _    = _apply_filters(base_qs, request.GET)
     paginator = Paginator(qs, per_page)
     page_obj  = paginator.get_page(request.GET.get('page', 1))
     view_mode = request.GET.get('view', 'grid')
-    grid_html = render_to_string('products/partials/product_grid.html', {'products': page_obj, 'view_mode': view_mode}, request=request)
-    pag_html  = render_to_string('products/partials/pagination.html',   {'products': page_obj, 'request': request}, request=request)
-    return JsonResponse({'html': grid_html, 'pagination': pag_html, 'count': paginator.count, 'num_pages': paginator.num_pages, 'page': page_obj.number})
+
+    scope_slug = request.GET.get('scope_cat', '').strip()
+    scope_cat  = Category.objects.filter(slug=scope_slug, is_active=True).first() if scope_slug else None
+    clear_url  = scope_cat.get_absolute_url() if scope_cat else reverse('products:list')
+
+    chips = _active_chips(request.GET, Brand.objects.filter(is_active=True))
+
+    grid_html  = render_to_string('products/partials/product_grid.html',
+                                  {'products': page_obj, 'view_mode': view_mode, 'clear_url': clear_url}, request=request)
+    pag_html   = render_to_string('products/partials/pagination.html',
+                                  {'products': page_obj, 'request': request}, request=request)
+    chips_html = render_to_string('products/partials/filter_chips.html',
+                                 {'active_chips': chips, 'clear_url': clear_url}, request=request)
+    return JsonResponse({'html': grid_html, 'pagination': pag_html, 'chips': chips_html,
+                         'count': paginator.count, 'num_pages': paginator.num_pages, 'page': page_obj.number})
 
 
 # ─── quick view ───────────────────────────────────────────────────────────────
@@ -181,55 +246,45 @@ def compare_products(request):
                  if p.attributes.filter(attribute__name=attr).exists() else '—') for p in products} for attr in all_attrs}
     return render(request, 'products/compare.html', {
         'products': products, 'matrix': matrix,
-        'all_attrs': all_attrs, 'matrix_json': json.dumps(matrix), 'page_title': 'Compare Products'
+        # `matrix` is serialised by {{ matrix|json_script }} in the template now,
+        # so no hand-dumped JSON is needed here.
+        'all_attrs': all_attrs, 'page_title': 'Compare Products'
     })
 
 
 # ─── category detail ──────────────────────────────────────────────────────────
 def category_detail(request, slug):
     category  = get_object_or_404(Category, slug=slug, is_active=True)
-    desc_ids  = [c.pk for c in category.get_all_descendants()]
-    all_ids   = [category.pk] + desc_ids
-    per_page  = int(request.GET.get('per_page', 12))
-    per_page  = per_page if per_page in (12, 24, 48) else 12
-    base_qs   = Product.objects.filter(category_id__in=all_ids, is_active=True).select_related('brand').prefetch_related('images', 'reviews')
+    all_ids   = [category.pk] + [c.pk for c in category.get_all_descendants()]
+    per_page  = _per_page(request.GET)
+    base_qs   = (Product.objects.filter(category_id__in=all_ids, is_active=True)
+                 .select_related('category', 'brand').prefetch_related('images', 'reviews'))
     qs, sort  = _apply_filters(base_qs, request.GET)
-    price_range   = base_qs.aggregate(min_price=Min('price'), max_price=Max('price'))
-    brands        = Brand.objects.filter(products__category_id__in=all_ids, is_active=True).distinct()
-    paginator     = Paginator(qs, per_page)
-    page_obj      = paginator.get_page(request.GET.get('page', 1))
-    chips         = _active_chips(request.GET, brands)
-    # Deduplicate color labels for the sidebar (trim + case-insensitive)
-    raw_colors = base_qs.exclude(color='').values_list('color', flat=True)
-    colors = []
-    _seen = set()
-    for c in raw_colors:
-        if not c:
-            continue
-        norm = c.strip().lower()
-        if not norm or norm in _seen:
-            continue
-        _seen.add(norm)
-        colors.append(c.strip())
+    brands    = Brand.objects.filter(products__category_id__in=all_ids, is_active=True).distinct().order_by('name')
 
-    return render(request, 'products/category.html', {
-        'category': category, 
+    ctx    = _sidebar_context(base_qs, request.GET, brands_qs=brands)
+    config = _filter_config(request.GET, category=category)
+    paginator = Paginator(qs, per_page)
+    page_obj  = paginator.get_page(request.GET.get('page', 1))
+
+    ctx.update({
+        'category': category,
         'products': page_obj,
         'subcategories': category.children.filter(is_active=True),
-        'siblings': category.get_siblings(), 'breadcrumbs': category.get_breadcrumbs(),
-        'brands': brands, 'sidebar_brands': brands, 'price_range': price_range,
-        'sort': sort, 'total_count': paginator.count,
-        'in_stock_count': base_qs.filter(stock__gt=0).count(),
-        'on_sale_count':  base_qs.filter(sale_price__isnull=False).count(),
-        'active_chips': chips, 'per_page': per_page,
+        'siblings': category.get_siblings(),
+        'breadcrumbs': category.get_breadcrumbs(),
+        'brands': brands,
+        'sort': sort,
+        'total_count': paginator.count,
+        'active_chips': _active_chips(request.GET, brands),
+        'per_page': per_page,
         'view_mode': request.GET.get('view', 'grid'),
-        'color_list': colors,
-        'selected_brands': request.GET.getlist('brand'),
-        'selected_colors': request.GET.getlist('color'),
-        'root_cats': Category.objects.filter(is_active=True, parent=None).prefetch_related('children'),
+        'filter_config': config,
+        'clear_url': config['clear_url'],
         'page_title': category.name,
         'meta_description': category.meta_description or category.description,
     })
+    return render(request, 'products/category.html', ctx)
 
 
 # ─── categories overview ──────────────────────────────────────────────────────

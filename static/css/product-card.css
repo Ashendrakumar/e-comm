@@ -1,0 +1,126 @@
+/* Product card: fixed geometry, hover actions, shelf/rail layouts, plus the
+   Quick View modal and Compare bar chrome.
+   Loaded on every page (from base.html) because cards appear on the
+   homepage, category pages, search results and product detail. */
+#qv-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+#qv-modal.open{display:flex;}
+#compare-bar{transform:translateY(100%);transition:transform .3s ease;z-index:40;}
+#compare-bar.show{transform:translateY(0);}
+.pc-fade-in{animation:pcFadeIn .3s ease;}
+@keyframes pcFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PRODUCT CARD — fixed size at every viewport.
+
+   The card never resizes: width is a constant, the media box is locked to 1:1
+   with that width, and the info block is a fixed height built from fixed-height
+   rows. Total height is therefore identical for every product regardless of
+   whether it has a brand, a rating, a sale price or a stock warning — only the
+   number of columns changes with the viewport.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root{
+  --pc-w:240px;                                        /* card width  — constant */
+  --pc-media:240px;                                    /* media box   — 1:1      */
+  --pc-info:152px;                                     /* info block  — constant */
+  --pc-h:calc(var(--pc-media) + var(--pc-info) + 2px); /* + 1px border each side */
+  --pc-gap:16px;
+}
+
+.product-card{
+  width:var(--pc-w);flex:0 0 var(--pc-w);height:var(--pc-h);
+  display:flex;flex-direction:column;position:relative;overflow:hidden;
+  background:#fff;border:1px solid #f3f4f6;border-radius:16px;
+  transition:transform .3s,box-shadow .3s,border-color .3s;
+}
+.dark .product-card{background:#111827;border-color:#1f2937;}
+.product-card:hover{transform:translateY(-6px);box-shadow:0 25px 50px -12px rgba(37,99,235,.18);border-color:#bfdbfe;}
+.dark .product-card:hover{border-color:#1e40af;}
+.product-card.is-out{opacity:.9;}
+
+/* ── Media: locked 1:1, same pixels on every screen ── */
+.product-card .card-media{
+  position:relative;width:var(--pc-w);height:var(--pc-media);
+  flex:0 0 var(--pc-media);aspect-ratio:1/1;overflow:hidden;
+  background:linear-gradient(135deg,#f9fafb,#f3f4f6);
+}
+.dark .product-card .card-media{background:linear-gradient(135deg,#1f2937,#111827);}
+.product-card .card-img{display:block;width:100%;height:100%;}
+.product-card .card-img img{width:100%;height:100%;object-fit:contain;padding:12px;transition:transform .5s ease-out;}
+.product-card:hover .card-img img{transform:scale(1.08);}
+.product-card.is-out .card-img img{filter:grayscale(1);}
+.product-card .card-img .pc-noimg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#d1d5db;}
+.dark .product-card .card-img .pc-noimg{color:#374151;}
+
+/* ── Info: fixed height, fixed rows ── */
+.product-card .card-info{height:var(--pc-info);padding:14px;display:flex;flex-direction:column;overflow:hidden;}
+.pc-brand{height:14px;line-height:14px;margin-bottom:4px;font-size:10.5px;font-weight:700;letter-spacing:.05em;
+          text-transform:uppercase;color:#2563eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dark .pc-brand{color:#60a5fa;}
+.pc-brand a:hover{text-decoration:underline;}
+.pc-title{height:38px;margin-bottom:6px;font-size:13.5px;line-height:19px;font-weight:600;color:#1f2937;
+          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.dark .pc-title{color:#e5e7eb;}
+a:hover>.pc-title{color:#2563eb;}
+.dark a:hover>.pc-title{color:#60a5fa;}
+.pc-rating{height:16px;margin-bottom:6px;display:flex;align-items:center;gap:5px;overflow:hidden;}
+.pc-rating i{font-size:12px;}
+.pc-rating .pc-note{font-size:10.5px;color:#6b7280;white-space:nowrap;}
+.dark .pc-rating .pc-note{color:#9ca3af;}
+.pc-price{height:26px;margin-top:auto;display:flex;align-items:baseline;gap:6px;overflow:hidden;}
+.pc-price .pc-now{font-size:17px;line-height:26px;font-weight:800;color:#111827;white-space:nowrap;}
+.dark .pc-price .pc-now{color:#fff;}
+.pc-price .pc-was{font-size:11px;color:#9ca3af;text-decoration:line-through;white-space:nowrap;}
+.pc-stock{height:14px;line-height:14px;display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;overflow:hidden;}
+.pc-stock i{font-size:11px;}
+.pc-stock.is-low{color:#f97316;}
+.pc-stock.is-none{color:#9ca3af;}
+.pc-stock.is-ok{color:#16a34a;}
+
+/* ── Hover actions: sit over the image, never over the price ── */
+.product-card .card-actions{
+  position:absolute;bottom:0;left:0;right:0;display:flex;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-top:1px solid #e5e7eb;
+  pointer-events:none;   /* invisible bar must not swallow clicks on the image */
+}
+.dark .product-card .card-actions{background:rgba(17,24,39,.97);border-top-color:#374151;}
+.product-card:hover .card-actions{pointer-events:auto;}
+
+/* Buttons — every state declared explicitly for light AND dark, so none of it
+   depends on a Tailwind shade being present in the palette. */
+.pc-act{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 4px;font-size:11.5px;font-weight:600;line-height:1.2;
+  background:transparent;border:0;cursor:pointer;
+  transition:background-color .15s ease,color .15s ease;
+}
+.pc-act i{font-size:14px;}
+.pc-act + .pc-act{border-left:1px solid #e5e7eb;}
+.dark .pc-act + .pc-act{border-left-color:#374151;}
+.pc-act:focus-visible{outline:2px solid #2563eb;outline-offset:-2px;}
+
+/* Quick View — primary accent, lighter in dark mode for readable contrast */
+.pc-act-qv{color:#2563eb;}
+.dark .pc-act-qv{color:#60a5fa;}
+.pc-act-qv:hover{background:#eff6ff;color:#1d4ed8;}
+.dark .pc-act-qv:hover{background:#1e3a8a;color:#dbeafe;}
+.pc-act-qv:active{background:#dbeafe;}
+.dark .pc-act-qv:active{background:#1e40af;}
+
+/* Compare — neutral until selected, then clearly "on" in both themes */
+.pc-act-cmp{color:#4b5563;}
+.dark .pc-act-cmp{color:#9ca3af;}
+.pc-act-cmp:hover{background:#f3f4f6;color:#111827;}
+.dark .pc-act-cmp:hover{background:#1f2937;color:#f9fafb;}
+.pc-act-cmp:active{background:#e5e7eb;}
+.dark .pc-act-cmp:active{background:#374151;}
+.pc-act-cmp.is-active{background:#dbeafe;color:#1d4ed8;}
+.dark .pc-act-cmp.is-active{background:#1e40af;color:#dbeafe;}
+.pc-act-cmp.is-active:hover{background:#bfdbfe;}
+.dark .pc-act-cmp.is-active:hover{background:#1d4ed8;}
+
+/* ── Layouts built from fixed-size cards ── */
+/* Wrapping shelf: column count reflows, card size never does. */
+.product-shelf{display:grid;grid-template-columns:repeat(auto-fill,var(--pc-w));gap:var(--pc-gap);justify-content:center;}
+/* Single-row scroller for "related" / "recently viewed" strips. */
+.product-rail{display:flex;gap:var(--pc-gap);overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+.product-rail::-webkit-scrollbar{display:none;}

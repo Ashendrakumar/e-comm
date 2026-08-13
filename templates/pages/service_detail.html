@@ -79,7 +79,10 @@
         <div id="inquiry" class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Request This Service</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">Fill in your details and we'll get back within 24 hours.</p>
-          <form id="service-inquiry-form" method="post" action="{% url 'pages:service_inquiry' service.slug %}" class="space-y-3">
+          <form id="service-inquiry-form" method="post" action="{% url 'pages:service_inquiry' service.slug %}" class="space-y-3"
+                data-ajax-form data-msg-target="#inquiry-msg"
+                data-msg-ok-class="text-sm text-center text-green-600"
+                data-error-text="Please check your details and try again.">
             {% csrf_token %}
             {{ inquiry_form.name }}
             {{ inquiry_form.email }}
@@ -130,25 +133,5 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-document.getElementById('service-inquiry-form').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const form = e.target, btn = form.querySelector('button[type=submit]'), msg = document.getElementById('inquiry-msg');
-  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 animate-spin"></i> Sending...';
-  try {
-    const res = await fetch(form.action, {method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':csrfToken}});
-    const data = await res.json();
-    msg.classList.remove('hidden');
-    if(data.success){
-      form.reset();
-      msg.className = 'text-sm text-center text-green-600'; msg.textContent = data.message;
-    } else {
-      msg.className = 'text-sm text-center text-red-500'; msg.textContent = 'Please check your details and try again.';
-    }
-  } catch(err){
-    msg.classList.remove('hidden'); msg.className='text-sm text-center text-red-500'; msg.textContent='Something went wrong. Please try again.';
-  }
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-send"></i> Send Inquiry';
-});
-</script>
+<script src="{% static 'js/ajax-form.js' %}"></script>
 {% endblock %}

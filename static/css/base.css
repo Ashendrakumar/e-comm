@@ -1,0 +1,36 @@
+/* Global chrome: skip-link, utility fallbacks, swiper theming and the
+   component classes shared by every page.
+   NOTE: .badge/.btn-*/.form-*/.section-* are also defined in
+   static_src/input.css (@layer components) for the compiled bundle. This
+   file is linked last, so it keeps the same cascade position the inline
+   <style> block had. */
+[x-cloak]{display:none!important}
+.skip-link{position:absolute;left:-9999px;top:auto;z-index:100;background:#2563eb;color:#fff;padding:10px 16px;border-radius:0 0 8px 0;font-weight:600}
+.skip-link:focus{left:0;top:0}
+.product-card:hover .product-actions{opacity:1;transform:translateY(0)}
+.product-actions{opacity:0;transform:translateY(10px);transition:all .3s ease}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.line-clamp-1{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.scrollbar-hide::-webkit-scrollbar{display:none}
+.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
+.animate-fade-in{animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.mega-menu{display:none}
+.mega-trigger:hover .mega-menu{display:block}
+.swiper-pagination-bullet-active{background:#2563eb!important}
+.hero-swiper .swiper-button-next,.hero-swiper .swiper-button-prev{color:#fff;background:rgba(0,0,0,.3);width:44px;height:44px;border-radius:50%;margin-top:-22px}
+.hero-swiper .swiper-button-next::after,.hero-swiper .swiper-button-prev::after{font-size:16px;font-weight:700}
+.star-filled{color:#f59e0b}
+.star-empty{color:#d1d5db}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+input:focus,textarea:focus,select:focus{outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.15);border-color:#2563eb}
+.form-input,.form-textarea,.form-select{width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-size:14px;background:#fff;color:#111;transition:border-color .2s,box-shadow .2s}
+.dark .form-input,.dark .form-textarea,.dark .form-select{background:#1f2937;border-color:#374151;color:#f9fafb}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:#2563eb;color:#fff;font-weight:600;padding:10px 22px;border-radius:10px;transition:background .2s,transform .1s;cursor:pointer;border:none;font-size:14px}
+.btn-primary:hover{background:#1d4ed8;transform:translateY(-1px)}
+.btn-outline{display:inline-flex;align-items:center;gap:8px;background:transparent;color:#2563eb;font-weight:600;padding:10px 22px;border-radius:10px;border:1.5px solid #2563eb;transition:all .2s;font-size:14px;cursor:pointer}
+.btn-outline:hover{background:#eff6ff}
+.section-title{font-size:clamp(22px,4vw,30px);font-weight:700;color:#111;letter-spacing:-.5px}
+.dark .section-title{color:#f9fafb}
+.section-subtitle{color:#6b7280;font-size:15px;margin-top:6px}
+.dark .section-subtitle{color:#9ca3af}

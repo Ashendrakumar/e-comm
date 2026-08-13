@@ -1,0 +1,19 @@
+{% comment %}
+Active filter chips. Rendered on page load and re-rendered by ajax_filter, so it
+must stay self-contained: it may only use `active_chips` and `clear_url`.
+{% endcomment %}
+{% if active_chips %}
+{% for chip in active_chips %}
+<span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-100 border border-primary-200 dark:border-primary-800">
+  {{ chip.label }}
+  <button type="button" onclick="removeFilterChip('{{ chip.key|escapejs }}','{{ chip.val|escapejs }}')"
+          class="hover:text-red-500 transition-colors leading-none">
+    <i class="ti ti-x text-[10px]"></i>
+  </button>
+</span>
+{% endfor %}
+<a href="{{ clear_url }}"
+   class="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1 font-medium px-2 py-1.5">
+  <i class="ti ti-x text-xs"></i> Clear all
+</a>
+{% endif %}

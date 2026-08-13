@@ -3,14 +3,7 @@
 {% block title %}Compare Products — TechZone{% endblock %}
 
 {% block extra_head %}
-<style>
-.compare-table th,.compare-table td{padding:12px 16px;vertical-align:top;border-bottom:1px solid #f3f4f6;}
-.dark .compare-table th,.dark .compare-table td{border-color:#1f2937;}
-.compare-table tr:last-child td,.compare-table tr:last-child th{border-bottom:none;}
-.compare-table thead th:first-child{width:180px;}
-.spec-row:hover td,.spec-row:hover th{background:#f8fafc;}
-.dark .spec-row:hover td,.dark .spec-row:hover th{background:#111827;}
-</style>
+<link rel="stylesheet" href="{% static 'css/compare.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -185,28 +178,6 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-// Fill matrix values
-const matrix = {{ matrix_json|safe }};
-document.querySelectorAll('.attr-val').forEach(el=>{
-  const attr=el.dataset.attr;
-  const pid=el.dataset.product;
-  if(matrix[attr]&&matrix[attr][pid]){ el.textContent=matrix[attr][pid]; }
-});
-
-function removeFromCompare(pid){
-  let items=JSON.parse(localStorage.getItem('tzCompare')||'[]');
-  items=items.filter(p=>p.id!==pid);
-  localStorage.setItem('tzCompare',JSON.stringify(items));
-  if(items.length===0){ window.location.href='/products/'; }
-  else {
-    const ids=items.map(p=>'ids='+p.id).join('&');
-    window.location.href='/products/compare/?'+ids;
-  }
-}
-function clearAllCompare(){
-  localStorage.setItem('tzCompare','[]');
-  window.location.href='/products/';
-}
-</script>
+{{ matrix|json_script:"cmp-matrix" }}
+<script src="{% static 'js/compare.js' %}"></script>
 {% endblock %}

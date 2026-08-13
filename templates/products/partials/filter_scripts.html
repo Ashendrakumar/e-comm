@@ -1,0 +1,15 @@
+{% load static %}
+{% comment %}
+  Script tag for the shared filter panel. Include ONCE per page, inside the
+  page's extra_scripts block. Behaviour lives in static/js/product-filters.js.
+
+  The hosting page must provide:
+    #filter-form[data-ajax-url]     desktop filter <form> + the AJAX endpoint
+    #products-section               AJAX target wrapping the grid + #pagination-section
+  and may provide:
+    #sort-select #perpage-select    toolbar <select>s calling doAjaxFilter()
+    #live-count #result-count       spans showing the result count
+    #chip-wrap                      container for the active filter chips
+    #mob-filter #mob-panel          mobile drawer
+{% endcomment %}
+<script src="{% static 'js/product-filters.js' %}"></script>

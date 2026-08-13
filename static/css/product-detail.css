@@ -1,0 +1,33 @@
+/* Product detail: gallery, sticky buy box, tabs, review bars and rails. */
+/* ── Gallery Swiper ── */
+.gallery-thumb-swiper .swiper-slide{opacity:.55;cursor:pointer;transition:opacity .2s;}
+.gallery-thumb-swiper .swiper-slide-thumb-active{opacity:1;border:2px solid #2563eb;border-radius:10px;}
+/* ── Zoom overlay ── */
+#zoom-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out;}
+#zoom-overlay.open{display:flex;}
+#zoom-img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:12px;}
+/* ── Star rating input ── */
+.star-input{display:flex;gap:4px;flex-direction:row-reverse;justify-content:flex-end;}
+.star-input input{display:none;}
+.star-input label{font-size:28px;color:#d1d5db;cursor:pointer;transition:color .15s;}
+.star-input label:hover,.star-input label:hover~label,.star-input input:checked~label{color:#fbbf24;}
+/* ── Tab system ── */
+.tab-btn{padding:13px 22px;border-bottom:2.5px solid transparent;font-size:14px;font-weight:500;color:#6b7280;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tab-btn.active{border-bottom-color:#2563eb;color:#2563eb;font-weight:700;}
+.dark .tab-btn{color:#9ca3af;}
+.dark .tab-btn.active{color:#60a5fa;border-bottom-color:#60a5fa;}
+/* ── Rating bar ── */
+.rating-bar{height:7px;border-radius:4px;background:#e5e7eb;overflow:hidden;}
+.dark .rating-bar{background:#374151;}
+.rating-bar-fill{height:100%;border-radius:4px;background:#fbbf24;transition:width .8s cubic-bezier(.4,0,.2,1);}
+/* ── Sticky sidebar ── */
+@media(min-width:1024px){.detail-sticky{position:sticky;top:88px;}}
+/* ── Breadcrumb scroll ── */
+.breadcrumb-scroll{overflow-x:auto;scrollbar-width:none;}
+.breadcrumb-scroll::-webkit-scrollbar{display:none;}
+/* ── Spec table rows ── */
+.spec-row:nth-child(even){background:#f9fafb;}
+.dark .spec-row:nth-child(even){background:#111827;}
+/* ── Recently viewed scroll ── */
+.rv-scroll{overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+.rv-scroll::-webkit-scrollbar{display:none;}

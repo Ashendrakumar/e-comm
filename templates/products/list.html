@@ -5,23 +5,8 @@
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block extra_head %}
-<style>
-/* ── List mode ────────────────────────────────────────────── */
-#product-grid.list-mode{display:flex!important;flex-direction:column!important;gap:10px!important;}
-#product-grid.list-mode .product-card{display:flex!important;flex-direction:row!important;height:auto!important;min-height:130px!important;}
-#product-grid.list-mode .product-card .card-img{width:140px!important;min-width:140px!important;flex-shrink:0!important;aspect-ratio:unset!important;}
-#product-grid.list-mode .product-card .card-actions{display:none!important;}
-#product-grid.list-mode .product-card .card-info{flex:1;padding:14px!important;}
-/* Quick-view modal & compare-bar styles are shared — see products/partials/product_card_scripts.html */
-/* ── Skeleton loader ──────────────────────────────────────── */
-.skeleton{background:linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%);background-size:200% 100%;animation:shimmer 1.3s infinite;border-radius:12px;}
-.dark .skeleton{background:linear-gradient(90deg,#1f2937 25%,#374151 50%,#1f2937 75%);background-size:200% 100%;}
-.skeleton-card{height:280px;border-radius:16px;}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-/* ── Fade in ──────────────────────────────────────────────── */
-.fade-in{animation:fadeIn .3s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-</style>
+{# Quick-view modal & compare-bar styles are shared — see products/partials/product_card_scripts.html #}
+{% include "products/partials/filter_panel_styles.html" %}
 {% endblock %}
 
 {% block content %}
@@ -50,21 +35,7 @@
 
       <!-- Active filter chips -->
       <div class="flex flex-wrap gap-2 items-center" id="chip-wrap">
-        {% if active_chips %}
-        {% for chip in active_chips %}
-        <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-100 border border-primary-200 dark:border-primary-800">
-          {{ chip.label }}
-          <button onclick="removeFilterChip('{{ chip.key }}','{{ chip.val }}')"
-                  class="hover:text-red-500 transition-colors leading-none">
-            <i class="ti ti-x text-[10px]"></i>
-          </button>
-        </span>
-        {% endfor %}
-        <a href="{% url 'products:list' %}"
-           class="text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1 font-medium px-2 py-1.5">
-          <i class="ti ti-x text-xs"></i> Clear all
-        </a>
-        {% endif %}
+        {% include "products/partials/filter_chips.html" %}
       </div>
     </div>
   </div>
@@ -78,7 +49,7 @@
     <aside class="hidden lg:block w-64 flex-shrink-0">
       <div class="sticky top-24 space-y-4">
 
-        <form method="get" id="filter-form" class="space-y-0">
+        <form method="get" id="filter-form" data-ajax-url="{% url 'products:ajax_filter' %}" class="space-y-0">
           <!-- Preserve sort/view/per_page -->
           {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
           {% if request.GET.view %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
@@ -91,7 +62,7 @@
               <h3 class="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
                 <i class="ti ti-adjustments-horizontal text-primary-600"></i> Filters
               </h3>
-              <a href="{% url 'products:list' %}" class="text-xs text-primary-600 hover:underline font-semibold">Clear all</a>
+              <a href="{{ clear_url }}" class="text-xs text-primary-600 hover:underline font-semibold">Clear all</a>
             </div>
 
             {% include "products/partials/filter_panel.html" %}
@@ -190,7 +161,7 @@
         <button type="submit" class="w-full btn-primary justify-center py-3 rounded-xl text-sm font-semibold mt-5">
           <i class="ti ti-search"></i> Apply Filters
         </button>
-        <a href="{% url 'products:list' %}" class="block text-center text-sm text-gray-500 hover:text-primary-600 mt-2 transition-colors">Clear All</a>
+        <a href="{{ clear_url }}" class="block text-center text-sm text-gray-500 hover:text-primary-600 mt-2 transition-colors">Clear All</a>
       </form>
     </div>
   </div>
@@ -201,135 +172,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-// showToast() and CSRF are provided globally by products/partials/product_card_scripts.html
-// ── Grid / List toggle ─────────────────────────────────────────────
-function setView(v){
-  const grid=document.getElementById('product-grid');
-  const bG=document.getElementById('btn-grid');
-  const bL=document.getElementById('btn-list');
-  if(v==='list'){
-    if(grid) grid.classList.add('list-mode');
-    bG.className='px-3 py-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors';
-    bL.className='px-3 py-2 bg-primary-600 text-white transition-colors border-l border-gray-200 dark:border-gray-700';
-  } else {
-    if(grid) grid.classList.remove('list-mode');
-    bG.className='px-3 py-2 bg-primary-600 text-white transition-colors';
-    bL.className='px-3 py-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-l border-gray-200 dark:border-gray-700';
-  }
-  localStorage.setItem('pview',v);
-  const p=new URLSearchParams(window.location.search);
-  p.set('view',v); p.delete('page');
-  history.replaceState({},'',window.location.pathname+'?'+p.toString());
-}
-// Restore saved view on load
-(function(){
-  const saved=localStorage.getItem('pview')||'grid';
-  if(saved==='list'){setView('list');}
-})();
-
-// ── Remove filter chip ─────────────────────────────────────────────
-function removeFilterChip(key,val){
-  const p=new URLSearchParams(window.location.search);
-  if(key==='price_range'){p.delete('min_price');p.delete('max_price');}
-  else if(key==='brand'&&val){
-    const kept=p.getAll('brand').filter(v=>v!==val);
-    p.delete('brand'); kept.forEach(v=>p.append('brand',v));
-  } else if(key==='color'&&val){
-    const kept=p.getAll('color').filter(v=>v!==val);
-    p.delete('color'); kept.forEach(v=>p.append('color',v));
-  } else {p.delete(key);}
-  p.delete('page');
-  window.location.search=p.toString();
-}
-
-// ── Skeleton loader ────────────────────────────────────────────────
-function showSkeleton(){
-  const grid=document.getElementById('product-grid');
-  if(!grid) return;
-  const n=Math.min(parseInt(document.getElementById('perpage-select')?.value||12,10),12);
-  grid.classList.remove('list-mode');
-  grid.innerHTML=Array.from({length:n}).map(()=>'<div class="skeleton skeleton-card"></div>').join('');
-}
-
-// ── Core AJAX loader ───────────────────────────────────────────────
-function ajaxLoad(params){
-  const view=localStorage.getItem('pview')||'grid';
-  params.set('view',view);
-
-  const section=document.getElementById('products-section');
-  showSkeleton();
-  section.style.opacity='0.6';
-  section.style.pointerEvents='none';
-
-  // Reflect state in the URL so refresh / share / back-button work
-  history.replaceState({},'',window.location.pathname+'?'+params.toString());
-
-  fetch('/products/ajax/filter/?'+params.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'}})
-    .then(r=>r.json())
-    .then(data=>{
-      section.innerHTML=data.html+'<div id="pagination-section">'+data.pagination+'</div>';
-      const lc=document.getElementById('live-count'); if(lc) lc.textContent=data.count;
-      const rc=document.getElementById('result-count'); if(rc) rc.textContent=data.count;
-      section.style.opacity='';
-      section.style.pointerEvents='';
-      if(typeof updateCompareUI==='function') updateCompareUI();
-      if(view==='list'){ const g=document.getElementById('product-grid'); if(g) g.classList.add('list-mode'); }
-    })
-    .catch(()=>{section.style.opacity='';section.style.pointerEvents='';});
-}
-
-// Build params from the desktop filter form + toolbar controls
-function collectParams(){
-  const form=document.getElementById('filter-form');
-  const params=new URLSearchParams(new FormData(form));
-  // Drop empty values so the URL stays clean
-  for(const k of [...params.keys()]){ if(params.get(k)==='') params.delete(k); }
-  const sort=document.getElementById('sort-select')?.value;
-  const per=document.getElementById('perpage-select')?.value;
-  if(sort) params.set('sort',sort);
-  if(per)  params.set('per_page',per);
-  params.delete('page');
-  return params;
-}
-
-// ── AJAX filter (called on every control change) ───────────────────
-function doAjaxFilter(){ ajaxLoad(collectParams()); }
-
-// Auto AJAX on checkbox / radio changes
-document.querySelectorAll('#filter-form input[type=checkbox], #filter-form input[type=radio]').forEach(el=>{
-  el.addEventListener('change',doAjaxFilter);
-});
-
-// Debounced AJAX on text search + price number inputs
-let _debounce;
-document.querySelectorAll('#filter-form .js-live-search, #filter-form .js-live-price').forEach(el=>{
-  el.addEventListener('input',()=>{ clearTimeout(_debounce); _debounce=setTimeout(doAjaxFilter,500); });
-});
-
-// Price quick presets (desktop form only)
-document.querySelectorAll('#filter-form .price-preset').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const form=document.getElementById('filter-form');
-    form.querySelector('[name=min_price]').value=btn.dataset.min||'';
-    form.querySelector('[name=max_price]').value=btn.dataset.max||'';
-    document.querySelectorAll('#filter-form .price-preset').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    doAjaxFilter();
-  });
-});
-
-// AJAX pagination — intercept clicks inside the products section
-document.getElementById('products-section').addEventListener('click',e=>{
-  const link=e.target.closest('#pagination-wrap a');
-  if(!link) return;
-  e.preventDefault();
-  const params=new URLSearchParams(link.search);
-  ajaxLoad(params);
-  window.scrollTo({top:document.querySelector('.max-w-7xl').offsetTop-20,behavior:'smooth'});
-});
-
-// Quick View, Compare and Wishlist behaviour is shared globally
-// (see products/partials/product_card_scripts.html).
-</script>
+{# showToast() and CSRF are provided globally by products/partials/product_card_scripts.html #}
+{# All filter/sort/pagination behaviour is shared with the category route: #}
+{% include "products/partials/filter_scripts.html" %}
 {% endblock %}

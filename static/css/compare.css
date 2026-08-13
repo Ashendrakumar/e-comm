@@ -1,0 +1,7 @@
+/* Compare table: sticky header column and row highlighting. */
+.compare-table th,.compare-table td{padding:12px 16px;vertical-align:top;border-bottom:1px solid #f3f4f6;}
+.dark .compare-table th,.dark .compare-table td{border-color:#1f2937;}
+.compare-table tr:last-child td,.compare-table tr:last-child th{border-bottom:none;}
+.compare-table thead th:first-child{width:180px;}
+.spec-row:hover td,.spec-row:hover th{background:#f8fafc;}
+.dark .spec-row:hover td,.dark .spec-row:hover th{background:#111827;}

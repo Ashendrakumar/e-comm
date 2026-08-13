@@ -7,7 +7,8 @@
     Try adjusting your filters or search terms to find what you're looking for.
   </p>
   <div class="flex items-center justify-center gap-3 flex-wrap">
-    <a href="{% url 'products:list' %}" class="btn-primary px-6 py-2.5 rounded-xl text-sm">Clear All Filters</a>
+    <a href="{% if clear_url %}{{ clear_url }}{% else %}{% url 'products:list' %}{% endif %}"
+       class="btn-primary px-6 py-2.5 rounded-xl text-sm">Clear All Filters</a>
     <a href="{% url 'products:categories' %}" class="btn-outline px-6 py-2.5 rounded-xl text-sm">Browse Categories</a>
   </div>
 </div>

@@ -1,72 +1,41 @@
 {% load static %}
+{% comment %}
+   ══════════════════════════════════════════════════════════════════════════════
+   Shared, route-agnostic filter panel.
 
-{% block extra_head %}
-<style>
-/* ── Filter panel ─────────────────────────────────────────── */
-.filter-section{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #f3f4f6;}
-.dark .filter-section{border-color:#1f2937;}
-.filter-section:last-child{border:none;padding-bottom:0;margin-bottom:0;}
-.filter-label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:#4b5563;transition:color .15s;border-radius:8px;}
-.dark .filter-label{color:#d1d5db;}
-.filter-label:hover{color:#2563eb;}
-.filter-label input[type=radio],.filter-label input[type=checkbox]{width:15px;height:15px;accent-color:#2563eb;flex-shrink:0;cursor:pointer;}
-.filter-count{font-size:11px;color:#9ca3af;background:#f3f4f6;padding:1px 7px;border-radius:9999px;flex-shrink:0;}
-.dark .filter-count{background:#1f2937;}
-/* ── Accordion ────────────────────────────────────────────── */
-.acc-head{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9ca3af;padding:2px 0 10px;cursor:pointer;background:none;border:none;transition:color .15s;}
-.acc-head:hover{color:#2563eb;}
-.acc-chevron{font-size:14px;transition:transform .25s ease;}
-.acc-body{max-height:600px;overflow:hidden;transition:max-height .3s ease,opacity .2s ease;opacity:1;}
-.filter-section.collapsed .acc-body{max-height:0!important;opacity:0;}
-.filter-section.collapsed .acc-chevron{transform:rotate(-90deg);}
-/* ── Price presets ────────────────────────────────────────── */
-.price-preset{font-size:11px;font-weight:600;padding:4px 10px;border-radius:9999px;border:1.5px solid #e5e7eb;color:#4b5563;background:#fff;transition:all .15s;cursor:pointer;}
-.dark .price-preset{border-color:#374151;background:#1f2937;color:#d1d5db;}
-.price-preset:hover{border-color:#2563eb;color:#2563eb;}
-.price-preset.active{background:#2563eb;border-color:#2563eb;color:#fff;}
-/* ── Rating options ───────────────────────────────────────── */
-.rating-option input{width:15px;height:15px;accent-color:#2563eb;cursor:pointer;}
-.rating-option:has(input:checked){color:#2563eb;font-weight:600;}
-/* ── Discount chips ───────────────────────────────────────── */
-.discount-chip{position:relative;cursor:pointer;}
-.discount-chip input{position:absolute;opacity:0;pointer-events:none;}
-.discount-chip span{display:inline-block;font-size:12px;font-weight:600;padding:5px 12px;border-radius:9999px;border:1.5px solid #e5e7eb;color:#4b5563;transition:all .15s;}
-.dark .discount-chip span{border-color:#374151;color:#d1d5db;}
-.discount-chip:hover span{border-color:#2563eb;color:#2563eb;}
-.discount-chip input:checked+span{background:#2563eb;border-color:#2563eb;color:#fff;}
-/* ── Colour swatches ──────────────────────────────────────── */
-.color-swatch{display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px 4px 4px;border-radius:9999px;border:1.5px solid #e5e7eb;transition:all .15s;}
-.dark .color-swatch{border-color:#374151;}
-.color-swatch:hover{border-color:#2563eb;}
-.color-swatch .swatch-dot{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0;box-shadow:inset 0 0 0 2px #fff;}
-.color-swatch .swatch-name{font-size:12px;color:#4b5563;text-transform:capitalize;}
-.dark .color-swatch .swatch-name{color:#d1d5db;}
-.color-swatch input{position:absolute;opacity:0;pointer-events:none;}
-.color-swatch:has(input:checked){border-color:#2563eb;background:#eff6ff;}
-.dark .color-swatch:has(input:checked){background:#1e3a8a33;}
-/* ── Custom scrollbar ─────────────────────────────────────── */
-.custom-scroll::-webkit-scrollbar{width:6px;}
-.custom-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:9999px;}
-.dark .custom-scroll::-webkit-scrollbar-thumb{background:#374151;}
-.custom-scroll{scrollbar-width:thin;}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-/* ── Fade in ──────────────────────────────────────────────── */
-.fade-in{animation:fadeIn .3s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-</style>
-{% endblock %}
+   Drop it inside any <form>; it renders only inputs, so the same markup serves
+   the all-products route and the category route. Everything route-specific
+   comes from `filter_config` (built by products.views._filter_config):
+
+     scope_cat        slug the whole page is locked to ('' on /products/).
+                      Rendered as a hidden field so *every* request — normal
+                      submit or AJAX — stays inside the category.
+     show_category    render the category chooser at all
+     cat_all_label    label for the "no narrowing" radio (value is always '')
+     cat_options      categories offered as radios (roots, or sub-categories)
+     current_category currently narrowed-to slug ('' = cat_all_label)
+     clear_url        where "Clear all" points
+
+   Styles live in filter_panel_styles.html, behaviour in filter_scripts.html —
+   include each of those ONCE per page.
+   ══════════════════════════════════════════════════════════════════════════
+{% endcomment %}
+
+{% if filter_config.scope_cat %}
+<input type="hidden" name="scope_cat" value="{{ filter_config.scope_cat }}">
+{% endif %}
 
 <!-- ── Keyword search ─────────────────────────────────────── -->
 <div class="filter-section border-b-0">
   <div class="relative">
     <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
-    <input type="text" name="q" value="{{ q }}" placeholder="Search products…"
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search products…"
            class="form-input pl-9 py-2 text-sm js-live-search" autocomplete="off">
   </div>
 </div>
 
 <!-- ── Category ───────────────────────────────────────────── -->
- {% if '/products/category/' not in request.path %}
+{% if filter_config.show_category %}
 <div class="filter-section">
   <button type="button" class="acc-head" onclick="toggleAcc(this)">
     <span>Category</span><i class="ti ti-chevron-down acc-chevron"></i>
@@ -74,20 +43,21 @@
   <div class="acc-body">
     <div class="space-y-0.5 max-h-56 overflow-y-auto pr-1 custom-scroll">
       <label class="filter-label font-medium">
-        <input type="radio" name="category" value="" {% if not request.GET.category %}checked{% endif %}>
-        All Categories
+        <input type="radio" name="category" value=""
+               {% if not filter_config.current_category %}checked{% endif %}>
+        {{ filter_config.cat_all_label }}
       </label>
-      {% for cat in root_cats %}
+      {% for cat in filter_config.cat_options %}
       <label class="filter-label">
         <input type="radio" name="category" value="{{ cat.slug }}"
-               {% if request.GET.category == cat.slug %}checked{% endif %}>
+               {% if filter_config.current_category == cat.slug %}checked{% endif %}>
         <span class="flex-1">{{ cat.name }}</span>
         <span class="filter-count">{{ cat.total_product_count }}</span>
       </label>
       {% for sub in cat.children.all %}{% if sub.is_active %}
       <label class="filter-label pl-5">
         <input type="radio" name="category" value="{{ sub.slug }}"
-               {% if request.GET.category == sub.slug %}checked{% endif %}>
+               {% if filter_config.current_category == sub.slug %}checked{% endif %}>
         <span class="flex-1 text-gray-500 dark:text-gray-400"> {{ sub.name }}</span>
         <span class="filter-count">{{ sub.product_count }}</span>
       </label>
@@ -263,26 +233,3 @@
     <label class="filter-label"><input type="radio" name="condition" value="open_box" {% if request.GET.condition == 'open_box' %}checked{% endif %}> Open Box</label>
   </div>
 </div>
-
-{% block extra_scripts %}
-<script>
-  
-// ── Accordion toggle ───────────────────────────────────────────────
-function toggleAcc(btn){ btn.closest('.filter-section').classList.toggle('collapsed'); }
-
-// ── Mobile drawer (with slide animation) ───────────────────────────
-function openMobileFilter(){
-  const d=document.getElementById('mob-filter'), p=document.getElementById('mob-panel');
-  d.classList.remove('hidden');
-  requestAnimationFrame(()=>p.classList.remove('translate-x-full'));
-}
-function closeMobileFilter(){
-  const d=document.getElementById('mob-filter'), p=document.getElementById('mob-panel');
-  p.classList.add('translate-x-full');
-  setTimeout(()=>d.classList.add('hidden'),250);
-}
-
-
-</script>
-
-{% endblock %}

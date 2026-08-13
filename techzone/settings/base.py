@@ -123,9 +123,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SITE_ID = 1
 
 # Frontend CSS strategy (Module 12).
-# False -> Tailwind via CDN (zero-build dev default).
-# True  -> compiled /static/css/app.css (run `npm install && npm run build` first).
-TAILWIND_COMPILED = os.environ.get('TAILWIND_COMPILED', 'False') == 'True'
+#   True  -> compiled /static/css/app.css  (built by `npm run build`)
+#   False -> Tailwind via the CDN runtime
+#
+# The CDN build is a script that generates the stylesheet in the browser *after*
+# the document is parsed, so the first paint is unstyled — a visible flash on
+# every load, and not something to ship. It therefore auto-enables as soon as a
+# compiled bundle exists, and `TAILWIND_COMPILED` is only needed to force it
+# either way (e.g. TAILWIND_COMPILED=False to fall back to the CDN).
+_compiled_css = BASE_DIR / 'static' / 'css' / 'app.css'
+TAILWIND_COMPILED = os.environ.get('TAILWIND_COMPILED', str(_compiled_css.exists())) == 'True'
 
 
 # Email configuration

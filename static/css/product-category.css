@@ -1,0 +1,3 @@
+/* Category landing page: hero banner treatments. */
+.cat-banner{position:relative;overflow:hidden;min-height:260px;display:flex;align-items:flex-end;}
+.cat-banner-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.2) 55%,transparent 100%);}

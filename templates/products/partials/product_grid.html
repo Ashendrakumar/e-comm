@@ -1,6 +1,6 @@
 {% load static %}
 {% if products %}
-<div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 {% if view_mode == 'list' %}list-mode{% endif %}">
+<div id="product-grid" class="product-shelf {% if view_mode == 'list' %}list-mode{% endif %}">
   {% for product in products %}
     {% include "products/partials/product_card.html" %}
   {% endfor %}
