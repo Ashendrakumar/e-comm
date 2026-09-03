@@ -1,0 +1,100 @@
+/* Category cards — shared by the homepage "Shop by Category" rail and the
+   all-categories page. Colour is driven by Category.color via --cat. */
+/* ---------- Base tile ---------- */
+.cat-card{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:24px 14px 18px;border-radius:20px;background:#fff;border:1.5px solid #eef0f4;isolation:isolate;overflow:hidden;
+  box-shadow:0 1px 2px rgba(16,24,40,.05);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease,border-color .35s ease;
+  animation:catIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 45ms)}
+.dark .cat-card{background:#111827;border-color:#1f2937;box-shadow:none}
+@keyframes catIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* soft colour wash that fades in behind the content */
+.cat-card::before{content:'';position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .35s ease;
+  background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--cat) 16%,transparent) 0%,transparent 70%)}
+/* accent bar that wipes across the top edge */
+.cat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cat);
+  transform:scaleX(0);transform-origin:left;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.cat-card:hover,.cat-card:focus-visible{transform:translateY(-6px);border-color:color-mix(in srgb,var(--cat) 38%,transparent);
+  box-shadow:0 18px 32px -14px color-mix(in srgb,var(--cat) 50%,transparent),0 4px 10px -6px rgba(16,24,40,.12)}
+.cat-card:hover::before,.cat-card:focus-visible::before{opacity:1}
+.cat-card:hover::after,.cat-card:focus-visible::after{transform:scaleX(1)}
+.cat-card:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--cat) 35%,transparent),0 18px 32px -14px color-mix(in srgb,var(--cat) 50%,transparent)}
+
+/* logo tile */
+.cat-ico{position:relative;width:64px;height:64px;border-radius:18px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--cat) 11%,#fff);color:var(--cat);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--cat) 16%,transparent);
+  transition:background .3s ease,color .3s ease,transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+.dark .cat-ico{background:color-mix(in srgb,var(--cat) 22%,#0b1220);color:color-mix(in srgb,var(--cat) 72%,#fff);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--cat) 30%,transparent)}
+.cat-ico i{font-size:28px;line-height:1;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.cat-ico img{width:34px;height:34px;object-fit:contain}
+.cat-card:hover .cat-ico{background:var(--cat);color:#fff;transform:translateY(-3px) scale(1.07);
+  box-shadow:0 12px 22px -8px color-mix(in srgb,var(--cat) 65%,transparent)}
+.dark .cat-card:hover .cat-ico{color:#fff}
+.cat-card:hover .cat-ico i{transform:scale(1.06) rotate(-4deg)}
+
+.cat-name{margin-top:14px;font-size:14px;font-weight:700;color:#1f2937;letter-spacing:-.2px;line-height:1.3;
+  transition:color .3s ease}
+.dark .cat-name{color:#e5e7eb}
+.cat-card:hover .cat-name{color:color-mix(in srgb,var(--cat) 85%,#111)}
+.dark .cat-card:hover .cat-name{color:color-mix(in srgb,var(--cat) 70%,#fff)}
+
+.cat-count{margin-top:7px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;
+  padding:3px 10px;border-radius:999px;background:#f3f4f6;color:#6b7280;transition:background .3s ease,color .3s ease}
+.dark .cat-count{background:#1f2937;color:#9ca3af}
+.cat-card:hover .cat-count{background:color-mix(in srgb,var(--cat) 14%,#fff);color:color-mix(in srgb,var(--cat) 80%,#111)}
+.dark .cat-card:hover .cat-count{background:color-mix(in srgb,var(--cat) 26%,#0b1220);color:color-mix(in srgb,var(--cat) 65%,#fff)}
+
+/* ---------- Compact variant: sub-category tiles on the all-categories page ---------- */
+.cat-card--sm{padding:16px 12px 14px;border-radius:18px;min-height:128px;justify-content:center}
+.cat-card--sm::after{height:2.5px}
+.cat-card--sm .cat-ico{width:48px;height:48px;border-radius:14px}
+.cat-card--sm .cat-ico i{font-size:22px}
+.cat-card--sm .cat-ico img{width:26px;height:26px}
+.cat-card--sm .cat-name{margin-top:11px;font-size:12.5px}
+.cat-card--sm .cat-count{margin-top:6px;font-size:10.5px;padding:2px 9px}
+.cat-card--sm:hover,.cat-card--sm:focus-visible{transform:translateY(-4px)}
+.cat-card--sm:hover .cat-ico{transform:translateY(-2px) scale(1.08)}
+
+/* ---------- Parent banner tile that leads each sub-category row ---------- */
+.cat-hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;
+  min-height:200px;border-radius:20px;isolation:isolate;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--cat) 82%,#fff) 0%,var(--cat) 42%,color-mix(in srgb,var(--cat) 62%,#000) 100%);
+  box-shadow:0 1px 2px rgba(16,24,40,.05);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease;
+  animation:catIn .5s cubic-bezier(.2,.8,.2,1) both}
+.cat-hero:hover,.cat-hero:focus-visible{transform:translateY(-6px);
+  box-shadow:0 18px 32px -14px color-mix(in srgb,var(--cat) 60%,transparent),0 4px 10px -6px rgba(16,24,40,.18)}
+.cat-hero:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--cat) 45%,#fff),0 18px 32px -14px color-mix(in srgb,var(--cat) 60%,transparent)}
+/* sheen that lifts on hover, matching the wash on the light tiles */
+.cat-hero-sheen{position:absolute;inset:0;opacity:0;transition:opacity .35s ease;
+  background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.28) 0%,transparent 65%)}
+.cat-hero:hover .cat-hero-sheen{opacity:1}
+.cat-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.3;
+  transition:opacity .5s ease,transform .5s cubic-bezier(.2,.8,.2,1)}
+.cat-hero:hover .cat-hero-img{opacity:.42;transform:scale(1.06)}
+.cat-hero-ico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;
+  background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25);
+  transition:background .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+.cat-hero-ico i{font-size:22px;line-height:1;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.cat-hero:hover .cat-hero-ico{background:rgba(255,255,255,.3);transform:translateY(-3px) scale(1.07)}
+.cat-hero:hover .cat-hero-ico i{transform:scale(1.06) rotate(-4deg)}
+
+/* ---------- Row header (icon + title + count) ---------- */
+.cat-group-ico{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;flex-shrink:0;color:var(--cat);
+  background:color-mix(in srgb,var(--cat) 11%,#fff);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--cat) 16%,transparent)}
+.dark .cat-group-ico{background:color-mix(in srgb,var(--cat) 22%,#0b1220);color:color-mix(in srgb,var(--cat) 72%,#fff);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--cat) 30%,transparent)}
+.cat-group-ico i{font-size:24px;line-height:1}
+.cat-group-link{color:var(--cat);transition:gap .3s ease,opacity .3s ease}
+.cat-group-link:hover{opacity:.8}
+
+@media (prefers-reduced-motion:reduce){
+  .cat-card,.cat-card::after,.cat-ico,.cat-ico i,
+  .cat-hero,.cat-hero-img,.cat-hero-ico,.cat-hero-ico i{animation:none!important;transition:none!important}
+  .cat-card:hover,.cat-hero:hover{transform:none}
+  .cat-card:hover .cat-ico,.cat-hero:hover .cat-hero-ico,.cat-hero:hover .cat-hero-img{transform:none}
+}
