@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load ui %}
 {% load static %}
-{% block title %}{{ page_title }} — TechZone{% endblock %}
+{% block title %}{{ page_title }} — {{ site_name }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/service-availability.css' %}">{% endblock %}
 {% block content %}
 
 <div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white relative overflow-hidden">
@@ -8,18 +10,12 @@
     <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
   </div>
   <div class="relative max-w-7xl mx-auto px-4">
-    <nav class="flex items-center gap-2 text-xs text-white/70 mb-5">
-      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
-      <i class="ti ti-chevron-right text-[10px]"></i>
-      <a href="{% url 'pages:serving_areas' %}" class="hover:text-white">Serving Areas</a>
-      <i class="ti ti-chevron-right text-[10px]"></i>
-      <span class="text-white font-semibold">{{ area.city }}</span>
-    </nav>
+    {% url 'pages:serving_areas' as areas_url %}{% breadcrumbs "Serving Areas" areas_url area.city on_dark=True %}
     <div class="flex items-center gap-3">
       <i class="ti ti-map-pin text-3xl"></i>
       <h1 class="text-4xl font-extrabold">Electronics in {{ area.city }}</h1>
     </div>
-    <p class="text-blue-200 text-lg mt-2">{{ area.city }}, {{ area.state }} — delivery, installation &amp; repair</p>
+    <p class="text-primary-100 text-lg mt-2">{{ area.city }}, {{ area.state }} — delivery, installation &amp; repair</p>
   </div>
 </div>
 
@@ -30,22 +26,16 @@
         {% if area.description %}
           {{ area.description|safe|linebreaks }}
         {% else %}
-          <p>TechZone proudly serves customers across <strong>{{ area.city }}, {{ area.state }}</strong> with our full range of
+          <p>{{ site_name }} proudly serves customers across <strong>{{ area.city }}, {{ area.state }}</strong> with our full range of
           electronics, expert consultation, professional installation and reliable repair services. Enjoy fast doorstep
           delivery and dedicated local support.</p>
         {% endif %}
       </div>
 
-      <!-- Service availability -->
-      <div>
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Available in {{ area.city }}</h2>
-        <div class="grid sm:grid-cols-2 gap-3">
-          <div class="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4"><i class="ti ti-truck text-primary-600 text-xl"></i><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Doorstep Delivery</span></div>
-          <div class="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4"><i class="ti ti-tool text-primary-600 text-xl"></i><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Installation</span></div>
-          <div class="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4"><i class="ti ti-device-mobile text-primary-600 text-xl"></i><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Device Repair</span></div>
-          <div class="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4"><i class="ti ti-shield-check text-primary-600 text-xl"></i><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Warranty Support</span></div>
-        </div>
-      </div>
+      <!-- Service availability (from /api/v1/service-availability/?area=…) -->
+      {% with "Available in "|add:area.city as avail_title %}
+      {% include "partials/service_availability.html" with layout="list" area=area title=avail_title %}
+      {% endwith %}
 
       {% if area.pincodes %}
       <div>
@@ -62,7 +52,7 @@
       {% if area.map_embed %}
       <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Find Us on the Map</h2>
-        <div class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 aspect-video">
+        <div class="card overflow-hidden aspect-video">
           {{ area.map_embed|safe }}
         </div>
       </div>
@@ -72,7 +62,7 @@
     <!-- Sidebar contact -->
     <div class="lg:col-span-1">
       <div class="sticky top-24 space-y-6">
-        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+        <div class="card p-6">
           <h3 class="font-bold text-gray-900 dark:text-white mb-4">{{ area.city }} Contact</h3>
           <div class="space-y-3 text-sm">
             <a href="tel:{{ area.contact_phone|default:site_settings.phone }}" class="flex items-center gap-3 text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors">
@@ -90,7 +80,7 @@
         </div>
 
         <!-- Area inquiry form -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+        <div class="card p-6">
           <h3 class="font-bold text-gray-900 dark:text-white mb-1">Enquire in {{ area.city }}</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Send us a message and our {{ area.city }} team will respond shortly.</p>
           <form id="area-form" method="post" action="{% url 'core:contact_submit' %}" class="space-y-3"
@@ -100,18 +90,18 @@
             {% csrf_token %}
             <input type="hidden" name="inquiry_type" value="general">
             <input type="hidden" name="subject" value="Service enquiry — {{ area.city }}">
-            <input type="text" name="name" required placeholder="Your Name" class="form-input">
-            <input type="email" name="email" required placeholder="Your Email" class="form-input">
-            <input type="tel" name="phone" placeholder="Phone Number" class="form-input">
-            <textarea name="message" required rows="3" placeholder="How can we help in {{ area.city }}?" class="form-textarea"></textarea>
-            <button type="submit" class="btn-primary w-full justify-center"><i class="ti ti-send"></i> Send Enquiry</button>
+            <input type="text" name="name" required placeholder="Your Name" aria-label="Your Name" class="input">
+            <input type="email" name="email" required placeholder="Your Email" aria-label="Your Email" class="input">
+            <input type="tel" name="phone" placeholder="Phone Number" aria-label="Phone Number" class="input">
+            <textarea name="message" required rows="3" placeholder="How can we help in {{ area.city }}?" aria-label="Message" class="textarea"></textarea>
+            <button type="submit" class="btn btn-primary btn-block"><i class="ti ti-send"></i> Send Enquiry</button>
             <p id="area-form-msg" class="hidden text-sm text-center"></p>
           </form>
         </div>
 
         {% if site_settings.whatsapp %}
         <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi,%20I'm%20in%20{{ area.city|urlencode }}%20and%20need%20help" target="_blank"
-           class="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-2xl font-medium text-sm transition-colors">
+           class="btn btn-success btn-block">
           <i class="ti ti-brand-whatsapp text-lg"></i> Chat on WhatsApp
         </a>
         {% endif %}
@@ -125,7 +115,7 @@
     <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Other Cities We Serve</h2>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
       {% for a in other_areas %}
-      <a href="{{ a.get_absolute_url }}" class="flex items-center gap-2 p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all">
+      <a href="{{ a.get_absolute_url }}" class="tile rise flex items-center gap-2 p-3" style="--i: {% if forloop.counter0 < 20 %}{{ forloop.counter0 }}{% else %}20{% endif %}">
         <i class="ti ti-map-pin text-primary-600 text-sm"></i>
         <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ a.city }}</span>
       </a>
@@ -138,5 +128,6 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="{% static 'js/service-availability.js' %}" defer></script>
 <script src="{% static 'js/ajax-form.js' %}"></script>
 {% endblock %}

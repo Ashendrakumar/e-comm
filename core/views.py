@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST
 from .models import Banner, Testimonial, WhyChooseUs, Brand
 from .forms import ContactForm, NewsletterForm
 from products.models import Category, Product
+from .branding import get_site_name
 
 
 def homepage(request):
@@ -20,7 +21,7 @@ def homepage(request):
     hero_banners        = cache.get_or_set('home_hero_banners',  lambda: list(Banner.objects.filter(banner_type='hero', is_active=True)[:3]), 600)
     promo_banners       = cache.get_or_set('home_promo_banners', lambda: list(Banner.objects.filter(banner_type='promo', is_active=True)[:4]), 600)
     featured_categories = cache.get_or_set('home_featured_cats', lambda: list(Category.objects.filter(is_featured=True, is_active=True, parent=None)[:10]), 600)
-    featured_brands     = cache.get_or_set('home_featured_brands', lambda: list(Brand.objects.filter(is_featured=True, is_active=True)[:12]), 600)
+    featured_brands     = cache.get_or_set('home_featured_brands_v2', lambda: list(Brand.objects.filter(is_featured=True, is_active=True)[:12]), 600)
     testimonials        = cache.get_or_set('home_testimonials',  lambda: list(Testimonial.objects.filter(is_active=True)[:6]), 600)
     why_choose_us       = cache.get_or_set('home_why_choose_us', lambda: list(WhyChooseUs.objects.filter(is_active=True)[:6]), 600)
 
@@ -52,8 +53,8 @@ def homepage(request):
         'serving_area_cities': ['Ahmedabad','Surat','Vadodara','Rajkot','Gandhinagar','Anand','Nadiad','Bharuch','Navsari','Vapi'],
         'contact_form':       ContactForm(),
         'newsletter_form':    NewsletterForm(),
-        'page_title':         'TechZone — Premium Electronics Store',
-        'meta_description':   'Shop the latest electronics including mobiles, laptops, TVs, cameras and more at TechZone.',
+        'page_title':         f'{get_site_name()} — Premium Electronics Store',
+        'meta_description':   f'Shop the latest electronics including mobiles, laptops, TVs, cameras and more at {get_site_name()}.',
     }
     return render(request, 'core/homepage.html', context)
 
@@ -128,7 +129,7 @@ def contact_page(request):
     return render(request, 'pages/contact.html', {
         'form':             form,
         'page_title':       'Contact Us',
-        'meta_description': 'Get in touch with TechZone — call, WhatsApp, email or visit our store. We respond within 24 hours.',
+        'meta_description': f'Get in touch with {get_site_name()} — call, WhatsApp, email or visit our store. We respond within 24 hours.',
     })
 
 
@@ -138,7 +139,7 @@ def about_page(request):
     return render(request, 'pages/about.html', {
         'why_choose_us': why_choose_us,
         'testimonials': testimonials,
-        'page_title': 'About TechZone',
+        'page_title': f'About {get_site_name()}',
     })
 
 

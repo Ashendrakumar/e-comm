@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+{% load ui %}
 {% load static %}
-{% block title %}All Categories — TechZone{% endblock %}
-{% block meta_description %}Browse all electronics categories at TechZone — mobiles, laptops, TVs, cameras and more.{% endblock %}
+{% block title %}All Categories — {{ site_name }}{% endblock %}
+{% block meta_description %}Browse all electronics categories at {{ site_name }} — mobiles, laptops, TVs, cameras and more.{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/category-cards.css' %}">
@@ -12,23 +13,19 @@
 <div class="bg-gradient-to-br from-primary-800 via-primary-700 to-primary-900 py-14 relative overflow-hidden">
   <div class="absolute inset-0 opacity-10">
     <div class="absolute -top-20 -right-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
-    <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-300 rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-primary-300 rounded-full filter blur-3xl"></div>
   </div>
   <div class="relative max-w-7xl mx-auto px-6 text-center">
-    <nav class="flex items-center justify-center gap-2 text-xs text-white/70 mb-5">
-      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
-      <i class="ti ti-chevron-right text-[10px]"></i>
-      <span class="text-white font-semibold">All Categories</span>
-    </nav>
+    {% breadcrumbs "All Categories" on_dark=True align="center" %}
     <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-3 tracking-tight">Shop by Category</h1>
-    <p class="text-blue-200 text-lg max-w-xl mx-auto">Browse our complete range of premium electronics across {{ root_categories|length }} categories</p>
+    <p class="text-primary-100 text-lg max-w-xl mx-auto">Browse our complete range of premium electronics across {{ root_categories|length }} categories</p>
   </div>
 </div>
 
 <!-- Categories Grid -->
 <div class="max-w-7xl mx-auto px-4 py-12">
   {% for cat in root_categories %}
-  <div class="mb-12" style="--cat: {{ cat.color|default:'#2563eb' }}">
+  <div class="mb-12"{% if cat.color %} style="--cat: {{ cat.color }}"{% endif %}>
     <!-- Category header row -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
@@ -36,8 +33,8 @@
           <i class="ti {{ cat.icon|default:'ti-tag' }}" aria-hidden="true"></i>
         </div>
         <div>
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ cat.name }}</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400">
+          <h2 class="cat-heading text-xl font-bold">{{ cat.name }}</h2>
+          <p class="text-sm text-muted">
             {{ cat.total_product_count }} product{{ cat.total_product_count|pluralize }}
             {% if cat.children.count %} · {{ cat.children.count }} sub-categor{{ cat.children.count|pluralize:"y,ies" }}{% endif %}
           </p>
@@ -57,7 +54,7 @@
         {% if cat.banner %}
         <img src="{{ cat.banner.url }}" alt="" class="cat-hero-img" loading="lazy" decoding="async">
         {% endif %}
-        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+        <div class="cat-hero-scrim"></div>
         <div class="cat-hero-sheen"></div>
         <div class="relative z-10 p-5">
           {% if cat.icon %}
@@ -109,19 +106,19 @@
     </div>
 
     {% if not forloop.last %}
-    <hr class="mt-10 border-gray-100 dark:border-gray-800">
+    <hr class="divider mt-10">
     {% endif %}
   </div>
   {% endfor %}
 
   <!-- CTA -->
-  <div class="mt-6 text-center bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-950 dark:to-gray-900 rounded-3xl p-10 border border-primary-100 dark:border-primary-900">
-    <i class="ti ti-package text-5xl text-primary-400 block mb-4"></i>
-    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Can't find what you're looking for?</h2>
-    <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">Browse all products or contact our expert team for personalised recommendations.</p>
+  <div class="cat-cta mt-6 text-center p-10">
+    <i class="cat-cta-ico ti ti-package text-5xl block mb-4" aria-hidden="true"></i>
+    <h2 class="cat-heading text-2xl font-bold mb-2">Can't find what you're looking for?</h2>
+    <p class="text-muted mb-6 max-w-md mx-auto">Browse all products or contact our expert team for personalised recommendations.</p>
     <div class="flex items-center justify-center gap-4 flex-wrap">
-      <a href="{% url 'products:list' %}" class="btn-primary px-8 py-3.5 rounded-xl text-sm">Browse All Products</a>
-      <a href="{% url 'core:contact' %}" class="btn-outline px-8 py-3.5 rounded-xl text-sm">Talk to an Expert</a>
+      <a href="{% url 'products:list' %}" class="btn btn-primary btn-lg">Browse All Products</a>
+      <a href="{% url 'core:contact' %}" class="btn btn-outline btn-lg">Talk to an Expert</a>
     </div>
   </div>
 </div>

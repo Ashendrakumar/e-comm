@@ -10,7 +10,7 @@ class BlogCategory(models.Model):
     name             = models.CharField(max_length=100)
     slug             = models.SlugField(unique=True, blank=True, max_length=120)
     description      = models.TextField(blank=True)
-    color            = models.CharField(max_length=7, blank=True, default='#2563eb')
+    color            = models.CharField(max_length=7, blank=True, default='#0f766e')
     icon             = models.CharField(max_length=60, blank=True, default='ti-news')
     meta_title       = models.CharField(max_length=200, blank=True)
     meta_description = models.TextField(max_length=320, blank=True)
@@ -103,7 +103,8 @@ class BlogPost(models.Model):
             return self.author_name
         if self.author:
             return self.author.get_full_name() or self.author.username
-        return 'TechZone Team'
+        from core.branding import get_site_name
+        return f'{get_site_name()} Team'
 
     @property
     def approved_comments(self):

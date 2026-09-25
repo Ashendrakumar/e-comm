@@ -15,7 +15,7 @@ class Service(models.Model):
     description      = models.TextField(blank=True, help_text='Full description shown on the service detail page')
     image            = models.ImageField(upload_to='services/', blank=True, null=True)
     banner           = models.ImageField(upload_to='services/banners/', blank=True, null=True)
-    color            = models.CharField(max_length=7, blank=True, default='#2563eb')
+    color            = models.CharField(max_length=7, blank=True, default='#0f766e')
     price_info       = models.CharField(max_length=120, blank=True, help_text='e.g. "Starting at ₹499" or "Free"')
 
     cta_text         = models.CharField(max_length=100, default='Get Started')
@@ -90,6 +90,28 @@ class ServiceInquiry(models.Model):
 # MODULE 8 — SERVING AREAS
 # ══════════════════════════════════════════════════════════════════
 
+class ServiceAvailability(models.Model):
+    """One item of the "service availability" strip (Doorstep Delivery, Installation …).
+
+    Served by GET /api/v1/service-availability/ and rendered client-side on the
+    serving-areas page and each city page. A city can narrow the list through
+    ServingArea.availability; a city with none selected offers every active item.
+    """
+    icon        = models.CharField(max_length=50, default='ti-circle-check', help_text='Tabler icon class, e.g. ti-truck')
+    title       = models.CharField(max_length=100)
+    description = models.CharField(max_length=160, blank=True, help_text='Optional one-line detail shown under the title')
+    order       = models.PositiveIntegerField(default=0)
+    is_active   = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['order', 'title']
+        verbose_name = 'service availability item'
+        verbose_name_plural = 'service availability'
+
+    def __str__(self):
+        return self.title
+
+
 class ServingArea(models.Model):
     city             = models.CharField(max_length=100)
     slug             = models.SlugField(unique=True, blank=True)
@@ -104,6 +126,9 @@ class ServingArea(models.Model):
     meta_description = models.TextField(max_length=320, blank=True)
     is_active        = models.BooleanField(default=True)
     is_featured      = models.BooleanField(default=False)
+    availability     = models.ManyToManyField(
+        ServiceAvailability, blank=True, related_name='areas',
+        help_text='Services offered in this city. Leave empty to offer every active item.')
 
     class Meta:
         ordering = ['city']
@@ -121,6 +146,11 @@ class ServingArea(models.Model):
 
     def get_absolute_url(self):
         return reverse('pages:area_detail', kwargs={'slug': self.slug})
+
+    def available_services(self):
+        """Explicitly selected items, or every active item when none are selected."""
+        chosen = self.availability.filter(is_active=True)
+        return chosen if chosen.exists() else ServiceAvailability.objects.filter(is_active=True)
 
     @property
     def pincode_list(self):

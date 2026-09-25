@@ -3,41 +3,67 @@
 <!-- Newsletter Banner -->
 {% include 'partials/newsletter.html' %}
 
+{% comment %}
+  The footer is intentionally dark in BOTH themes, so it reads the raw palette
+  (--gray-*) rather than the semantic tokens, which flip with .dark.
+{% endcomment %}
+<style>
+  .site-footer{background:var(--gray-900);color:var(--gray-300);}
+  .dark .site-footer{background:var(--gray-950);}
+  .site-footer .ft-heading{color:var(--white);}
+  .site-footer .ft-muted{color:var(--gray-400);}
+  .site-footer .ft-faint{color:var(--gray-500);}
+  .site-footer .ft-icon{color:var(--brand-400);}
+  .site-footer .ft-rule{border-color:var(--gray-800);}
+  .site-footer .ft-link{display:flex;align-items:center;gap:6px;transition:color var(--duration) var(--ease);}
+  .site-footer .ft-link:hover{color:var(--brand-400);}
+  .site-footer .ft-link > .ti-chevron-right{color:var(--gray-600);}
+  .site-footer .ft-contact{display:flex;align-items:center;gap:8px;transition:color var(--duration) var(--ease);}
+  .site-footer .ft-contact:hover{color:var(--white);}
+  .site-footer .ft-social{background:var(--gray-800);color:var(--gray-400);}
+  .site-footer .ft-social:hover{background:var(--color-primary);color:var(--white);}
+  .site-footer .ft-logo-mark{background:var(--color-primary);color:var(--white);border-radius:var(--radius-md);}
+  .btn.wa-fab{width:56px;height:56px;}
+  .btn.wa-fab i{font-size:24px;}
+  .wa-fab{box-shadow:var(--shadow-lg);transition:transform var(--duration) var(--ease),background var(--duration) var(--ease);}
+  .wa-fab:hover{transform:scale(1.1);}
+</style>
+
 <!-- Main Footer -->
-<footer class="bg-gray-900 dark:bg-gray-950 text-gray-300 pt-14 pb-6">
+<footer class="site-footer pt-14 pb-6">
   <div class="max-w-7xl mx-auto px-4">
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-10">
+    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-8 mb-10">
 
       <!-- Brand column -->
-      <div class="col-span-2 md:col-span-4 lg:col-span-1">
+      <div class="col-span-2 md:col-span-4 xl:col-span-1">
         <div class="flex items-center gap-2 mb-4">
           {% if site_settings.logo %}
             <img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" class="h-9 w-auto">
           {% else %}
-            <div class="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
-              <i class="ti ti-cpu text-white text-lg"></i>
+            <div class="ft-logo-mark w-9 h-9 flex items-center justify-center">
+              <i class="ti ti-cpu text-lg"></i>
             </div>
           {% endif %}
-          <span class="font-bold text-xl text-white">
-            {{ site_settings.site_name | default:"TechZone" }} 
+          <span class="ft-heading font-bold text-xl">
+            {{ site_name }} 
           </span>
         </div>
-        <p class="text-sm leading-relaxed text-gray-400 mb-5">{{ site_settings.tagline }}</p>
+        <p class="text-sm leading-relaxed ft-muted mb-5">{{ site_settings.tagline }}</p>
         <div class="space-y-2.5 text-sm">
           {% if site_settings.phone %}
-          <a href="tel:{{ site_settings.phone }}" class="flex items-center gap-2 hover:text-white transition-colors">
-            <i class="ti ti-phone text-primary-400 text-base flex-shrink-0"></i> {{ site_settings.phone }}
+          <a href="tel:{{ site_settings.phone }}" class="ft-contact">
+            <i class="ti ti-phone ft-icon text-base flex-shrink-0"></i> {{ site_settings.phone }}
           </a>
           {% endif %}
           {% if site_settings.email %}
-          <a href="mailto:{{ site_settings.email }}" class="flex items-center gap-2 hover:text-white transition-colors">
-            <i class="ti ti-mail text-primary-400 text-base flex-shrink-0"></i> {{ site_settings.email }}
+          <a href="mailto:{{ site_settings.email }}" class="ft-contact">
+            <i class="ti ti-mail ft-icon text-base flex-shrink-0"></i> {{ site_settings.email }}
           </a>
           {% endif %}
           {% if site_settings.address %}
           <p class="flex items-start gap-2">
-            <i class="ti ti-map-pin text-primary-400 text-base flex-shrink-0 mt-0.5"></i>
-            <span class="text-gray-400 text-xs leading-relaxed">{{ site_settings.address }}</span>
+            <i class="ti ti-map-pin ft-icon text-base flex-shrink-0 mt-0.5"></i>
+            <span class="ft-muted text-xs leading-relaxed">{{ site_settings.address }}</span>
           </p>
           {% endif %}
         </div>
@@ -45,7 +71,7 @@
         <div class="flex items-center gap-3 mt-5">
           {% for sl in social_links %}
           <a href="{{ sl.url }}" target="_blank" rel="noopener"
-            class="w-9 h-9 bg-gray-800 hover:bg-primary-600 text-gray-400 hover:text-white rounded-xl flex items-center justify-center transition-all">
+            class="btn btn-icon ft-social" aria-label="{{ sl.get_platform_display }}">
             <i class="ti {{ sl.get_icon_class }}"></i>
           </a>
           {% endfor %}
@@ -54,18 +80,18 @@
 
       <!-- Categories -->
       <div>
-        <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Categories</h4>
+        <h4 class="ft-heading font-semibold mb-4 text-sm uppercase tracking-wider">Categories</h4>
         <ul class="space-y-2.5 text-sm">
           {% for cat in nav_categories|slice:":6" %}
           <li>
-            <a href="{{ cat.get_absolute_url }}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5">
-              <i class="ti ti-chevron-right text-xs text-gray-600"></i>{{ cat.name }}
+            <a href="{{ cat.get_absolute_url }}" class="hover:ft-icon transition-colors flex items-center gap-1.5">
+              <i class="ti ti-chevron-right text-xs"></i>{{ cat.name }}
             </a>
           </li>
           {% endfor %}
           <li>
-            <a href="{% url 'products:list' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5">
-              <i class="ti ti-chevron-right text-xs text-gray-600"></i>All Products
+            <a href="{% url 'products:list' %}" class="hover:ft-icon transition-colors flex items-center gap-1.5">
+              <i class="ti ti-chevron-right text-xs"></i>All Products
             </a>
           </li>
         </ul>
@@ -73,39 +99,39 @@
 
       <!-- Services -->
       <div>
-        <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Services</h4>
+        <h4 class="ft-heading font-semibold mb-4 text-sm uppercase tracking-wider">Services</h4>
         <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'pages:services' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5 "><i class="ti ti-chevron-right text-xs text-gray-600"></i>All Services</a></li>
+          <li><a href="{% url 'pages:services' %}" class="hover:ft-icon transition-colors flex items-center gap-1.5 "><i class="ti ti-chevron-right text-xs"></i>All Services</a></li>
           {% for svc in footer_services %}
-          <li><a href="{{ svc.get_absolute_url }}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>{{ svc.title }}</a></li>
+          <li><a href="{{ svc.get_absolute_url }}" class="hover:ft-icon transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs"></i>{{ svc.title }}</a></li>
           {% endfor %}
         </ul>
       </div>
 
       <!-- Quick Links -->
       <div>
-        <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Quick Links</h4>
+        <h4 class="ft-heading font-semibold mb-4 text-sm uppercase tracking-wider">Quick Links</h4>
         <ul class="space-y-2.5 text-sm">
-          <li><a href="{% url 'core:about' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>About Us</a></li>
-          <li><a href="{% url 'blog:list' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Blog &amp; News</a></li>
-          <li><a href="{% url 'pages:faqs' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>FAQs</a></li>
-          <li><a href="{% url 'pages:serving_areas' %}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>Serving Areas</a></li>
+          <li><a href="{% url 'core:about' %}" class="hover:ft-icon transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs"></i>About Us</a></li>
+          <li><a href="{% url 'blog:list' %}" class="hover:ft-icon transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs"></i>Blog &amp; News</a></li>
+          <li><a href="{% url 'pages:faqs' %}" class="hover:ft-icon transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs"></i>FAQs</a></li>
+          <li><a href="{% url 'pages:serving_areas' %}" class="hover:ft-icon transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs"></i>Serving Areas</a></li>
           {% for fp in footer_pages %}
-          <li><a href="{{ fp.get_absolute_url }}" class="hover:text-primary-400 transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs text-gray-600"></i>{{ fp.title }}</a></li>
+          <li><a href="{{ fp.get_absolute_url }}" class="hover:ft-icon transition-colors flex items-center gap-1.5"><i class="ti ti-chevron-right text-xs"></i>{{ fp.title }}</a></li>
           {% endfor %}
         </ul>
       </div>
 
       <!-- Working Hours -->
       <div>
-        <h4 class="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Store Hours</h4>
-        <div class="space-y-2 text-sm text-gray-400">
-          <div class="flex items-center gap-2"><i class="ti ti-clock text-primary-400"></i>{{ site_settings.working_hours }}</div>
-          <p class="text-xs text-gray-500 leading-relaxed mt-3">Visit our store or contact us online. We're here to help you find the perfect electronics.</p>
+        <h4 class="ft-heading font-semibold mb-4 text-sm uppercase tracking-wider">Store Hours</h4>
+        <div class="space-y-2 text-sm ft-muted">
+          <div class="flex items-center gap-2"><i class="ti ti-clock ft-icon"></i>{{ site_settings.working_hours }}</div>
+          <p class="text-xs ft-faint leading-relaxed mt-3">Visit our store or contact us online. We're here to help you find the perfect electronics.</p>
         </div>
         {% if site_settings.whatsapp %}
-        <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank"
-          class="mt-5 flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
+        <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener"
+          class="btn btn-whatsapp btn-block mt-5">
           <i class="ti ti-brand-whatsapp"></i> Chat on WhatsApp
         </a>
         {% endif %}
@@ -114,15 +140,15 @@
 
     <!-- Brands bar -->
     {% if featured_brands %}
-    <div class="border-t border-gray-800 py-6 mb-6">
-      <p class="text-xs text-gray-500 uppercase tracking-wider mb-4">Authorized Brands</p>
+    <div class="border-t ft-rule py-6 mb-6">
+      <p class="text-xs ft-faint uppercase tracking-wider mb-4">Authorized Brands</p>
       <div class="flex flex-wrap items-center gap-4">
         {% for brand in featured_brands %}
         <a href="{% url 'products:list' %}?brand={{ brand.pk }}" class="group">
           {% if brand.logo %}
           <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="h-8 w-auto object-contain filter brightness-75 group-hover:brightness-100 transition-all" loading="lazy" decoding="async">
           {% else %}
-          <span class="text-xs text-gray-500 group-hover:text-gray-300 font-semibold transition-colors">{{ brand.name }}</span>
+          <span class="ft-link text-xs ft-faint font-semibold">{{ brand.name }}</span>
           {% endif %}
         </a>
         {% endfor %}
@@ -131,16 +157,16 @@
     {% endif %}
 
     <!-- Bottom bar -->
-    <div class="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
-      <p>&copy; {% now "Y" %} <span class="text-gray-400 font-medium">{{ site_settings.site_name }}</span>. All rights reserved.</p>
-      <div class="flex items-center gap-1 text-gray-600">
-        <i class="ti ti-shield-check text-green-600 text-sm"></i>
+    <div class="border-t ft-rule pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs ft-faint">
+      <p>&copy; {% now "Y" %} <span class="ft-muted font-medium">{{ site_settings.site_name }}</span>. All rights reserved.</p>
+      <div class="flex items-center gap-1">
+        <i class="ti ti-shield-check text-sm" style="color:var(--green-500)"></i>
         <span>Secure Shopping</span>
         <span class="mx-2">·</span>
-        <i class="ti ti-truck text-blue-500 text-sm"></i>
+        <i class="ti ti-truck text-sm ft-icon"></i>
         <span>Fast Delivery</span>
         <span class="mx-2">·</span>
-        <i class="ti ti-headset text-purple-500 text-sm"></i>
+        <i class="ti ti-headset text-sm" style="color:var(--amber-400)"></i>
         <span>24/7 Support</span>
       </div>
     </div>
@@ -150,8 +176,8 @@
 <!-- WhatsApp floating button -->
 {% if site_settings.whatsapp %}
 <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener"
-  class="fixed bottom-6 right-6 z-40 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110"
-  title="Chat on WhatsApp">
-  <i class="ti ti-brand-whatsapp text-2xl"></i>
+  class="btn btn-icon btn-round btn-whatsapp wa-fab fixed bottom-6 right-6 z-40"
+  title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+  <i class="ti ti-brand-whatsapp"></i>
 </a>
 {% endif %}

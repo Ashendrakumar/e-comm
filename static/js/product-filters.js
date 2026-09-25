@@ -15,11 +15,13 @@ function openMobileFilter(){
   const d=document.getElementById('mob-filter'), p=document.getElementById('mob-panel');
   if(!d) return;
   d.classList.remove('hidden');
+  document.documentElement.style.overflow='hidden';   // only the drawer scrolls while it's open
   if(p) requestAnimationFrame(()=>p.classList.remove('translate-x-full'));
 }
 function closeMobileFilter(){
   const d=document.getElementById('mob-filter'), p=document.getElementById('mob-panel');
   if(!d) return;
+  document.documentElement.style.overflow='';
   if(!p){ d.classList.add('hidden'); return; }
   p.classList.add('translate-x-full');
   setTimeout(()=>d.classList.add('hidden'),250);
@@ -30,18 +32,18 @@ function setView(v){
   const grid=document.getElementById('product-grid');
   const bG=document.getElementById('btn-grid');
   const bL=document.getElementById('btn-list');
-  const on ='px-3 py-2 bg-primary-600 text-white transition-colors';
-  const off='px-3 py-2 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors';
-  if(v==='list'){
-    if(grid) grid.classList.add('list-mode');
-    if(bG) bG.className=off;
-    if(bL) bL.className=on+' border-l border-gray-200 dark:border-gray-700';
-  } else {
-    if(grid) grid.classList.remove('list-mode');
-    if(bG) bG.className=on;
-    if(bL) bL.className=off+' border-l border-gray-200 dark:border-gray-700';
-  }
-  localStorage.setItem('pview',v);
+  // Buttons are `.btn .btn-icon .btn-sm`; the active one is btn-primary, the other btn-ghost.
+  const mark=(b,on)=>{
+    if(!b) return;
+    b.classList.toggle('btn-primary',on);
+    b.classList.toggle('btn-ghost',!on);
+    b.setAttribute('aria-pressed',on?'true':'false');
+  };
+  const list=v==='list';
+  if(grid) grid.classList.toggle('list-mode',list);
+  mark(bG,!list);
+  mark(bL,list);
+  try{ localStorage.setItem('pview',v); }catch(e){}
 }
 
 // ── Skeleton loader ────────────────────────────────────────────────
@@ -140,20 +142,32 @@ function removeFilterChip(key,val){ clearFilterControl(key,val); doAjaxFilter();
       el.addEventListener('input',()=>{ clearTimeout(debounce); debounce=setTimeout(doAjaxFilter,500); });
     });
 
-    // Price quick presets
-    form.querySelectorAll('.price-preset').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        form.querySelector('[name=min_price]').value=btn.dataset.min||'';
-        form.querySelector('[name=max_price]').value=btn.dataset.max||'';
-        form.querySelectorAll('.price-preset').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        doAjaxFilter();
-      });
-    });
-
     // "Apply Filters" is a no-op fallback for no-JS; intercept it here
     form.addEventListener('submit',e=>{ e.preventDefault(); doAjaxFilter(); });
   }
+
+  // Price quick presets (button.pill.price-preset; .active = selected).
+  // Wired in every form that hosts the panel (desktop AJAX form + the mobile
+  // drawer's plain form); only #filter-form re-filters immediately.
+  document.querySelectorAll('.price-preset').forEach(btn=>{
+    const f=btn.form;
+    if(!f) return;
+    const minEl=f.querySelector('[name=min_price]'), maxEl=f.querySelector('[name=max_price]');
+    // Reflect an already-applied preset on page load
+    if(minEl && maxEl && (minEl.value||maxEl.value) &&
+       minEl.value===(btn.dataset.min||'') && maxEl.value===(btn.dataset.max||'')) btn.classList.add('active');
+    btn.addEventListener('click',()=>{
+      if(minEl) minEl.value=btn.dataset.min||'';
+      if(maxEl) maxEl.value=btn.dataset.max||'';
+      f.querySelectorAll('.price-preset').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      if(f===form) doAjaxFilter();
+    });
+  });
+  // Typing a custom price clears the preset highlight
+  document.querySelectorAll('.js-live-price').forEach(el=>{
+    el.addEventListener('input',()=>{ el.form?.querySelectorAll('.price-preset').forEach(b=>b.classList.remove('active')); });
+  });
 
   // AJAX pagination — delegated, so it survives innerHTML replacement
   const section=document.getElementById('products-section');

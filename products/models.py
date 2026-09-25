@@ -15,7 +15,7 @@ class Category(models.Model):
     banner           = models.ImageField(upload_to='categories/banners/', blank=True, null=True)
     banner_mobile    = models.ImageField(upload_to='categories/banners/mobile/', blank=True, null=True)
     icon             = models.CharField(max_length=60, blank=True)
-    color            = models.CharField(max_length=7, blank=True, default='#2563eb')
+    color            = models.CharField(max_length=7, blank=True, default='#0f766e')
     description      = models.TextField(blank=True)
     meta_title       = models.CharField(max_length=200, blank=True)
     meta_description = models.TextField(max_length=320, blank=True)

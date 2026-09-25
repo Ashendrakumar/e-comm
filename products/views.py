@@ -1,7 +1,9 @@
+import uuid
+
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.core.paginator import Paginator
-from django.db.models import Q, Min, Max
+from django.db.models import Q, Min, Max, Avg, Count
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
@@ -17,6 +19,7 @@ from .related import (
     record_view,
 )
 from core.models import Brand
+from core.branding import get_site_name
 
 
 # ─── filter helpers ───────────────────────────────────────────────────────────
@@ -185,7 +188,7 @@ def product_list(request):
                total_count=paginator.count, active_chips=chips, per_page=per_page,
                view_mode=request.GET.get('view', 'grid'), page_title='All Products',
                filter_config=config, clear_url=config['clear_url'],
-               meta_description='Browse premium electronics at TechZone.')
+               meta_description=f'Browse premium electronics at {get_site_name()}.')
     return render(request, 'products/list.html', ctx)
 
 
@@ -239,16 +242,64 @@ def toggle_wishlist(request, pk):
 
 # ─── compare ──────────────────────────────────────────────────────────────────
 def compare_products(request):
-    ids      = request.GET.getlist('ids')[:3]
-    products = list(Product.objects.filter(pk__in=ids, is_active=True).prefetch_related('images', 'attributes__attribute'))
-    all_attrs = sorted({av.attribute.name for p in products for av in p.attributes.all()})
-    matrix    = {attr: {str(p.pk): (p.attributes.filter(attribute__name=attr).first().value
-                 if p.attributes.filter(attribute__name=attr).exists() else '—') for p in products} for attr in all_attrs}
+    # Validate ids up front: pk is a UUID, so a malformed value would raise
+    # ValidationError (500) inside the queryset. Dedupe while keeping order.
+    ids = []
+    for raw in request.GET.getlist('ids'):
+        try:
+            pk = uuid.UUID(str(raw))
+        except ValueError:
+            continue
+        if pk not in ids:
+            ids.append(pk)
+    ids = ids[:3]
+
+    found = {p.pk: p for p in (Product.objects.filter(pk__in=ids, is_active=True)
+                               .select_related('category', 'brand')
+                               .prefetch_related('images', 'attributes__attribute')
+                               .annotate(avg_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True)),
+                                         num_reviews=Count('reviews', filter=Q(reviews__is_approved=True))))}
+    products = [found[pk] for pk in ids if pk in found]   # keep the user's selection order
+
+    for p in products:
+        p.avg_rating = round(p.avg_rating or 0, 1)
+        imgs = list(p.images.all())                        # prefetched — no extra queries
+        p.cover = next((i for i in imgs if i.is_primary), imgs[0] if imgs else None)
+
+    def row(label, values):
+        vals = [v if v not in (None, '') else '—' for v in values]
+        return {'label': label, 'values': vals, 'differs': len({str(v) for v in vals}) > 1}
+
+    general = [
+        row('Brand',     [p.brand.name if p.brand else None for p in products]),
+        row('Category',  [p.category.name for p in products]),
+        row('Condition', [p.get_condition_display() for p in products]),
+        row('Warranty',  [p.warranty for p in products]),
+        row('Color',     [p.color for p in products]),
+        row('Weight',    [f'{p.weight.normalize():f} kg' if p.weight else None for p in products]),
+        row('SKU',       [p.sku for p in products]),
+    ]
+
+    attr_maps = [{av.attribute.name: av.value for av in p.attributes.all()} for p in products]
+    all_attrs = sorted({name for m in attr_maps for name in m})
+    specs     = [row(name, [m.get(name) for m in attr_maps]) for name in all_attrs]
+
+    # Rows no product has a value for add nothing to a comparison.
+    general = [r for r in general if any(v != '—' for v in r['values'])]
+
+    prices = [p.effective_price for p in products]
+    best_price = min(prices) if len(products) > 1 else None
+
     return render(request, 'products/compare.html', {
-        'products': products, 'matrix': matrix,
-        # `matrix` is serialised by {{ matrix|json_script }} in the template now,
-        # so no hand-dumped JSON is needed here.
-        'all_attrs': all_attrs, 'page_title': 'Compare Products'
+        'products': products,
+        'general_rows': general,
+        'spec_rows': specs,
+        'best_price': best_price,
+        'price_differs': len(set(prices)) > 1,
+        'can_add_more': len(products) < 3,
+        # Lets compare.js resync localStorage with what's actually shown.
+        'compare_items': [{'id': str(p.pk), 'name': p.name} for p in products],
+        'page_title': 'Compare Products',
     })
 
 

@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import BlogPost, BlogCategory
 from .forms import BlogCommentForm
+from core.branding import get_site_name
 
 
 def _published():
@@ -44,7 +45,7 @@ def blog_list(request):
         'query':           query,
         'active_tag':      tag,
         'page_title':      'Blog & News',
-        'meta_description': 'Latest electronics news, buying guides, reviews and tech tips from TechZone.',
+        'meta_description': f'Latest electronics news, buying guides, reviews and tech tips from {get_site_name()}.',
     })
 
 

@@ -3,133 +3,167 @@
 <!-- Top bar -->
 {% include 'partials/topbar.html' %}
 
+{% comment %}
+  Header chrome styles. Built only on tokens.css (they flip for .dark), so there
+  are no dark: variants below. Kept here because header.html is the only place
+  these classes are used; move to a header.css once base.html links one.
+  NOTE: .btn sets display:inline-flex and loads after Tailwind, so responsive
+  visibility (hidden md:block …) goes on a wrapper, never on the .btn itself.
+{% endcomment %}
+<style>
+  .site-header{background:color-mix(in srgb,var(--color-bg) 82%,transparent);border-bottom:1px solid var(--color-border);box-shadow:var(--shadow-xs);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
+  .site-brand{color:var(--color-text);}
+  /* Logo: capped width, height follows the image ratio (never stretched). */
+  .site-logo-img{display:block;width:auto;height:auto;max-width:84px;max-height:36px;object-fit:contain;}
+  @media (max-width:640px){.site-logo-img{max-width:68px;max-height:30px;}}
+  .site-logo-mark{background:linear-gradient(135deg,var(--brand-500),var(--brand-700));color:var(--color-on-primary);border-radius:var(--radius-md);box-shadow:var(--shadow-xs);transition:box-shadow var(--duration) var(--ease);}
+  .group:hover .site-logo-mark{box-shadow:0 6px 16px -4px var(--color-focus-ring);}
+  .hdr-search .input{border-radius:var(--radius-full);background:var(--color-bg-subtle);}
+  .hdr-search .input:focus{background:var(--color-bg);}
+  .hdr-msearch .input{padding-right:48px;}
+  .hdr-msearch .btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:var(--color-primary-text);}
+
+  /* Desktop nav */
+  .nav-bar{border-top:1px solid var(--color-border-subtle);}
+  .nav-link{display:flex;align-items:center;gap:6px;padding:12px;font-size:var(--text-sm);font-weight:500;white-space:nowrap;
+    color:var(--color-text-soft);background:none;border:0;border-bottom:2px solid transparent;cursor:pointer;
+    transition:color var(--duration) var(--ease),border-color var(--duration) var(--ease);}
+  .nav-link:hover,.group:hover > .nav-link{color:var(--color-primary-text);border-bottom-color:var(--color-primary);}
+  .nav-link.is-active{color:var(--color-primary-text);border-bottom-color:var(--color-primary);}
+  /* 1024–1279px: the full nav needs ~1150px, so tighten it and drop the leading icons. */
+  @media (max-width:1279px){
+    .nav-link{padding:12px 9px;}
+    .nav-link > .ti:first-child:not(.ti-chevron-down){display:none;}
+  }
+
+  /* Hover mega-menu panels */
+  /* The last two dropdowns open leftwards so they never spill past the viewport edge. */
+  .nav-bar > div.group:nth-last-of-type(-n+2) > .absolute{left:auto;right:0;}
+  .mega-panel{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);}
+  .mega-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-md);transition:background var(--duration) var(--ease);}
+  .mega-item:hover{background:var(--color-bg-subtle);}
+  .mega-item.is-active{background:var(--color-primary-soft);}
+  .mega-item-title{font-size:var(--text-sm);font-weight:500;line-height:1.25;color:var(--color-text);transition:color var(--duration);}
+  .mega-item:hover .mega-item-title,.mega-item.is-active .mega-item-title{color:var(--color-primary-text);}
+  .mega-item-meta{font-size:var(--text-xs);color:var(--color-text-faint);}
+  .mega-foot{border-top:1px solid var(--color-border-subtle);}
+
+  /* Mobile drawer */
+  .m-backdrop{background:var(--color-overlay);}
+  .m-panel{background:var(--color-bg);box-shadow:var(--shadow-lg);}
+  .m-rule{border-color:var(--color-border-subtle);}
+  .m-nav-link{display:flex;align-items:center;gap:12px;padding:12px 16px;font-size:var(--text-sm);font-weight:500;
+    color:var(--color-text-soft);border-bottom:1px solid var(--color-border-subtle);transition:background var(--duration) var(--ease);}
+  .m-nav-link:last-child{border-bottom:0;}
+  .m-nav-link i{color:var(--color-text-faint);}
+  .m-nav-link:hover{background:var(--color-bg-subtle);}
+  .m-nav-link.is-active{color:var(--color-primary-text);background:var(--color-primary-soft);}
+  .m-nav-link.is-active i{color:var(--color-primary-text);}
+</style>
+
 <!-- Sticky Header -->
-<header
-  class="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-gray-900/70 shadow-sm border-b border-gray-200/70 dark:border-gray-800/70"
-  id="main-header">
+<header class="site-header sticky top-0 z-50" id="main-header">
   <div class="max-w-7xl mx-auto px-4">
     <div class="flex items-center h-16 gap-4">
 
       <!-- Logo -->
       <a href="{% url 'core:homepage' %}" class="flex items-center gap-2 flex-shrink-0 group">
         {% if site_settings.logo %}
-          <img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" class="h-9 w-auto">
+          <img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" class="site-logo-img">
         {% else %}
-          <div class="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-primary-500/30 group-hover:shadow-md transition-shadow">
-            <i class="ti ti-cpu text-white text-lg"></i>
+          <div class="site-logo-mark w-9 h-9 flex items-center justify-center">
+            <i class="ti ti-cpu text-lg"></i>
           </div>
         {% endif %}
-        <span class="font-bold text-lg text-gray-900 dark:text-white tracking-tight hidden sm:block">
-          {{ site_settings.site_name|default:"TechZone" }}
+        <span class="site-brand font-bold text-lg tracking-tight hidden sm:block">
+          {{ site_name }}
         </span>
       </a>
 
       <!-- Search -->
-      <form action="{% url 'products:list' %}" method="get" class="flex-1 max-w-xl hidden md:flex">
-        <div
-          class="flex w-full rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden focus-within:border-primary-500 focus-within:ring-4 focus-within:ring-primary-500/10 transition-all bg-gray-50 dark:bg-gray-800">
-          <i class="ti ti-search text-sm text-gray-400 self-center pl-4"></i>
-          <input id="" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search products, brands, categories..."
-            class="flex-1 px-3 py-2.5 text-sm bg-transparent focus-within:ring-0 outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400">
+      <form action="{% url 'products:list' %}" method="get" class="hdr-search flex-1 max-w-xl hidden md:flex" role="search">
+        <div class="input-group w-full">
+          <i class="ti ti-search" aria-hidden="true"></i>
+          <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search products, brands, categories..."
+            aria-label="Search products" class="input">
         </div>
       </form>
 
       <!-- Right actions -->
       <div class="flex items-center gap-1 md:gap-2 ml-auto">
-        <div>
-          <button onclick="toggleDark()" aria-label="Toggle dark mode"
-          class="p-2.5 rounded-full transition-colors text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400"
-          title="Toggle theme">
-          <i class="ti ti-sun text-lg dark:hidden" aria-hidden="true"></i>
-          <i class="ti ti-moon text-lg hidden dark:block" aria-hidden="true"></i>
+        <button type="button" onclick="toggleDark()" aria-label="Toggle dark mode"
+          class="btn btn-ghost btn-icon btn-round" title="Toggle theme">
+          <i class="ti ti-sun dark:hidden" aria-hidden="true"></i>
+          <i class="ti ti-moon hidden dark:block" aria-hidden="true"></i>
         </button>
-        </div>
         {% if site_settings.whatsapp %}
-        <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank"
-          class="hidden md:flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white px-3.5 py-2 rounded-full text-sm font-medium transition-colors shadow-sm">
-          <i class="ti ti-brand-whatsapp"></i>
-          <span class="hidden lg:inline">WhatsApp</span>
-        </a>
+        <div class="hidden md:block">
+          <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener"
+            class="btn btn-sm btn-round btn-whatsapp" aria-label="Chat on WhatsApp">
+            <i class="ti ti-brand-whatsapp"></i>
+            <span class="hidden lg:inline">WhatsApp</span>
+          </a>
+        </div>
         {% endif %}
-        {% if user.is_authenticated %}
-        <a href="/admin/"
-          class="hidden md:flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <i class="ti ti-user-circle text-lg"></i>
-          <span class="hidden lg:inline">{{ user.get_short_name|default:user.username }}</span>
-        </a>
-        {% else %}
-        <a href="/admin/"
-          class="hidden md:flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <i class="ti ti-login text-lg"></i>
-          <span class="hidden lg:inline">Sign In</span>
-        </a>
-        {% endif %}
-        <button onclick="toggleMobileMenu()" aria-label="Open menu" aria-controls="mobile-menu"
-          class="md:hidden p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <i class="ti ti-menu-2 text-xl text-gray-700 dark:text-gray-300" aria-hidden="true"></i>
-        </button>
+        <div class="hidden md:block">
+          {% if user.is_authenticated %}
+          <a href="/admin/" class="btn btn-ghost btn-round" title="My account">
+            <i class="ti ti-user-circle"></i>
+            <span class="hidden lg:inline">{{ user.get_short_name|default:user.username }}</span>
+          </a>
+          {% else %}
+          <a href="/admin/" class="btn btn-ghost btn-round" title="Sign in">
+            <i class="ti ti-login"></i>
+            <span class="hidden lg:inline">Sign In</span>
+          </a>
+          {% endif %}
+        </div>
+        <div class="lg:hidden">
+          <button type="button" onclick="toggleMobileMenu()" aria-label="Open menu" aria-controls="mobile-menu" aria-expanded="false"
+            id="mobile-menu-toggle" class="btn btn-ghost btn-icon btn-round">
+            <i class="ti ti-menu-2" aria-hidden="true"></i>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Desktop Nav -->
-    <nav class="hidden md:flex items-center border-t border-gray-100 dark:border-gray-800 pt-1.5">
+    <nav class="nav-bar hidden lg:flex items-center pt-1.5" aria-label="Main">
 
       {% comment %} All Products {% endcomment %}
       <a href="{% url 'products:list' %}"
-        class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-          {% if request.resolver_match.url_name == 'list' and not request.resolver_match.kwargs %}
-            border-primary-500 text-primary-600 dark:text-primary-400 
-          {% else %}
-            border-transparent text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-500
-          {% endif %}">
+        class="nav-link{% if request.resolver_match.url_name == 'list' and not request.resolver_match.kwargs %} is-active{% endif %}">
         <i class="ti ti-layout-grid text-sm"></i> All Products
       </a>
 
       <!-- Categories with mega-menu (button only opens the submenu, it does not navigate) -->
       <div class="relative group">
         <button type="button" aria-haspopup="true"
-          class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-            {% if request.resolver_match.url_name == 'categories' and not request.resolver_match.kwargs %}
-              border-primary-500 text-primary-600 dark:text-primary-400 
-            {% else %}
-              border-transparent text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-500
-            {% endif %}">
+          class="nav-link{% if request.resolver_match.url_name == 'categories' and not request.resolver_match.kwargs %} is-active{% endif %}">
           <i class="ti ti-category text-sm"></i> Categories
           <i class="ti ti-chevron-down text-xs ml-0.5 opacity-60 group-hover:rotate-180 transition-transform duration-200"></i>
         </button>
         <!-- Mega dropdown -->
-        <div
-          class="absolute top-full left-0 pt-2 hidden group-hover:block z-50">
-          <div
-            class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl shadow-gray-900/10 dark:shadow-black/40 min-w-[520px] p-5
-              opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+        <div class="absolute top-full left-0 pt-2 hidden group-hover:block z-50">
+          <div class="mega-panel min-w-[520px] p-5 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
             <div class="grid grid-cols-3 gap-2">
               {% for cat in categories %}
               <a href="{{ cat.get_absolute_url }}"
-                class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors group/item
-                  {% if request.path == cat.get_absolute_url %}
-                    bg-primary-50 dark:bg-primary-500/10
-                  {% else %}
-                    hover:bg-gray-50 dark:hover:bg-gray-800
-                  {% endif %}">
+                class="mega-item{% if request.path == cat.get_absolute_url %} is-active{% endif %}">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style="background:{{ cat.color|default:'#2563eb' }}20;">
+                  style="background:{{ cat.color|default:'#0f766e' }}20;">
                   <i class="ti {{ cat.icon|default:'ti-tag' }} text-sm"
-                    style="color:{{ cat.color|default:'#2563eb' }};"></i>
+                    style="color:{{ cat.color|default:'#0f766e' }};"></i>
                 </div>
                 <div>
-                  <p class="text-sm font-medium leading-tight
-                    {% if request.path == cat.get_absolute_url %}text-primary-600 dark:text-primary-400{% else %}text-gray-800 dark:text-gray-200 group-hover/item:text-primary-600{% endif %}">
-                    {{ cat.name }}
-                  </p>
-                  <p class="text-[11px] text-gray-400">{{ cat.total_product_count }} items</p>
+                  <p class="mega-item-title">{{ cat.name }}</p>
+                  <p class="mega-item-meta">{{ cat.total_product_count }} items</p>
                 </div>
               </a>
               {% endfor %}
             </div>
-            <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
-              <a href="{% url 'products:categories' %}"
-                class="flex items-center justify-center gap-2 text-sm text-primary-600 font-semibold hover:underline">
+            <div class="mega-foot mt-4 pt-3 flex justify-center">
+              <a href="{% url 'products:categories' %}" class="btn-link">
                 View All Categories <i class="ti ti-arrow-right text-xs"></i>
               </a>
             </div>
@@ -147,50 +181,34 @@
       {% if cat.children.count %}
       <div class="relative group">
         <button type="button" aria-haspopup="true"
-          class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-            {% if request.path == cat.get_absolute_url %}
-              border-primary-500 text-primary-600 dark:text-primary-400 
-            {% else %}
-              border-transparent text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-500
-            {% endif %}">
+          class="nav-link{% if request.path == cat.get_absolute_url %} is-active{% endif %}">
           {% if cat.icon %}<i class="ti {{ cat.icon }} text-sm"></i>{% endif %}
           {{ cat.name }}
           <i class="ti ti-chevron-down text-xs ml-0.5 opacity-60 group-hover:rotate-180 transition-transform duration-200"></i>
         </button>
         <!-- Submenu: same card style as the Categories mega-menu -->
         <div class="absolute top-full left-0 pt-2 hidden group-hover:block z-50">
-          <div
-            class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl shadow-gray-900/10 dark:shadow-black/40 min-w-[320px] p-5
-              opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+          <div class="mega-panel min-w-[320px] p-5 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
             <div class="grid grid-cols-2 gap-2">
               {% for child in cat.children.all %}
               {% if child.is_active %}
               <a href="{{ child.get_absolute_url }}"
-                class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors group/item
-                  {% if request.path == child.get_absolute_url %}
-                    bg-primary-50 dark:bg-primary-500/10
-                  {% else %}
-                    hover:bg-gray-50 dark:hover:bg-gray-800
-                  {% endif %}">
+                class="mega-item{% if request.path == child.get_absolute_url %} is-active{% endif %}">
                 <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style="background:{{ cat.color|default:'#2563eb' }}20;">
+                  style="background:{{ cat.color|default:'#0f766e' }}20;">
                   <i class="ti {{ child.icon|default:'ti-tag' }} text-sm"
-                    style="color:{{ cat.color|default:'#2563eb' }};"></i>
+                    style="color:{{ cat.color|default:'#0f766e' }};"></i>
                 </div>
                 <div>
-                  <p class="text-sm font-medium leading-tight
-                    {% if request.path == child.get_absolute_url %}text-primary-600 dark:text-primary-400{% else %}text-gray-800 dark:text-gray-200 group-hover/item:text-primary-600{% endif %}">
-                    {{ child.name }}
-                  </p>
-                  <p class="text-[11px] text-gray-400">{{ child.product_count }} items</p>
+                  <p class="mega-item-title">{{ child.name }}</p>
+                  <p class="mega-item-meta">{{ child.product_count }} items</p>
                 </div>
               </a>
               {% endif %}
               {% endfor %}
             </div>
-            <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
-              <a href="{{ cat.get_absolute_url }}"
-                class="flex items-center justify-center gap-2 text-sm text-primary-600 font-semibold hover:underline">
+            <div class="mega-foot mt-4 pt-3 flex justify-center">
+              <a href="{{ cat.get_absolute_url }}" class="btn-link">
                 All {{ cat.name }} <i class="ti ti-arrow-right text-xs"></i>
               </a>
             </div>
@@ -199,12 +217,7 @@
       </div>
       {% else %}
       <a href="{{ cat.get_absolute_url }}"
-        class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-          {% if request.path == cat.get_absolute_url %}
-            border-primary-500 text-primary-600 dark:text-primary-400 
-          {% else %}
-            border-transparent text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-500
-          {% endif %}">
+        class="nav-link{% if request.path == cat.get_absolute_url %} is-active{% endif %}">
         {% if cat.icon %}<i class="ti {{ cat.icon }} text-sm"></i>{% endif %}
         {{ cat.name }}
       </a>
@@ -212,31 +225,16 @@
       {% endfor %}
 
       <a href="{% url 'pages:services' %}"
-        class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-          {% if request.resolver_match.url_name == 'services' %}
-            border-primary-500 text-primary-600 dark:text-primary-400 
-          {% else %}
-            border-transparent text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-500
-          {% endif %}">
+        class="nav-link{% if request.resolver_match.url_name == 'services' %} is-active{% endif %}">
         <i class="ti ti-tool text-sm"></i> Services
       </a>
-      
+
       <a href="{% url 'blog:list' %}"
-        class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-          {% if request.resolver_match.app_name == 'blog' %}
-            border-primary-500 text-primary-600 dark:text-primary-400
-          {% else %}
-            border-transparent text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-500
-          {% endif %}">
+        class="nav-link{% if request.resolver_match.app_name == 'blog' %} is-active{% endif %}">
         <i class="ti ti-news text-sm"></i> Blog
       </a>
       <a href="{% url 'core:contact' %}"
-        class="flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap
-          {% if request.resolver_match.url_name == 'contact' %}
-            border-primary-500 text-primary-600 dark:text-primary-400
-          {% else %}
-            border-transparent text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-500
-          {% endif %}">
+        class="nav-link{% if request.resolver_match.url_name == 'contact' %} is-active{% endif %}">
         <i class="ti ti-headset text-sm"></i> Contact
       </a>
     </nav>
@@ -244,68 +242,60 @@
 </header>
 
 <!-- Mobile Menu -->
-<div id="mobile-menu" class="md:hidden fixed inset-0 z-[60] flex pointer-events-none">
-  <div class="absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-200" onclick="toggleMobileMenu()" id="mobile-menu-backdrop"></div>
+<div id="mobile-menu" class="lg:hidden fixed inset-0 z-[60] flex pointer-events-none">
+  <div class="m-backdrop absolute inset-0 opacity-0 transition-opacity duration-200" onclick="toggleMobileMenu()" id="mobile-menu-backdrop"></div>
   <div id="mobile-menu-panel"
-    class="relative w-80 max-w-full bg-white dark:bg-gray-900 h-full overflow-y-auto flex flex-col shadow-2xl -translate-x-full transition-transform duration-200">
-    <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-800">
-      <span class="font-bold text-lg text-gray-900 dark:text-white">{{ site_settings.site_name|default:"TechZone" }}</span>
-      <button onclick="toggleMobileMenu()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
-        <i class="ti ti-x text-xl"></i>
+    class="m-panel relative w-80 max-w-full h-full overflow-y-auto flex flex-col -translate-x-full transition-transform duration-200">
+    <div class="flex items-center justify-between px-4 py-4 border-b m-rule">
+      <span class="site-brand font-bold text-lg">{{ site_name }}</span>
+      <button type="button" onclick="toggleMobileMenu()" class="btn btn-ghost btn-icon btn-round" aria-label="Close menu">
+        <i class="ti ti-x"></i>
       </button>
     </div>
-    <form action="{% url 'products:list' %}" method="get" class="p-4 border-b border-gray-100 dark:border-gray-800">
-      <div class="flex rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-800">
-        <input type="text" name="q" placeholder="Search products..."
-          class="flex-1 px-4 py-2.5 text-sm bg-transparent outline-none dark:text-gray-300">
-        <button type="submit" class="px-4 text-primary-600"><i class="ti ti-search text-sm"></i></button>
+    <form action="{% url 'products:list' %}" method="get" class="hdr-search hdr-msearch p-4 border-b m-rule" role="search">
+      <div class="relative">
+        <input type="search" name="q" placeholder="Search products..." aria-label="Search products" class="input">
+        <button type="submit" class="btn btn-ghost btn-icon btn-sm btn-round" aria-label="Search"><i class="ti ti-search"></i></button>
       </div>
     </form>
-    <nav class="flex-1 py-2">
+    <nav class="flex-1 py-2" aria-label="Mobile">
       <a href="{% url 'products:list' %}"
-        class="flex items-center gap-3 px-4 py-3 text-sm font-medium border-b border-gray-100 dark:border-gray-800
-          {% if request.resolver_match.url_name == 'list' %}text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %}">
-        <i class="ti ti-layout-grid {% if request.resolver_match.url_name == 'list' %}text-primary-600{% else %}text-gray-400{% endif %}"></i> All Products
+        class="m-nav-link{% if request.resolver_match.url_name == 'list' %} is-active{% endif %}">
+        <i class="ti ti-layout-grid"></i> All Products
       </a>
       <a href="{% url 'products:categories' %}"
-        class="flex items-center gap-3 px-4 py-3 text-sm font-medium border-b border-gray-100 dark:border-gray-800
-          {% if request.resolver_match.url_name == 'categories' %}text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %}">
-        <i class="ti ti-category {% if request.resolver_match.url_name == 'categories' %}text-primary-600{% else %}text-gray-400{% endif %}"></i> All Categories
+        class="m-nav-link{% if request.resolver_match.url_name == 'categories' %} is-active{% endif %}">
+        <i class="ti ti-category"></i> All Categories
       </a>
       {% for cat in nav_categories %}
       <a href="{{ cat.get_absolute_url }}"
-        class="flex items-center gap-3 px-4 py-3 text-sm font-medium border-b border-gray-100 dark:border-gray-800
-          {% if request.path == cat.get_absolute_url %}text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %}">
-        <i class="ti {{ cat.icon|default:'ti-tag' }} {% if request.path == cat.get_absolute_url %}text-primary-600{% else %}text-gray-400{% endif %}"></i>
+        class="m-nav-link{% if request.path == cat.get_absolute_url %} is-active{% endif %}">
+        <i class="ti {{ cat.icon|default:'ti-tag' }}"></i>
         <span>{{ cat.name }}</span>
-        <span class="ml-auto text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{{ cat.total_product_count }}</span>
+        <span class="check-count">{{ cat.total_product_count }}</span>
       </a>
       {% endfor %}
       <a href="{% url 'pages:services' %}"
-        class="flex items-center gap-3 px-4 py-3 text-sm font-medium border-b border-gray-100 dark:border-gray-800
-          {% if request.resolver_match.url_name == 'services' %}text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %}">
-        <i class="ti ti-tool {% if request.resolver_match.url_name == 'services' %}text-primary-600{% else %}text-gray-400{% endif %}"></i> Services
+        class="m-nav-link{% if request.resolver_match.url_name == 'services' %} is-active{% endif %}">
+        <i class="ti ti-tool"></i> Services
       </a>
       <a href="{% url 'blog:list' %}"
-        class="flex items-center gap-3 px-4 py-3 text-sm font-medium border-b border-gray-100 dark:border-gray-800
-          {% if request.resolver_match.app_name == 'blog' %}text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %}">
-        <i class="ti ti-news {% if request.resolver_match.app_name == 'blog' %}text-primary-600{% else %}text-gray-400{% endif %}"></i> Blog &amp; News
+        class="m-nav-link{% if request.resolver_match.app_name == 'blog' %} is-active{% endif %}">
+        <i class="ti ti-news"></i> Blog &amp; News
       </a>
       <a href="{% url 'pages:faqs' %}"
-        class="flex items-center gap-3 px-4 py-3 text-sm font-medium border-b border-gray-100 dark:border-gray-800
-          {% if request.resolver_match.url_name == 'faqs' %}text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %}">
-        <i class="ti ti-help-circle {% if request.resolver_match.url_name == 'faqs' %}text-primary-600{% else %}text-gray-400{% endif %}"></i> FAQs
+        class="m-nav-link{% if request.resolver_match.url_name == 'faqs' %} is-active{% endif %}">
+        <i class="ti ti-help-circle"></i> FAQs
       </a>
       <a href="{% url 'core:contact' %}"
-        class="flex items-center gap-3 px-4 py-3 text-sm font-medium
-          {% if request.resolver_match.url_name == 'contact' %}text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %}">
-        <i class="ti ti-headset {% if request.resolver_match.url_name == 'contact' %}text-primary-600{% else %}text-gray-400{% endif %}"></i> Contact Us
+        class="m-nav-link{% if request.resolver_match.url_name == 'contact' %} is-active{% endif %}">
+        <i class="ti ti-headset"></i> Contact Us
       </a>
     </nav>
     {% if site_settings.whatsapp %}
-    <div class="p-4 border-t border-gray-100 dark:border-gray-800">
-      <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank"
-        class="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-full font-medium transition-colors text-sm shadow-sm">
+    <div class="p-4 border-t m-rule">
+      <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener"
+        class="btn btn-block btn-round btn-whatsapp">
         <i class="ti ti-brand-whatsapp"></i> Chat on WhatsApp
       </a>
     </div>

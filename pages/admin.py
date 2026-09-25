@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from core.admin_mixins import ExportCsvMixin
 from .models import (
     Service, ServiceFeature, ServiceInquiry,
-    ServingArea, FlatPage, FAQCategory, GeneralFAQ,
+    ServingArea, ServiceAvailability, FlatPage, FAQCategory, GeneralFAQ,
 )
 
 
@@ -52,17 +52,27 @@ class ServiceInquiryAdmin(ExportCsvMixin, admin.ModelAdmin):
     actions         = ['export_as_csv']
 
 
+@admin.register(ServiceAvailability)
+class ServiceAvailabilityAdmin(admin.ModelAdmin):
+    list_display  = ('title', 'icon', 'order', 'is_active')
+    list_editable = ('order', 'is_active')
+    search_fields = ('title', 'description')
+
+
 @admin.register(ServingArea)
 class ServingAreaAdmin(admin.ModelAdmin):
     list_display        = ('city', 'state', 'contact_phone', 'is_active', 'is_featured')
     list_editable       = ('is_active', 'is_featured')
     list_filter         = ('state', 'is_active', 'is_featured')
     search_fields       = ('city', 'pincodes')
+    filter_horizontal   = ('availability',)
     prepopulated_fields = {'slug': ('city',)}
     fieldsets = (
         ('Location', {'fields': ('city', 'slug', 'state', 'description')}),
         ('Contact', {'fields': ('contact_phone', 'contact_email', 'address', 'pincodes')}),
         ('Map & SEO', {'fields': ('map_embed', 'meta_title', 'meta_description')}),
+        ('Services available', {'fields': ('availability',),
+                                'description': 'Leave empty to offer every active service availability item.'}),
         ('Display', {'fields': ('is_active', 'is_featured')}),
     )
 

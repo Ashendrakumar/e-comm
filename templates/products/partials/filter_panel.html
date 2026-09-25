@@ -17,7 +17,10 @@
      clear_url        where "Clear all" points
 
    Styles live in filter_panel_styles.html, behaviour in filter_scripts.html —
-   include each of those ONCE per page.
+   include each of those ONCE per page. Controls use the shared components
+   (label.check + input.checkbox/.radio + .check-count, label.pill, button.pill).
+   JS hooks: .filter-section(.collapsed) + .acc-head, .price-preset(.active),
+   .js-live-search, .js-live-price, [name=min_price|max_price].
    ══════════════════════════════════════════════════════════════════════════
 {% endcomment %}
 
@@ -26,11 +29,11 @@
 {% endif %}
 
 <!-- ── Keyword search ─────────────────────────────────────── -->
-<div class="filter-section border-b-0">
-  <div class="relative">
-    <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
-    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search products…"
-           class="form-input pl-9 py-2 text-sm js-live-search" autocomplete="off">
+<div class="filter-section is-flush">
+  <div class="input-group">
+    <i class="ti ti-search"></i>
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search products…" aria-label="Search products"
+           class="input input-sm js-live-search" autocomplete="off">
   </div>
 </div>
 
@@ -41,25 +44,25 @@
     <span>Category</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
   <div class="acc-body">
-    <div class="space-y-0.5 max-h-56 overflow-y-auto pr-1 custom-scroll">
-      <label class="filter-label font-medium">
-        <input type="radio" name="category" value=""
+    <div class="max-h-56 overflow-y-auto pr-1 custom-scroll">
+      <label class="check">
+        <input type="radio" class="radio" name="category" value=""
                {% if not filter_config.current_category %}checked{% endif %}>
         {{ filter_config.cat_all_label }}
       </label>
       {% for cat in filter_config.cat_options %}
-      <label class="filter-label">
-        <input type="radio" name="category" value="{{ cat.slug }}"
+      <label class="check">
+        <input type="radio" class="radio" name="category" value="{{ cat.slug }}"
                {% if filter_config.current_category == cat.slug %}checked{% endif %}>
-        <span class="flex-1">{{ cat.name }}</span>
-        <span class="filter-count">{{ cat.total_product_count }}</span>
+        {{ cat.name }}
+        <span class="check-count">{{ cat.total_product_count }}</span>
       </label>
       {% for sub in cat.children.all %}{% if sub.is_active %}
-      <label class="filter-label pl-5">
-        <input type="radio" name="category" value="{{ sub.slug }}"
+      <label class="check check-indent">
+        <input type="radio" class="radio" name="category" value="{{ sub.slug }}"
                {% if filter_config.current_category == sub.slug %}checked{% endif %}>
-        <span class="flex-1 text-gray-500 dark:text-gray-400"> {{ sub.name }}</span>
-        <span class="filter-count">{{ sub.product_count }}</span>
+        {{ sub.name }}
+        <span class="check-count">{{ sub.product_count }}</span>
       </label>
       {% endif %}{% endfor %}
       {% endfor %}
@@ -75,26 +78,26 @@
   </button>
   <div class="acc-body">
     <div class="flex gap-2">
-      <div class="relative flex-1">
-        <label for="min_price" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">₹</label>
+      <div class="price-field">
+        <label for="min_price">₹</label>
         <input id="min_price" type="number" name="min_price" placeholder="Min" value="{{ request.GET.min_price }}"
-               class="form-input text-xs py-2 pl-6 pr-2 w-full js-live-price" min="0">
+               class="input input-sm js-live-price" min="0">
       </div>
-      <div class="relative flex-1">
-        <label for="max_price" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">₹</label>
+      <div class="price-field">
+        <label for="max_price">₹</label>
         <input id="max_price" type="number" name="max_price" placeholder="Max" value="{{ request.GET.max_price }}"
-               class="form-input text-xs py-2 pl-6 pr-2 w-full js-live-price" min="0">
+               class="input input-sm js-live-price" min="0">
       </div>
     </div>
-    <!-- Quick presets -->
+    <!-- Quick presets — product-filters.js toggles .active -->
     <div class="flex flex-wrap gap-1.5 mt-3">
-      <button type="button" class="price-preset" data-min="" data-max="1000">Under ₹1K</button>
-      <button type="button" class="price-preset" data-min="1000" data-max="5000">₹1K–5K</button>
-      <button type="button" class="price-preset" data-min="5000" data-max="20000">₹5K–20K</button>
-      <button type="button" class="price-preset" data-min="20000" data-max="">₹20K+</button>
+      <button type="button" class="pill price-preset" data-min="" data-max="1000">Under ₹1K</button>
+      <button type="button" class="pill price-preset" data-min="1000" data-max="5000">₹1K–5K</button>
+      <button type="button" class="pill price-preset" data-min="5000" data-max="20000">₹5K–20K</button>
+      <button type="button" class="pill price-preset" data-min="20000" data-max="">₹20K+</button>
     </div>
     {% if price_range.min_price and price_range.max_price %}
-    <p class="text-[11px] text-gray-400 mt-2 text-right">
+    <p class="filter-hint">
       Range ₹{{ price_range.min_price|floatformat:0 }} – ₹{{ price_range.max_price|floatformat:0 }}
     </p>
     {% endif %}
@@ -107,23 +110,17 @@
     <span>Availability</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
   <div class="acc-body">
-    <label class="filter-label justify-between">
-      <span class="flex items-center gap-2">
-        <input type="checkbox" name="in_stock" value="1" {% if request.GET.in_stock %}checked{% endif %}> In Stock Only
-      </span>
-      <span class="filter-count">{{ in_stock_count }}</span>
+    <label class="check">
+      <input type="checkbox" class="checkbox" name="in_stock" value="1" {% if request.GET.in_stock %}checked{% endif %}>
+      In Stock Only <span class="check-count">{{ in_stock_count }}</span>
     </label>
-    <label class="filter-label justify-between">
-      <span class="flex items-center gap-2">
-        <input type="checkbox" name="on_sale" value="1" {% if request.GET.on_sale %}checked{% endif %}> On Sale
-      </span>
-      <span class="filter-count">{{ on_sale_count }}</span>
+    <label class="check">
+      <input type="checkbox" class="checkbox" name="on_sale" value="1" {% if request.GET.on_sale %}checked{% endif %}>
+      On Sale <span class="check-count">{{ on_sale_count }}</span>
     </label>
-    <label class="filter-label justify-between">
-      <span class="flex items-center gap-2">
-        <input type="checkbox" name="new_arrival" value="1" {% if request.GET.new_arrival %}checked{% endif %}> New Arrivals
-      </span>
-      <span class="filter-count">{{ new_count }}</span>
+    <label class="check">
+      <input type="checkbox" class="checkbox" name="new_arrival" value="1" {% if request.GET.new_arrival %}checked{% endif %}>
+      New Arrivals <span class="check-count">{{ new_count }}</span>
     </label>
   </div>
 </div>
@@ -135,19 +132,19 @@
   </button>
   <div class="acc-body">
     <div class="flex flex-wrap gap-1.5">
-      <label class="discount-chip">
+      <label class="pill">
         <input type="radio" name="min_discount" value="10" {% if request.GET.min_discount == '10' %}checked{% endif %}>
         <span>10%+</span>
       </label>
-      <label class="discount-chip">
+      <label class="pill">
         <input type="radio" name="min_discount" value="25" {% if request.GET.min_discount == '25' %}checked{% endif %}>
         <span>25%+</span>
       </label>
-      <label class="discount-chip">
+      <label class="pill">
         <input type="radio" name="min_discount" value="50" {% if request.GET.min_discount == '50' %}checked{% endif %}>
         <span>50%+</span>
       </label>
-      <label class="discount-chip">
+      <label class="pill">
         <input type="radio" name="min_discount" value="" {% if not request.GET.min_discount %}checked{% endif %}>
         <span>Any</span>
       </label>
@@ -162,12 +159,12 @@
     <span>Brand</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
   <div class="acc-body">
-    <div class="space-y-0.5 max-h-48 overflow-y-auto pr-1 custom-scroll">
+    <div class="max-h-48 overflow-y-auto pr-1 custom-scroll">
       {% for brand in sidebar_brands %}
-      <label class="filter-label">
-        <input type="checkbox" name="brand" value="{{ brand.pk }}"
+      <label class="check">
+        <input type="checkbox" class="checkbox" name="brand" value="{{ brand.pk }}"
                {% if brand.pk|stringformat:"s" in selected_brands %}checked{% endif %}>
-        <span class="flex-1">{{ brand.name }}</span>
+        {{ brand.name }}
       </label>
       {% endfor %}
     </div>
@@ -187,6 +184,7 @@
       <label class="color-swatch" title="{{ color }}">
         <input type="checkbox" name="color" value="{{ color }}"
                {% if color in selected_colors %}checked{% endif %}>
+        {# The swatch fill is product data, not a design colour — stays inline. #}
         <span class="swatch-dot" style="background-color:{{ color|lower }}"></span>
         <span class="swatch-name">{{ color }}</span>
       </label>
@@ -201,22 +199,22 @@
   <button type="button" class="acc-head" onclick="toggleAcc(this)">
     <span>Customer Rating</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
-  <div class="acc-body space-y-0.5">
+  <div class="acc-body">
     {% for r in "4321" %}
-    <label class="filter-label rating-option">
-      <input type="radio" name="min_rating" value="{{ r }}" {% if request.GET.min_rating == r %}checked{% endif %}>
-      <span class="flex items-center gap-0.5">
+    <label class="check">
+      <input type="radio" class="radio" name="min_rating" value="{{ r }}" {% if request.GET.min_rating == r %}checked{% endif %}>
+      <span class="flex items-center gap-0.5" aria-label="{{ r }} stars">
         {% for i in "12345" %}
-          {% if forloop.counter <= r|add:0 %}<i class="ti ti-star-filled text-yellow-400 text-sm"></i>
-          {% else %}<i class="ti ti-star text-gray-300 dark:text-gray-600 text-sm"></i>{% endif %}
+          {% if forloop.counter <= r|add:0 %}<i class="ti ti-star-filled star-filled text-sm"></i>
+          {% else %}<i class="ti ti-star star-empty text-sm"></i>{% endif %}
         {% endfor %}
       </span>
-      <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">& up</span>
+      <span class="text-xs text-muted">&amp; up</span>
     </label>
     {% endfor %}
-    <label class="filter-label rating-option">
-      <input type="radio" name="min_rating" value="" {% if not request.GET.min_rating %}checked{% endif %}>
-      <span class="text-xs">Any rating</span>
+    <label class="check">
+      <input type="radio" class="radio" name="min_rating" value="" {% if not request.GET.min_rating %}checked{% endif %}>
+      Any rating
     </label>
   </div>
 </div>
@@ -226,10 +224,10 @@
   <button type="button" class="acc-head" onclick="toggleAcc(this)">
     <span>Condition</span><i class="ti ti-chevron-down acc-chevron"></i>
   </button>
-  <div class="acc-body space-y-0.5">
-    <label class="filter-label"><input type="radio" name="condition" value="" {% if not request.GET.condition %}checked{% endif %}> All</label>
-    <label class="filter-label"><input type="radio" name="condition" value="new" {% if request.GET.condition == 'new' %}checked{% endif %}> New</label>
-    <label class="filter-label"><input type="radio" name="condition" value="refurbished" {% if request.GET.condition == 'refurbished' %}checked{% endif %}> Refurbished</label>
-    <label class="filter-label"><input type="radio" name="condition" value="open_box" {% if request.GET.condition == 'open_box' %}checked{% endif %}> Open Box</label>
+  <div class="acc-body">
+    <label class="check"><input type="radio" class="radio" name="condition" value="" {% if not request.GET.condition %}checked{% endif %}> All</label>
+    <label class="check"><input type="radio" class="radio" name="condition" value="new" {% if request.GET.condition == 'new' %}checked{% endif %}> New</label>
+    <label class="check"><input type="radio" class="radio" name="condition" value="refurbished" {% if request.GET.condition == 'refurbished' %}checked{% endif %}> Refurbished</label>
+    <label class="check"><input type="radio" class="radio" name="condition" value="open_box" {% if request.GET.condition == 'open_box' %}checked{% endif %}> Open Box</label>
   </div>
 </div>

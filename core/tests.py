@@ -44,3 +44,26 @@ class ValidatorTests(TestCase):
 
     def test_accepts_valid_image(self):
         validate_image_file(self._Fake('photo.jpg', 1000))  # should not raise
+
+
+from django.test import override_settings
+
+
+@override_settings(DEBUG=True)
+class FriendlyDebug404Tests(TestCase):
+    def test_unknown_url_shows_site_404_in_debug(self):
+        resp = self.client.get('/definitely-not-a-page/')
+        self.assertEqual(resp.status_code, 404)
+        self.assertTemplateUsed(resp, '404.html')
+
+    def test_api_404_stays_json(self):
+        resp = self.client.get('/api/v1/products/no-such-product/')
+        self.assertEqual(resp.status_code, 404)
+        self.assertTrue(resp['Content-Type'].startswith('application/json'))
+
+    @override_settings(SHOW_TECHNICAL_404=True)
+    def test_opt_out_keeps_django_debug_page(self):
+        resp = self.client.get('/definitely-not-a-page/')
+        self.assertEqual(resp.status_code, 404)
+        self.assertTemplateNotUsed(resp, '404.html')
+

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.cache import cache
 from .models import SiteSettings, SocialLink, Brand
+from .branding import DEFAULT_SITE_NAME
 from products.models import Category
 from pages.models import FlatPage, Service
 
@@ -32,8 +33,10 @@ def global_context(request):
     if nav is None:
         nav = _build_nav_context()
         cache.set(NAV_CACHE_KEY, nav, NAV_CACHE_SECONDS)
+    site_settings = SiteSettings.get_settings()
     return {
-        'site_settings': SiteSettings.get_settings(),
+        'site_settings': site_settings,
+        'site_name':     (site_settings.site_name or '').strip() or DEFAULT_SITE_NAME,
         'use_compiled_css': getattr(settings, 'TAILWIND_COMPILED', False),
         **nav,
     }

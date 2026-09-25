@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load ui %}
 {% load static %}
-{% block title %}{{ category.name }} — TechZone{% endblock %}
+{% block title %}{{ category.name }} — {{ site_name }}{% endblock %}
 {% block meta_description %}{{ meta_description|default:category.name }}{% endblock %}
 
 {% block extra_head %}
@@ -17,19 +18,6 @@
        class="absolute inset-0 w-full h-full object-cover object-center" loading="eager" fetchpriority="high" decoding="async">
   <div class="cat-banner-overlay"></div>
   <div class="relative z-10 w-full max-w-7xl mx-auto px-6 pb-8 pt-20">
-    <nav class="flex items-center gap-2 text-xs text-white/70 mb-4 flex-wrap">
-      <a href="{% url 'core:homepage' %}" class="hover:text-white transition-colors">Home</a>
-      <i class="ti ti-chevron-right text-[10px]"></i>
-      <a href="{% url 'products:categories' %}" class="hover:text-white transition-colors">Categories</a>
-      {% for crumb_name, crumb_url in breadcrumbs %}
-        <i class="ti ti-chevron-right text-[10px]"></i>
-        {% if crumb_url and not forloop.last %}
-          <a href="{{ crumb_url }}" class="hover:text-white transition-colors">{{ crumb_name }}</a>
-        {% else %}
-          <span class="text-white font-semibold">{{ crumb_name }}</span>
-        {% endif %}
-      {% endfor %}
-    </nav>
     <div class="flex items-end gap-4 flex-wrap">
       {% if category.icon %}
       <div class="w-14 h-14 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
@@ -37,6 +25,7 @@
       </div>
       {% endif %}
       <div>
+        {% url 'products:categories' as cats_url %}{% breadcrumbs "Categories" cats_url trail=breadcrumbs on_dark=True %}
         <h1 class="text-3xl md:text-4xl font-extrabold text-white leading-tight">{{ category.name }}</h1>
         {% if category.description %}<p class="text-white/70 text-sm mt-1.5 max-w-xl">{{ category.description|truncatewords:20 }}</p>{% endif %}
         <div class="flex flex-wrap items-center gap-4 mt-3 text-sm">
@@ -56,16 +45,6 @@
     <div class="absolute -bottom-16 -left-16 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
   </div>
   <div class="relative max-w-7xl mx-auto px-6">
-    <nav class="flex items-center gap-2 text-xs text-white/70 mb-4 flex-wrap">
-      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
-      <i class="ti ti-chevron-right text-[10px]"></i>
-      <a href="{% url 'products:categories' %}" class="hover:text-white">Categories</a>
-      {% for crumb_name, crumb_url in breadcrumbs %}
-        <i class="ti ti-chevron-right text-[10px]"></i>
-        {% if crumb_url and not forloop.last %}<a href="{{ crumb_url }}" class="hover:text-white">{{ crumb_name }}</a>
-        {% else %}<span class="text-white font-semibold">{{ crumb_name }}</span>{% endif %}
-      {% endfor %}
-    </nav>
     <div class="flex items-center gap-4 flex-wrap">
       {% if category.icon %}
       <div class="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center flex-shrink-0">
@@ -73,6 +52,7 @@
       </div>
       {% endif %}
       <div>
+        {% url 'products:categories' as cats_url %}{% breadcrumbs "Categories" cats_url trail=breadcrumbs on_dark=True %}
         <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">{{ category.name }}</h1>
         {% if category.description %}<p class="text-white/70 text-sm mt-1.5">{{ category.description|truncatewords:20 }}</p>{% endif %}
         <p class="text-white/80 text-sm mt-2">
@@ -88,15 +68,14 @@
 
 <!-- ═══════ SUBCATEGORY PILLS (sticky) ═══════ -->
 {% if subcategories %}
-<div class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-gray-900/70 border-b dark:border-gray-800 sticky top-[111px] z-30 shadow-sm">
+<div class="lp-subnav z-30" data-sticky-subnav>
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 overflow-x-auto scrollbar-hide">
-    <span class="text-[11px] font-bold text-primary-400 uppercase tracking-wider flex-shrink-0">Sub-categories:</span>
+    <span class="lp-eyebrow is-primary flex-shrink-0">Sub-categories:</span>
     {% for sub in subcategories %}
-    <a href="{{ sub.get_absolute_url }}"
-       class="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-700 dark:hover:text-primary-400 group">
-      {% if sub.icon %}<i class="ti {{ sub.icon }} text-sm text-gray-400 group-hover:text-primary-500 transition-colors"></i>{% endif %}
+    <a href="{{ sub.get_absolute_url }}" class="lp-subpill" title="{{ sub.name }}">
+      {% if sub.icon %}<i class="ti {{ sub.icon }} text-sm"></i>{% endif %}
       <span class="hidden sm:inline-block">{{ sub.name }}</span>
-      <span class="text-[11px] bg-gray-100 dark:bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full">{{ sub.total_product_count }}</span>
+      <span class="check-count">{{ sub.total_product_count }}</span>
     </a>
     {% endfor %}
   </div>
@@ -108,36 +87,36 @@
   <div class="flex gap-6">
 
     <!-- ── SIDEBAR ─────────────────────────────────────────────── -->
-    <aside class="hidden lg:block w-64 flex-shrink-0 space-y-4">
+    <aside class="hidden lg:block w-64 flex-shrink-0">
+      <div class="lp-sticky space-y-4">
 
       <!-- Filter panel (shared with the all-products route) -->
       <form method="get" id="filter-form" data-ajax-url="{% url 'products:ajax_filter' %}">
         {% if request.GET.view %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
         {% if request.GET.per_page %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}
 
-        <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+        <div class="card card-pad">
           <div class="flex items-center justify-between mb-5">
-            <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-sm">
-              <i class="ti ti-adjustments-horizontal text-primary-600"></i> Filters
+            <h3 class="lp-strong font-bold flex items-center gap-2 text-sm">
+              <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters
             </h3>
-            <a href="{{ clear_url }}" class="text-xs text-primary-600 hover:underline font-semibold">Clear all</a>
+            <a href="{{ clear_url }}" class="btn-link">Clear all</a>
           </div>
 
           {% include "products/partials/filter_panel.html" %}
 
-          <button type="submit" class="w-full btn-primary justify-center py-2.5 mt-4 text-sm rounded-xl">
-            <i class="ti ti-search text-sm"></i> Apply Filters
+          <button type="submit" class="btn btn-primary btn-block mt-4">
+            <i class="ti ti-search"></i> Apply Filters
           </button>
         </div>
       </form>
 
       <!-- Related categories (siblings) -->
       {% if siblings %}
-      <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 ">
-        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Related Categories</p>
+      <div class="card card-pad">
+        <p class="lp-eyebrow mb-3">Related Categories</p>
         {% for sib in siblings %}
-        <a href="{{ sib.get_absolute_url }}"
-          class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 text-sm dark:text-gray-300 hover:text-primary-600 transition-colors group">
+        <a href="{{ sib.get_absolute_url }}" class="lp-side-link">
           {% if sib.icon %}
             <i class="ti {{ sib.icon }} text-sm shrink-0"></i>
           {% endif %}
@@ -150,16 +129,16 @@
 
       <!-- Parent category link -->
       {% if category.parent %}
-      <div class="bg-primary-50 dark:bg-primary-900 rounded-2xl border border-primary-100 dark:border-primary-900 p-4">
-        <p class="text-[11px] font-bold text-primary-500 uppercase tracking-wider mb-2">Parent Category</p>
-        <a href="{{ category.parent.get_absolute_url }}"
-           class="flex items-center gap-2 text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline">
+      <div class="lp-parent p-4">
+        <p class="lp-eyebrow is-primary mb-2">Parent Category</p>
+        <a href="{{ category.parent.get_absolute_url }}" class="flex items-center gap-2 text-sm font-semibold">
           {% if category.parent.icon %}<i class="ti {{ category.parent.icon }} text-sm"></i>{% endif %}
           {{ category.parent.name }}
         </a>
       </div>
       {% endif %}
 
+      </div>
     </aside>
 
     <!-- ── PRODUCT AREA ────────────────────────────────────────── -->
@@ -171,52 +150,51 @@
       </div>
 
       <!-- Toolbar — identical to the all-products route -->
-      <div class="flex items-center justify-between mb-4 gap-3 flex-wrap bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl px-4 py-3 shadow-sm">
-        <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">
-          <span id="live-count" class="font-bold text-gray-900 dark:text-white">{{ total_count }}</span> results
+      <div class="card flex items-center justify-between mb-4 gap-3 flex-wrap px-4 py-3">
+        <p class="text-sm text-muted font-medium">
+          <span id="live-count" class="lp-strong font-bold">{{ total_count }}</span> results
         </p>
 
         <div class="flex items-center gap-2 flex-wrap">
 
-          <!-- Mobile filter -->
-          <button onclick="openMobileFilter()"
-                  class="lg:hidden flex items-center gap-2 px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium bg-white dark:bg-gray-900 hover:border-primary-400 transition-colors">
-            <i class="ti ti-adjustments-horizontal text-primary-600"></i> Filters
-            {% if active_chips %}<span class="w-5 h-5 rounded-full bg-primary-600 text-white text-[10px] font-bold flex items-center justify-center">{{ active_chips|length }}</span>{% endif %}
-          </button>
+          <!-- Mobile filter (wrapper carries lg:hidden — .btn's display would override it) -->
+          <div class="lg:hidden">
+            <button type="button" onclick="openMobileFilter()" class="btn btn-secondary btn-sm">
+              <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters
+              {% if active_chips %}<span class="lp-badge">{{ active_chips|length }}</span>{% endif %}
+            </button>
+          </div>
 
           <!-- Sort (AJAX) -->
           <div>
-            <select id="sort-select" onchange="doAjaxFilter()"
-                  class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900">
-            <option value="-created_at"  {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
-            <option value="price"        {% if sort == 'price' %}selected{% endif %}>Price: Low → High</option>
-            <option value="-price"       {% if sort == '-price' %}selected{% endif %}>Price: High → Low</option>
-            <option value="name"         {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
-            <option value="-name"        {% if sort == '-name' %}selected{% endif %}>Name Z–A</option>
-            <option value="-views_count" {% if sort == '-views_count' %}selected{% endif %}>Most Popular</option>
-          </select>
+            <select id="sort-select" onchange="doAjaxFilter()" class="select select-sm" aria-label="Sort products">
+              <option value="-created_at"  {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
+              <option value="price"        {% if sort == 'price' %}selected{% endif %}>Price: Low → High</option>
+              <option value="-price"       {% if sort == '-price' %}selected{% endif %}>Price: High → Low</option>
+              <option value="name"         {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
+              <option value="-name"        {% if sort == '-name' %}selected{% endif %}>Name Z–A</option>
+              <option value="-views_count" {% if sort == '-views_count' %}selected{% endif %}>Most Popular</option>
+            </select>
           </div>
 
           <!-- Per page (AJAX) -->
-          <div>
-            <select id="perpage-select" onchange="doAjaxFilter()"
-                  class="form-select py-2 text-sm rounded-xl cursor-pointer font-medium bg-white dark:bg-gray-900 hidden md:block">
-            <option value="12" {% if per_page == 12 %}selected{% endif %}>12 / page</option>
-            <option value="24" {% if per_page == 24 %}selected{% endif %}>24 / page</option>
-            <option value="48" {% if per_page == 48 %}selected{% endif %}>48 / page</option>
-          </select>
+          <div class="hidden md:block">
+            <select id="perpage-select" onchange="doAjaxFilter()" class="select select-sm" aria-label="Products per page">
+              <option value="12" {% if per_page == 12 %}selected{% endif %}>12 / page</option>
+              <option value="24" {% if per_page == 24 %}selected{% endif %}>24 / page</option>
+              <option value="48" {% if per_page == 48 %}selected{% endif %}>48 / page</option>
+            </select>
           </div>
 
-          <!-- Grid / List -->
-          <!-- <div class="flex border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-            <button type="button" onclick="setView('grid')" id="btn-grid"
-                    class="px-3 py-2 {% if view_mode != 'list' %}bg-primary-600 text-white{% else %}text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %} transition-colors">
-              <i class="ti ti-layout-grid text-sm"></i>
+          <!-- Grid / List (disabled; setView() in product-filters.js swaps btn-primary/btn-ghost) -->
+          <!-- <div class="lp-segment" role="group" aria-label="View">
+            <button type="button" onclick="setView('grid')" id="btn-grid" aria-label="Grid view"
+                    class="btn btn-icon btn-sm {% if view_mode != 'list' %}btn-primary{% else %}btn-ghost{% endif %}">
+              <i class="ti ti-layout-grid"></i>
             </button>
-            <button type="button" onclick="setView('list')" id="btn-list"
-                    class="px-3 py-2 {% if view_mode == 'list' %}bg-primary-600 text-white{% else %}text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800{% endif %} transition-colors border-l border-gray-200 dark:border-gray-700">
-              <i class="ti ti-list text-sm"></i>
+            <button type="button" onclick="setView('list')" id="btn-list" aria-label="List view"
+                    class="btn btn-icon btn-sm {% if view_mode == 'list' %}btn-primary{% else %}btn-ghost{% endif %}">
+              <i class="ti ti-list"></i>
             </button>
           </div> -->
         </div>
@@ -234,15 +212,14 @@
 
 <!-- ═══════ MOBILE FILTER DRAWER ═══════ -->
 <div id="mob-filter" class="hidden fixed inset-0 z-50 flex">
-  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMobileFilter()"></div>
-  <div class="relative ml-auto w-80 max-w-full bg-white dark:bg-gray-900 h-full overflow-y-auto shadow-2xl flex flex-col translate-x-full transition-transform duration-300" id="mob-panel">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10">
-      <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-        <i class="ti ti-adjustments-horizontal text-primary-600"></i> Filters
+  <div class="lp-backdrop absolute inset-0" onclick="closeMobileFilter()"></div>
+  <div class="lp-drawer relative ml-auto w-80 max-w-full h-full overflow-y-auto flex flex-col translate-x-full transition-transform duration-300" id="mob-panel">
+    <div class="lp-drawer-head flex items-center justify-between px-5 py-4 sticky top-0 z-10">
+      <h3 class="lp-strong font-bold flex items-center gap-2">
+        <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters
       </h3>
-      <button onclick="closeMobileFilter()"
-              class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-        <i class="ti ti-x text-lg"></i>
+      <button type="button" onclick="closeMobileFilter()" class="btn btn-ghost btn-icon btn-sm" aria-label="Close filters">
+        <i class="ti ti-x"></i>
       </button>
     </div>
     <div class="flex-1 p-5 overflow-y-auto">
@@ -251,10 +228,10 @@
         {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
         {% if request.GET.view %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
         {% include "products/partials/filter_panel.html" %}
-        <button type="submit" class="w-full btn-primary justify-center py-3 rounded-xl text-sm font-semibold mt-5">
+        <button type="submit" class="btn btn-primary btn-block mt-5">
           <i class="ti ti-search"></i> Apply Filters
         </button>
-        <a href="{{ clear_url }}" class="block text-center text-sm text-gray-500 hover:text-primary-600 mt-2 transition-colors">Clear All</a>
+        <a href="{{ clear_url }}" class="btn btn-outline btn-block mt-2"><i class="ti ti-x"></i> Clear All</a>
       </form>
     </div>
   </div>

@@ -17,11 +17,13 @@ const PC_UUID = '00000000-0000-0000-0000-000000000000';
 
 // ── Toast ───────────────────────────────────────────────────────────
 function showToast(msg, type='info'){
-  const colors={success:'bg-green-500',error:'bg-red-500',warning:'bg-orange-500',info:'bg-primary-600'};
+  // Look lives in .pc-toast / .pc-toast--{type} (product-card.css), built on tokens.
   const icons ={success:'ti-circle-check',error:'ti-circle-x',warning:'ti-alert-triangle',info:'ti-info-circle'};
+  if(!icons[type]) type='info';
   const t=document.createElement('div');
-  t.className=`fixed top-20 right-4 z-[9999] ${colors[type]||colors.info} text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold pc-fade-in flex items-center gap-2 max-w-xs`;
-  t.innerHTML=`<i class="ti ${icons[type]||icons.info} text-base flex-shrink-0"></i><span>${msg}</span>`;
+  t.className=`pc-toast pc-toast--${type} pc-fade-in`;
+  t.setAttribute('role','status');
+  t.innerHTML=`<i class="ti ${icons[type]}"></i><span>${msg}</span>`;
   document.body.appendChild(t);
   setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3500);
 }
@@ -33,11 +35,11 @@ async function openQV(slug){
   if(!modal||!content)return;
   modal.classList.add('open');
   document.body.style.overflow='hidden';
-  content.innerHTML='<div class="flex items-center justify-center h-48"><div class="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div></div>';
+  content.innerHTML='<div class="flex items-center justify-center h-48"><div class="pc-spinner" role="status" aria-label="Loading"></div></div>';
   try{
     const res=await fetch(PC_URLS.quickView.replace('__SLUG__', slug),{headers:{'X-Requested-With':'XMLHttpRequest'}});
     content.innerHTML=await res.text();
-  }catch{content.innerHTML='<p class="text-center text-gray-500 py-12">Could not load product details.</p>';}
+  }catch{content.innerHTML='<p class="text-center text-muted py-12">Could not load product details.</p>';}
 }
 function closeQV(){
   const modal=document.getElementById('qv-modal');
@@ -57,32 +59,32 @@ function updateCompareUI(){
   const countEl=document.getElementById('cmp-count');
   const goBtn=document.getElementById('cmp-go-btn');
 
-  if(countEl) countEl.textContent=`(${compareItems.length}/3)`;
+  if(countEl) countEl.textContent=`${compareItems.length}/3`;
   if(goBtn){
+    // .btn:disabled supplies the dimmed / not-allowed look — no class swap needed.
     goBtn.disabled=compareItems.length<2;
-    goBtn.className=compareItems.length>=2
-      ?'btn-primary text-sm py-2 px-5 rounded-xl'
-      :'btn-primary text-sm py-2 px-5 rounded-xl opacity-50 cursor-not-allowed';
+    goBtn.className='btn btn-primary cmp-bar-btn';
   }
 
   document.querySelectorAll('.cmp-slot').forEach((slot,i)=>{
     const nameEl=slot.querySelector('.cmp-name');
     if(compareItems[i]){
-      slot.className='cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-primary-50 dark:bg-primary-950 rounded-xl text-sm border-2 border-primary-300 dark:border-primary-700 min-w-[120px] h-10';
-      nameEl.className='cmp-name text-xs font-semibold text-primary-700 dark:text-primary-300 truncate flex-1';
+      // Slot look lives in #compare-bar .cmp-slot(.is-filled) — product-card.css.
+      slot.classList.add('is-filled');
       nameEl.textContent=compareItems[i].name;
       let rmBtn=slot.querySelector('.cmp-rm');
       if(!rmBtn){
         rmBtn=document.createElement('button');
-        rmBtn.className='cmp-rm flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-primary-200 dark:bg-primary-800 hover:bg-red-200 dark:hover:bg-red-800 transition-colors';
-        rmBtn.innerHTML='<i class="ti ti-x text-[10px] text-primary-600 dark:text-primary-400"></i>';
+        rmBtn.type='button';
+        rmBtn.className='cmp-rm';
+        rmBtn.setAttribute('aria-label','Remove from compare');
+        rmBtn.innerHTML='<i class="ti ti-x" aria-hidden="true"></i>';
         slot.appendChild(rmBtn);
       }
       const itemId=compareItems[i].id;
       rmBtn.onclick=()=>toggleCompare(itemId,'');
     } else {
-      slot.className='cmp-slot flex items-center justify-between gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-sm text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 min-w-[120px] h-10';
-      nameEl.className='cmp-name text-xs truncate';
+      slot.classList.remove('is-filled');
       nameEl.textContent='Empty slot';
       const rmBtn=slot.querySelector('.cmp-rm');
       if(rmBtn) rmBtn.remove();
@@ -100,7 +102,10 @@ function updateCompareUI(){
     const active=compareItems.some(p=>p.id===btn.dataset.id);
     btn.classList.toggle('is-active',active);
     btn.setAttribute('aria-pressed',active ? 'true' : 'false');
-    btn.title=active ? 'Remove from compare' : 'Add to compare';
+    const label=active ? 'Remove from compare' : 'Add to compare';
+    btn.setAttribute('aria-label',label);
+    // Card buttons show aria-label as a styled tooltip; others keep a plain title.
+    if(!btn.classList.contains('pc-act')) btn.title=label;
   });
 }
 
@@ -148,11 +153,21 @@ document.addEventListener('click',async e=>{
     const data=await res.json();
     const icon=btn.querySelector('i');
     if(data.status==='added'){
-      icon.className='ti ti-heart-filled text-red-500 text-sm';
+      icon.className='ti ti-heart-filled';   // coloured by .pc-wish .ti-heart-filled
+      btn.setAttribute('aria-label','Remove from wishlist');
       showToast('Added to wishlist ❤️','success');
     } else {
-      icon.className='ti ti-heart text-sm';
+      icon.className='ti ti-heart';
+      btn.setAttribute('aria-label','Add to wishlist');
       showToast('Removed from wishlist','info');
     }
   }catch{showToast('Something went wrong','error');}
 });
+
+// Expose the compare bar's height (it wraps to 3 rows on phones) so the floating
+// WhatsApp button can sit above it — see .wa-fab in product-card.css.
+(function(){
+  const bar=document.getElementById('compare-bar');
+  if(!bar||!('ResizeObserver' in window)) return;
+  new ResizeObserver(()=>document.documentElement.style.setProperty('--cmp-bar-h',bar.offsetHeight+'px')).observe(bar);
+})();

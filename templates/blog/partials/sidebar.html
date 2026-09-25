@@ -2,10 +2,12 @@
   <!-- Search -->
   <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
     <h4 class="font-bold text-gray-900 dark:text-white mb-3 text-sm uppercase tracking-wide">Search</h4>
-    <form action="{% url 'blog:list' %}" method="get" class="flex rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <input type="text" name="q" value="{{ query }}" placeholder="Search articles..."
-             class="flex-1 px-3 py-2.5 text-sm bg-transparent outline-none dark:text-gray-300">
-      <button type="submit" class="px-4 bg-primary-600 text-white hover:bg-primary-700"><i class="ti ti-search text-sm"></i></button>
+    <form action="{% url 'blog:list' %}" method="get" role="search" class="flex gap-2">
+      <div class="input-group flex-1">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input type="search" id="blog-search-q" aria-label="Search articles" name="q" value="{{ query }}" placeholder="Search articles..." class="input">
+      </div>
+      <button type="submit" class="btn btn-primary btn-icon" aria-label="Search"><i class="ti ti-arrow-right"></i></button>
     </form>
   </div>
 
@@ -56,8 +58,8 @@
   <div class="bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl p-6 text-white">
     <i class="ti ti-headset text-3xl mb-3 block"></i>
     <h4 class="font-bold text-lg mb-2">Need Expert Advice?</h4>
-    <p class="text-sm text-blue-100 mb-4">Our specialists help you pick the right electronics.</p>
-    <a href="{% url 'core:contact' %}" class="inline-flex items-center gap-2 bg-white text-primary-700 font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-blue-50 transition-colors">
+    <p class="text-sm text-primary-50 mb-4">Our specialists help you pick the right electronics.</p>
+    <a href="{% url 'core:contact' %}" class="btn btn-inverse">
       Contact Us <i class="ti ti-arrow-right text-xs"></i>
     </a>
   </div>

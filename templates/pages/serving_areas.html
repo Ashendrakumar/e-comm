@@ -1,8 +1,17 @@
 {% extends "base.html" %}
+{% load ui %}
 {% load static %}
-{% block title %}Serving Areas — TechZone{% endblock %}
-{% block meta_description %}TechZone delivers electronics, installation and repair services across {{ areas.count }}+ cities in Gujarat. Find service availability in your city.{% endblock %}
+{% block title %}Serving Areas — {{ site_name }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/service-availability.css' %}">{% endblock %}
+{% block meta_description %}{{ site_name }} delivers electronics, installation and repair services across {{ areas.count }}+ cities in Gujarat. Find service availability in your city.{% endblock %}
 {% block content %}
+<style>
+  /* Featured-area cards keep their gradient; lift + shadow use the standard hover tokens.
+     `translate` (not `transform`) so the hover composes with the .rise entrance animation. */
+  .area-feat{transition:translate .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+  .area-feat:hover,.area-feat:focus-visible{translate:0 var(--lift-hover);box-shadow:var(--shadow-hover)}
+  @media (prefers-reduced-motion:reduce){.area-feat{transition:none}.area-feat:hover{translate:none}}
+</style>
 
 <div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white text-center relative overflow-hidden">
   <div class="absolute inset-0 opacity-10">
@@ -10,13 +19,9 @@
     <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
   </div>
   <div class="relative">
-    <nav class="flex items-center justify-center gap-2 text-xs text-white/70 mb-5">
-      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
-      <i class="ti ti-chevron-right text-[10px]"></i>
-      <span class="text-white font-semibold">Serving Areas</span>
-    </nav>
+    {% breadcrumbs "Serving Areas" on_dark=True align="center" %}
     <h1 class="text-4xl font-extrabold mb-3">Serving Areas</h1>
-    <p class="text-blue-200 text-lg max-w-xl mx-auto">Delivering electronics and services across Gujarat and beyond</p>
+    <p class="text-primary-100 text-lg max-w-xl mx-auto">Delivering electronics and services across Gujarat and beyond</p>
   </div>
 </div>
 
@@ -38,16 +43,16 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       {% for area in featured_areas %}
       <a href="{{ area.get_absolute_url }}"
-         class="group relative bg-gradient-to-br from-primary-600 to-primary-800 text-white rounded-2xl p-6 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all">
+         class="area-feat rise group relative bg-gradient-to-br from-primary-600 to-primary-800 text-white rounded-2xl p-6 overflow-hidden" style="--i: {{ forloop.counter0 }}">
         <div class="absolute -right-6 -bottom-6 opacity-15"><i class="ti ti-map-2 text-8xl"></i></div>
         <div class="relative">
           <div class="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur">
             <i class="ti ti-map-pin text-xl"></i>
           </div>
           <h3 class="text-xl font-bold mb-1">{{ area.city }}</h3>
-          <p class="text-blue-200 text-sm mb-4">{{ area.state }}</p>
+          <p class="text-primary-100 text-sm mb-4">{{ area.state }}</p>
           {% if area.contact_phone %}
-          <p class="text-xs text-blue-100 flex items-center gap-1.5 mb-3"><i class="ti ti-phone"></i>{{ area.contact_phone }}</p>
+          <p class="text-xs text-primary-50 flex items-center gap-1.5 mb-3"><i class="ti ti-phone"></i>{{ area.contact_phone }}</p>
           {% endif %}
           <span class="inline-flex items-center gap-1.5 text-sm font-semibold group-hover:gap-2.5 transition-all">
             View Details <i class="ti ti-arrow-right text-xs"></i>
@@ -66,10 +71,8 @@
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-12">
     {% for area in areas %}
     <a href="{{ area.get_absolute_url }}"
-       class="group flex items-center gap-2.5 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950 transition-all">
-      <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900 group-hover:bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
-        <i class="ti ti-map-pin text-primary-600 group-hover:text-white text-sm transition-colors"></i>
-      </div>
+       class="tile rise group flex items-center gap-2.5 p-4" style="--i: {% if forloop.counter0 < 20 %}{{ forloop.counter0 }}{% else %}20{% endif %}">
+      <span class="chip chip-sm"><i class="ti ti-map-pin" aria-hidden="true"></i></span>
       <div>
         <span class="font-semibold text-sm text-gray-800 dark:text-gray-200 group-hover:text-primary-600 transition-colors">{{ area.city }}</span>
         <p class="text-xs text-gray-400">{{ area.state }}</p>
@@ -80,42 +83,29 @@
   {% else %}
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-12">
     {% for city in default_cities %}
-    <div class="group flex items-center gap-2.5 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800">
-      <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center flex-shrink-0">
-        <i class="ti ti-map-pin text-primary-600 text-sm"></i>
-      </div>
+    <div class="card rise flex items-center gap-2.5 p-4" style="--i: {% if forloop.counter0 < 20 %}{{ forloop.counter0 }}{% else %}20{% endif %}">
+      <span class="chip chip-sm"><i class="ti ti-map-pin" aria-hidden="true"></i></span>
       <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">{{ city }}</span>
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <!-- Service availability strip -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-    <div class="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
-      <i class="ti ti-truck text-3xl text-primary-600 mb-2 block"></i>
-      <p class="font-bold text-gray-900 dark:text-white text-sm">Doorstep Delivery</p>
-    </div>
-    <div class="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
-      <i class="ti ti-tool text-3xl text-primary-600 mb-2 block"></i>
-      <p class="font-bold text-gray-900 dark:text-white text-sm">Installation</p>
-    </div>
-    <div class="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
-      <i class="ti ti-device-mobile text-3xl text-primary-600 mb-2 block"></i>
-      <p class="font-bold text-gray-900 dark:text-white text-sm">Device Repair</p>
-    </div>
-    <div class="text-center p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800">
-      <i class="ti ti-headset text-3xl text-primary-600 mb-2 block"></i>
-      <p class="font-bold text-gray-900 dark:text-white text-sm">Local Support</p>
-    </div>
+  <!-- Service availability strip (from /api/v1/service-availability/) -->
+  <div class="mb-12">
+    {% include "partials/service_availability.html" with layout="tiles" %}
   </div>
 
   <div class="bg-primary-600 rounded-3xl p-10 text-white text-center">
     <h2 class="text-2xl font-bold mb-3">Don't See Your City?</h2>
-    <p class="text-blue-200 mb-6 max-w-md mx-auto">We're constantly expanding. Contact us and we'll check if we can serve your location.</p>
-    <a href="{% url 'core:contact' %}" class="inline-flex items-center gap-2 bg-white text-primary-700 hover:bg-blue-50 font-bold px-7 py-3.5 rounded-2xl transition-colors">
+    <p class="text-primary-100 mb-6 max-w-md mx-auto">We're constantly expanding. Contact us and we'll check if we can serve your location.</p>
+    <a href="{% url 'core:contact' %}" class="btn btn-inverse btn-lg">
       Contact Us <i class="ti ti-arrow-right"></i>
     </a>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/service-availability.js' %}" defer></script>
 {% endblock %}

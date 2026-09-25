@@ -1,7 +1,91 @@
-/* Compare table: sticky header column and row highlighting. */
-.compare-table th,.compare-table td{padding:12px 16px;vertical-align:top;border-bottom:1px solid #f3f4f6;}
-.dark .compare-table th,.dark .compare-table td{border-color:#1f2937;}
-.compare-table tr:last-child td,.compare-table tr:last-child th{border-bottom:none;}
-.compare-table thead th:first-child{width:180px;}
-.spec-row:hover td,.spec-row:hover th{background:#f8fafc;}
-.dark .spec-row:hover td,.dark .spec-row:hover th{background:#111827;}
+/* Compare page — minimal, responsive. Colours come from tokens.css;
+   switches and links are the shared .switch / .btn-link components.
+   Desktop: label column + one column per product (CSS grid, no table).
+   ≤768px:  the label sits above its values, so products stay side by side
+            without horizontal scrolling. */
+.cmp-page{max-width:1120px;margin:0 auto;padding:24px 16px 48px;color:var(--color-text);}
+
+/* The floating compare bar is redundant on this page and covered the content. */
+#compare-bar{display:none !important;}
+
+/* ── Header ─────────────────────────────────────────────── */
+.cmp-titlebar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;margin-bottom:24px;}
+.cmp-titlebar h1{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px;}
+.cmp-count{font-size:.8rem;font-weight:500;color:var(--color-text-muted);}
+.cmp-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;font-size:.85rem;color:var(--color-text-muted);}
+
+.cmp-notice{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 14px;border-radius:var(--radius-md);font-size:.85rem;color:var(--color-warning);background:var(--color-warning-soft);}
+
+/* ── Grid ───────────────────────────────────────────────── */
+.cmp{background:var(--color-bg);border:1px solid var(--color-border-subtle);border-radius:var(--radius-xl);overflow:hidden;}
+.cmp-row{display:grid;grid-template-columns:180px repeat(var(--n,3),minmax(0,1fr));border-top:1px solid var(--color-border-subtle);transition:background .15s;}
+.cmp-head{border-top:0;}
+.cmp-label,.cmp-cell{padding:14px 20px;font-size:.875rem;line-height:1.45;overflow-wrap:anywhere;}
+.cmp-label{color:var(--color-text-muted);font-weight:500;}
+.cmp-cell{color:var(--color-text);}
+.cmp-cell + .cmp-cell{border-left:1px solid var(--color-border-subtle);}
+.cmp-na{color:var(--color-text-faint);}
+
+.cmp-section{padding:22px 20px 8px;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted);border-top:1px solid var(--color-border-subtle);}
+
+/* Product header */
+.cmp-product{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding-top:20px;padding-bottom:18px;}
+.cmp-img{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;max-width:140px;margin-bottom:10px;padding:10px;border-radius:var(--radius-lg);background:var(--color-bg-subtle);color:var(--color-text-faint);font-size:2rem;}
+.cmp-img img{max-width:100%;max-height:100%;object-fit:contain;}
+.cmp-brand{font-size:.7rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted);}
+.cmp-name{font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.cmp-name:hover{color:var(--color-primary-text);}
+.cmp-name i{margin-left:4px;font-size:.85em;color:var(--color-primary-text);vertical-align:-1px;transition:transform .15s;display:inline-block;}
+.cmp-name:hover i{transform:translateX(3px);}
+.cmp-remove{position:absolute;top:12px;right:12px;width:28px;height:28px;display:grid;place-items:center;border-radius:50%;color:var(--color-text-muted);background:transparent;transition:background .15s,color .15s;}
+.cmp-remove:hover{color:var(--color-danger);background:var(--color-bg-subtle);}
+
+/* Values */
+.cmp-price{font-size:1.05rem;font-weight:700;}
+.cmp-mrp{margin-left:6px;font-size:.8rem;color:var(--color-text-muted);text-decoration:line-through;}
+.cmp-off{display:block;font-size:.75rem;font-weight:600;color:var(--color-success);}
+.cmp-best{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:999px;font-size:.7rem;font-weight:600;color:var(--color-success);border:1px solid currentColor;}
+.cmp-rating{font-weight:600;}
+.cmp-star{color:var(--color-star);}
+.cmp-sub{display:block;font-size:.75rem;color:var(--color-text-muted);}
+.cmp-stock{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;}
+.cmp-stock::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;}
+.cmp-stock.is-in{color:var(--color-success);}
+.cmp-stock.is-low{color:var(--color-warning);}
+.cmp-stock.is-out{color:var(--color-danger);}
+
+/* Hover + differences (JS toggles .cmp-highlight / .cmp-only-diff on .cmp) */
+.cmp-row:not(.cmp-head):hover{background:var(--color-bg-subtle);}
+.cmp-highlight .cmp-row.is-diff{background:var(--color-highlight);box-shadow:inset 3px 0 0 var(--color-star);}
+.cmp-only-diff .cmp-row:not(.cmp-head):not(.is-diff){display:none;}
+.cmp-no-diff{padding:28px 20px;text-align:center;font-size:.875rem;color:var(--color-text-muted);border-top:1px solid var(--color-border-subtle);}
+
+.cmp-actions{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;margin-top:20px;}
+
+/* Empty state */
+.cmp-empty-state{text-align:center;padding:72px 16px;}
+.cmp-empty-state > i{display:block;font-size:3rem;color:var(--color-text-faint);margin-bottom:16px;}
+.cmp-empty-state h2{font-size:1.15rem;font-weight:700;margin-bottom:6px;}
+.cmp-empty-state p{color:var(--color-text-muted);margin-bottom:24px;}
+
+/* ── Tablet / phone ─────────────────────────────────────── */
+@media (max-width:768px){
+  .cmp-row{grid-template-columns:repeat(var(--n,3),minmax(0,1fr));}
+  .cmp-row > .cmp-label{grid-column:1 / -1;padding:12px 14px 0;font-size:.7rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+  .cmp-head > .cmp-label{display:none;}
+  .cmp-label,.cmp-cell{padding:10px 14px;font-size:.825rem;}
+  .cmp-row > .cmp-label + .cmp-cell{border-left:0;}
+  .cmp-section{padding:18px 14px 6px;}
+  .cmp-product{padding-top:14px;}
+  .cmp-img{max-width:96px;}
+}
+@media (max-width:480px){
+  .cmp-page{padding-top:16px;}
+  .cmp-titlebar h1{font-size:1.25rem;}
+  .cmp-label,.cmp-cell{padding-inline:10px;}
+  .cmp-img{padding:6px;margin-bottom:6px;}
+  .cmp-name{font-size:.8rem;}
+  .cmp-remove{top:6px;right:4px;width:24px;height:24px;}
+  .cmp-price{font-size:.95rem;}
+  .cmp-mrp{display:block;margin-left:0;}
+}

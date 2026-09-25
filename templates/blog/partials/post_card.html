@@ -9,7 +9,7 @@
       </div>
     {% endif %}
     {% if post.category %}
-    <span class="absolute top-3 left-3 badge text-white" style="background:{{ post.category.color|default:'#2563eb' }};">
+    <span class="absolute top-3 left-3 badge text-white" style="background:{{ post.category.color|default:'var(--color-primary)' }};">
       {{ post.category.name }}
     </span>
     {% endif %}
@@ -27,7 +27,7 @@
       <span class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
         <i class="ti ti-user-circle text-base"></i>{{ post.display_author }}
       </span>
-      <a href="{{ post.get_absolute_url }}" class="text-primary-600 font-semibold text-sm hover:underline flex items-center gap-1">
+      <a href="{{ post.get_absolute_url }}" class="btn-link">
         Read <i class="ti ti-arrow-right text-xs"></i>
       </a>
     </div>

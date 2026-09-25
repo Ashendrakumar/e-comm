@@ -41,7 +41,7 @@
                   <p class="text-gray-300 text-base md:text-lg leading-relaxed max-w-md mb-8">{{ banner.subtitle }}</p>
                   {% endif %}
                   {% if banner.link %}
-                  <a href="{{ banner.link }}" class="hero-cta">
+                  <a href="{{ banner.link }}" class="btn btn-lg hero-cta">
                     {{ banner.button_text }} <i class="ti ti-arrow-right"></i>
                   </a>
                   {% endif %}
@@ -65,14 +65,14 @@
               </span>
               <h1 class="text-white text-4xl md:text-5xl font-extrabold leading-[1.08] tracking-tight mb-5">
                 Discover the Future of
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">Electronics</span>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 to-emerald-200">Electronics</span>
               </h1>
               <p class="text-gray-300 text-lg leading-relaxed max-w-md mb-9">
                 Top brands, unbeatable prices, expert service — your one-stop destination for premium electronics.
               </p>
               <div class="flex flex-wrap gap-3">
-                <a href="{% url 'products:list' %}" class="hero-cta">Shop Now <i class="ti ti-arrow-right"></i></a>
-                <a href="{% url 'core:contact' %}" class="hero-cta hero-cta-ghost">Get Consultation <i class="ti ti-headset"></i></a>
+                <a href="{% url 'products:list' %}" class="btn btn-lg hero-cta">Shop Now <i class="ti ti-arrow-right"></i></a>
+                <a href="{% url 'core:contact' %}" class="btn btn-lg hero-cta hero-cta-ghost">Get Consultation <i class="ti ti-headset"></i></a>
               </div>
             </div>
           </div>
@@ -83,14 +83,14 @@
       <!-- Quick-entry rail -->
       <aside class="hidden lg:flex flex-col gap-5">
         {% if featured_categories %}
-        <div class="hero-rail-tile flex-1" style="--c: #2563eb">
+        <div class="hero-rail-tile flex-1" style="--c: var(--color-primary)">
           <div class="flex items-center justify-between mb-3">
             <p class="text-[11px] font-extrabold uppercase tracking-[.14em] text-gray-400">Top Categories</p>
-            <a href="{% url 'products:categories' %}" class="text-[11px] font-bold text-primary-600 hover:text-primary-700">All</a>
+            <a href="{% url 'products:categories' %}" class="btn-link">All</a>
           </div>
           <div class="space-y-0.5">
             {% for cat in featured_categories|slice:":4" %}
-            <a href="{{ cat.get_absolute_url }}" class="rail-link" style="--c: {{ cat.color|default:'#2563eb' }}">
+            <a href="{{ cat.get_absolute_url }}" class="rail-link" style="--c: {{ cat.color|default:'var(--color-primary)' }}">
               <span class="rail-ico"><i class="ti {{ cat.icon|default:'ti-tag' }}" aria-hidden="true"></i></span>
               <span class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{{ cat.name }}</span>
               <i class="ti ti-chevron-right text-xs text-gray-300 ml-auto flex-shrink-0" aria-hidden="true"></i>
@@ -103,7 +103,7 @@
         <a href="{% url 'core:contact' %}" class="hero-rail-tile hero-rail-tile--dark">
           <span class="svc-ico"><i class="ti ti-headset" aria-hidden="true"></i></span>
           <p class="font-bold text-white text-base mt-4">Need help choosing?</p>
-          <p class="text-blue-200 text-xs mt-1 leading-relaxed">Talk to a product expert before you buy.</p>
+          <p class="text-primary-100 text-xs mt-1 leading-relaxed">Talk to a product expert before you buy.</p>
           {% if site_settings.phone %}
           <p class="text-white font-bold text-sm mt-3">{{ site_settings.phone }}</p>
           {% endif %}
@@ -118,21 +118,21 @@
   <!-- Trust strip, overlapping the seam into the next section -->
   <div class="relative z-10 max-w-7xl mx-auto px-4 mt-5 lg:mt-7 -mb-10">
     <div class="usp-strip grid grid-cols-2 md:grid-cols-4">
-      <div class="usp-item" style="--c: #2563eb">
+      <div class="usp-item" style="--c: var(--color-primary)">
         <span class="chip chip-sm"><i class="ti ti-truck" aria-hidden="true"></i></span>
         <div class="min-w-0">
           <p class="font-bold text-gray-900 dark:text-white text-sm truncate">Free Delivery</p>
           <p class="text-xs text-gray-500 truncate">On orders above ₹999</p>
         </div>
       </div>
-      <div class="usp-item" style="--c: #16a34a">
+      <div class="usp-item" style="--c: var(--green-600)">
         <span class="chip chip-sm"><i class="ti ti-shield-check" aria-hidden="true"></i></span>
         <div class="min-w-0">
           <p class="font-bold text-gray-900 dark:text-white text-sm truncate">Genuine Products</p>
           <p class="text-xs text-gray-500 truncate">100% authentic brands</p>
         </div>
       </div>
-      <div class="usp-item" style="--c: #f97316">
+      <div class="usp-item" style="--c: var(--color-accent)">
         <span class="chip chip-sm"><i class="ti ti-refresh" aria-hidden="true"></i></span>
         <div class="min-w-0">
           <p class="font-bold text-gray-900 dark:text-white text-sm truncate">Easy Returns</p>
@@ -152,7 +152,7 @@
 
 <!-- ========== SHOP BY CATEGORY ========== -->
 {% if featured_categories %}
-<section class="sec sec-under-strip bg-white dark:bg-gray-900" style="--c: #2563eb">
+<section class="sec sec-under-strip bg-white dark:bg-gray-900" style="--c: var(--color-primary)">
   <div class="max-w-7xl mx-auto px-4">
     <div class="sec-head">
       <div>
@@ -167,7 +167,7 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
       {% for cat in featured_categories %}
       <a href="{{ cat.get_absolute_url }}" class="cat-card"
-        style="--cat: {{ cat.color|default:'#2563eb' }}; --i: {{ forloop.counter0 }}"
+        style="--cat: {{ cat.color|default:'var(--color-primary)' }}; --i: {{ forloop.counter0 }}"
         aria-label="{{ cat.name }} — {{ cat.product_count }} product{{ cat.product_count|pluralize }}">
         <span class="cat-ico">
           {% if cat.image %}
@@ -216,7 +216,7 @@
       </a>
       {% endfor %}
       <!-- Fills out the bento grid -->
-      <a href="{% url 'products:list' %}" class="tile group flex flex-col justify-center items-start p-5" style="--c: #2563eb">
+      <a href="{% url 'products:list' %}" class="tile group flex flex-col justify-center items-start p-5" style="--c: var(--color-primary)">
         <span class="chip chip-sm"><i class="ti ti-tags" aria-hidden="true"></i></span>
         <p class="font-bold text-gray-900 dark:text-white text-base mt-3">All Offers</p>
         <p class="text-xs text-gray-500 mt-1">Every deal in one place</p>
@@ -231,7 +231,7 @@
 
 <!-- ========== FEATURED PRODUCTS ========== -->
 {% if featured_products %}
-<section class="sec sec-wash" style="--c: #2563eb">
+<section class="sec sec-wash" style="--c: var(--color-primary)">
   <div class="max-w-7xl mx-auto px-4">
     <div class="sec-head">
       <div>
@@ -257,7 +257,7 @@
 
 <!-- ========== TRENDING PRODUCTS ========== -->
 {% if trending_products %}
-<section class="sec bg-white dark:bg-gray-900" style="--c: #f97316">
+<section class="sec bg-white dark:bg-gray-900" style="--c: var(--color-accent)">
   <div class="max-w-7xl mx-auto px-4">
     <div class="sec-head">
       <div>
@@ -286,14 +286,14 @@
 <section class="sec sec-wash" style="--c: #7c3aed">
   <div class="max-w-7xl mx-auto px-4">
     <div class="sec-head sec-head-center mb-12">
-      <span class="sec-eyebrow">The TechZone difference</span>
-      <h2 class="section-title">Why Choose TechZone?</h2>
+      <span class="sec-eyebrow">The {{ site_name }} difference</span>
+      <h2 class="section-title">Why Choose {{ site_name }}?</h2>
       <p class="section-subtitle max-w-xl">We're committed to delivering the best electronics shopping experience — quality, value and service in equal measure.</p>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {% for item in why_choose_us %}
       <div class="tile feat rise"
-           style="--c: {% cycle '#2563eb' '#16a34a' '#f97316' '#7c3aed' '#0891b2' '#db2777' as featcolor %}; --i: {{ forloop.counter0 }}">
+           style="--c: {% cycle '#0f766e' '#16a34a' '#f97316' '#7c3aed' '#0891b2' '#db2777' as featcolor %}; --i: {{ forloop.counter0 }}">
         <span class="feat-num" aria-hidden="true">{{ forloop.counter }}</span>
         <span class="chip"><i class="ti {{ item.icon }}" aria-hidden="true"></i></span>
         <h3 class="font-bold text-gray-900 dark:text-white text-base mt-5 mb-2">{{ item.title }}</h3>
@@ -307,7 +307,7 @@
 
 <!-- ========== NEW ARRIVALS ========== -->
 {% if new_arrivals %}
-<section class="sec bg-white dark:bg-gray-900" style="--c: #16a34a">
+<section class="sec bg-white dark:bg-gray-900" style="--c: var(--green-600)">
   <div class="max-w-7xl mx-auto px-4">
     <div class="sec-head">
       <div>
@@ -333,32 +333,35 @@
 
 <!-- ========== BRAND PARTNERS ========== -->
 {% if featured_brands %}
-<section class="sec-tight bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800" style="--c: #2563eb">
+<section class="sec-tight bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800" style="--c: var(--color-primary)">
   <div class="max-w-7xl mx-auto px-4">
-    <div class="sec-head sec-head-center mb-8">
+    <div class="sec-head sec-head-center mb-6">
       <span class="sec-eyebrow">Authorized partners</span>
       <h2 class="section-title">Brands We Carry</h2>
       <p class="section-subtitle">Authentic products, backed by official warranty</p>
     </div>
   </div>
-  {# The list is repeated once so the -50% marquee loop is seamless; the copy is hidden from AT. #}
-  <div class="marquee">
-    <div class="marquee-track">
+  {# Logo-only tiles with the category-card hover, in an endless marquee; the list is rendered twice for a seamless loop (copy hidden from AT). #}
+  <div class="brand-marquee">
+    <div class="brand-track">
       {% for brand in featured_brands %}
-      <a href="{% url 'products:list' %}?brand={{ brand.pk }}" class="brand-tile">
+      <a href="{% url 'products:list' %}?brand={{ brand.pk }}" class="cat-card cat-card--brand brand-logo"
+         style="--cat: {% cycle '#0f766e' '#16a34a' '#f97316' '#7c3aed' '#0891b2' '#db2777' as brandcolor %}"
+         aria-label="{{ brand.name }}">
         {% if brand.logo %}
-        <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" loading="lazy" decoding="async">
+        <img src="{{ brand.logo.url }}" alt="" loading="lazy" decoding="async">
         {% else %}
-        <span>{{ brand.name }}</span>
+        <span class="brand-wordmark">{{ brand.name }}</span>
         {% endif %}
       </a>
       {% endfor %}
       {% for brand in featured_brands %}
-      <span class="brand-tile" aria-hidden="true">
+      <span aria-hidden="true" class="cat-card cat-card--brand brand-logo"
+         style="--cat: {% cycle '#0f766e' '#16a34a' '#f97316' '#7c3aed' '#0891b2' '#db2777' as brandcolor2 %}">
         {% if brand.logo %}
         <img src="{{ brand.logo.url }}" alt="" loading="lazy" decoding="async">
         {% else %}
-        <span>{{ brand.name }}</span>
+        <span class="brand-wordmark">{{ brand.name }}</span>
         {% endif %}
       </span>
       {% endfor %}
@@ -373,12 +376,12 @@
     <div class="svc-panel p-8 md:p-12">
       <div class="relative grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-10 items-center">
         <div>
-          <span class="sec-eyebrow" style="--c: #93c5fd">What we do</span>
+          <span class="sec-eyebrow" style="--c: var(--brand-300)">What we do</span>
           <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">Our Services</h2>
-          <p class="text-blue-200 leading-relaxed mb-8">
+          <p class="text-primary-100 leading-relaxed mb-8">
             Complete electronics solutions for home, business and beyond — from choosing the right product to installing and supporting it.
           </p>
-          <a href="{% url 'pages:services' %}" class="hero-cta">
+          <a href="{% url 'pages:services' %}" class="btn btn-lg hero-cta">
             Explore All Services <i class="ti ti-arrow-right"></i>
           </a>
         </div>
@@ -408,7 +411,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       {% for t in testimonials %}
       <figure class="tile quote rise flex flex-col"
-              style="--c: {% cycle '#0891b2' '#2563eb' '#7c3aed' as quotecolor %}; --i: {{ forloop.counter0 }}">
+              style="--c: {% cycle '#0891b2' '#0f766e' '#7c3aed' as quotecolor %}; --i: {{ forloop.counter0 }}">
         <div class="quote-stars mb-4" role="img" aria-label="Rated {{ t.rating }} out of 5">
           {% for i in "12345" %}
           {% if forloop.counter <= t.rating %}
@@ -442,7 +445,7 @@
 {% endif %}
 
 <!-- ========== SERVING AREAS ========== -->
-<section class="sec bg-white dark:bg-gray-900" style="--c: #2563eb">
+<section class="sec bg-white dark:bg-gray-900" style="--c: var(--color-primary)">
   <div class="max-w-7xl mx-auto px-4">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
       <div>
@@ -464,7 +467,7 @@
           {% endfor %}
           {% endfor %}
         </div>
-        <a href="{% url 'pages:serving_areas' %}" class="btn-primary">
+        <a href="{% url 'pages:serving_areas' %}" class="btn btn-primary">
           View All Areas <i class="ti ti-arrow-right"></i>
         </a>
       </div>
@@ -494,7 +497,7 @@
 </section>
 
 <!-- ========== CONTACT ========== -->
-<section class="sec sec-wash" style="--c: #2563eb">
+<section class="sec sec-wash" style="--c: var(--color-primary)">
   <div class="max-w-7xl mx-auto px-4">
     <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 items-start">
       <div>
@@ -505,7 +508,7 @@
         </p>
         <div class="space-y-3">
           {% if site_settings.phone %}
-          <a href="tel:{{ site_settings.phone }}" class="chan group" style="--c: #2563eb">
+          <a href="tel:{{ site_settings.phone }}" class="chan group" style="--c: var(--color-primary)">
             <span class="chip chip-sm"><i class="ti ti-phone" aria-hidden="true"></i></span>
             <span>
               <span class="block font-bold text-gray-900 dark:text-white text-sm">Call Us</span>
@@ -515,7 +518,7 @@
           </a>
           {% endif %}
           {% if site_settings.whatsapp %}
-          <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener" class="chan group" style="--c: #16a34a">
+          <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener" class="chan group" style="--c: var(--green-600)">
             <span class="chip chip-sm"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i></span>
             <span>
               <span class="block font-bold text-gray-900 dark:text-white text-sm">WhatsApp</span>
@@ -540,7 +543,7 @@
       <!-- Contact form -->
       <div class="form-panel p-7 md:p-8">
         <div class="flex items-center gap-3 mb-6">
-          <span class="chip chip-sm" style="--c: #2563eb"><i class="ti ti-send" aria-hidden="true"></i></span>
+          <span class="chip chip-sm" style="--c: var(--color-primary)"><i class="ti ti-send" aria-hidden="true"></i></span>
           <div>
             <h3 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">Send us a Message</h3>
             <p class="text-xs text-gray-500 mt-0.5">We usually reply within one business day</p>
@@ -554,29 +557,29 @@
               data-loading-text="&lt;i class=&quot;ti ti-loader animate-spin&quot;&gt;&lt;/i&gt; Sending...">
           {% csrf_token %}
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Your Name *</label>
-              <input type="text" name="name" required placeholder="John Doe" class="form-input">
+            <div class="field">
+              <label class="label" for="home-contact-name">Your Name <span class="req">*</span></label>
+              <input type="text" id="home-contact-name" name="name" required placeholder="John Doe" class="input">
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Phone</label>
-              <input type="tel" name="phone" placeholder="+91 98765 43210" class="form-input">
+            <div class="field">
+              <label class="label" for="home-contact-phone">Phone</label>
+              <input type="tel" id="home-contact-phone" name="phone" placeholder="+91 98765 43210" class="input">
             </div>
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Email Address *</label>
-            <input type="email" name="email" required placeholder="you@example.com" class="form-input">
+          <div class="field">
+            <label class="label" for="home-contact-email">Email Address <span class="req">*</span></label>
+            <input type="email" id="home-contact-email" name="email" required placeholder="you@example.com" class="input">
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Subject *</label>
-            <input type="text" name="subject" required placeholder="How can we help?" class="form-input">
+          <div class="field">
+            <label class="label" for="home-contact-subject">Subject <span class="req">*</span></label>
+            <input type="text" id="home-contact-subject" name="subject" required placeholder="How can we help?" class="input">
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Message *</label>
-            <textarea name="message" required rows="4" placeholder="Tell us more about your requirements..." class="form-textarea"></textarea>
+          <div class="field">
+            <label class="label" for="home-contact-message">Message <span class="req">*</span></label>
+            <textarea id="home-contact-message" name="message" required rows="4" placeholder="Tell us more about your requirements..." class="textarea"></textarea>
           </div>
           <input type="hidden" name="inquiry_type" value="general">
-          <button type="submit" class="w-full btn-primary justify-center py-3 rounded-xl text-sm font-bold">
+          <button type="submit" class="btn btn-primary btn-lg btn-block">
             <i class="ti ti-send"></i> Send Message
           </button>
           <p id="home-contact-msg" class="hidden text-sm text-center font-medium mt-2"></p>

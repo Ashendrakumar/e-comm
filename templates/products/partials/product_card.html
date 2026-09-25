@@ -1,8 +1,9 @@
 {% load static %}
 {% comment %}
-  Fixed-size product card. Geometry lives in products/partials/product_card_scripts.html
-  (included globally from base.html) — the card is always --pc-w wide with a 1:1 media
-  box and a fixed-height info block, so it looks identical on every screen size.
+  Fixed-size product card. Geometry and all visual state live in
+  static/css/product-card.css (linked globally from base.html) — the card is always
+  --pc-w wide with a --pc-media tall media box and a fixed-height info block, so it
+  looks identical on every screen size.
 
   Every info row is ALWAYS rendered, even when there is nothing to put in it, because
   that is what keeps the height constant across products. Place cards in a
@@ -10,30 +11,24 @@
 {% endcomment %}
 <div class="product-card group{% if not product.is_in_stock %} is-out{% endif %}">
 
-  <!-- ══ MEDIA (locked 1:1) ══════════════════════════════════ -->
+  <!-- ══ MEDIA (constant pixels — see --pc-media) ══════════════ -->
   <div class="card-media">
 
     <!-- Badges -->
-    <div class="absolute top-3 left-3 z-10 flex flex-col gap-1.5 items-start">
+    <div class="pc-badges">
       {% if product.discount_percent %}
-      <span class="badge bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-sm shadow-red-500/30">-{{ product.discount_percent }}%</span>
+      <span class="badge badge-danger">-{{ product.discount_percent }}%</span>
       {% endif %}
       {% if product.is_new_arrival %}
-      <span class="badge bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">New</span>
+      <span class="badge badge-primary">New</span>
       {% endif %}
       {% if product.is_trending %}
-      <span class="badge bg-orange-100 text-orange-600 dark:bg-orange-900/60 dark:text-orange-300">🔥 Hot</span>
+      <span class="badge badge-warning">🔥 Hot</span>
       {% endif %}
       {% if not product.is_in_stock %}
-      <span class="badge bg-gray-700 text-white dark:bg-gray-200 dark:text-gray-900">Sold Out</span>
+      <span class="badge badge-neutral">Sold Out</span>
       {% endif %}
     </div>
-
-    <!-- Wishlist -->
-    <button class="wishlist-btn absolute top-3 right-3 z-10 w-9 h-9 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center text-gray-400 hover:text-red-500 hover:scale-110 active:scale-95 transition-all opacity-0 group-hover:opacity-100"
-            data-product="{{ product.pk }}" title="Add to wishlist" aria-label="Add to wishlist">
-      <i class="ti ti-heart text-base"></i>
-    </button>
 
     <!-- Image -->
     <a href="{{ product.get_absolute_url }}" class="card-img" aria-label="{{ product.name }}">
@@ -45,15 +40,22 @@
       {% endif %}
     </a>
 
-    <!-- Quick actions (revealed on hover) -->
-    <div class="card-actions product-actions">
+    <!-- Quick actions: icon column on the right (styles: .pc-rail / .pc-act in
+         product-card.css). .wishlist-btn and .compare-btn[data-id] are the JS hooks;
+         labels come from aria-label (shown as tooltips). -->
+    <div class="pc-rail">
+      <button type="button" class="pc-act pc-wish wishlist-btn"
+              data-product="{{ product.pk }}" aria-label="Add to wishlist">
+        <i class="ti ti-heart" aria-hidden="true"></i>
+      </button>
       <button type="button" onclick="openQuickView('{{ product.slug }}')"
-              class="pc-act pc-act-qv" title="Quick view">
-        <i class="ti ti-eye"></i> Quick View
+              class="pc-act pc-act-qv" aria-label="Quick view">
+        <i class="ti ti-eye" aria-hidden="true"></i>
       </button>
       <button type="button" onclick="toggleCompare('{{ product.pk }}','{{ product.name|escapejs }}')"
-              class="pc-act pc-act-cmp compare-btn" data-id="{{ product.pk }}" title="Add to compare">
-        <i class="ti ti-arrows-diff"></i> Compare
+              class="pc-act pc-act-cmp compare-btn" data-id="{{ product.pk }}"
+              aria-pressed="false" aria-label="Add to compare">
+        <i class="ti ti-arrows-diff" aria-hidden="true"></i>
       </button>
     </div>
   </div>
@@ -74,18 +76,18 @@
     </a>
 
     <!-- Rating -->
-    <div class="pc-rating">
+    <div class="pc-rating{% if not product.review_count %} is-empty{% endif %}">
       {% if product.review_count > 0 %}
         {% for i in "12345" %}
           {% if forloop.counter <= product.average_rating %}
-          <i class="ti ti-star-filled text-yellow-400"></i>
+          <i class="ti ti-star-filled star-filled"></i>
           {% else %}
-          <i class="ti ti-star text-gray-300 dark:text-gray-600"></i>
+          <i class="ti ti-star star-empty"></i>
           {% endif %}
         {% endfor %}
         <span class="pc-note">({{ product.review_count }})</span>
       {% else %}
-        {% for i in "12345" %}<i class="ti ti-star text-gray-200 dark:text-gray-700"></i>{% endfor %}
+        {% for i in "12345" %}<i class="ti ti-star star-empty"></i>{% endfor %}
         <span class="pc-note">No reviews yet</span>
       {% endif %}
     </div>

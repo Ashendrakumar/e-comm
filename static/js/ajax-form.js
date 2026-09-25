@@ -24,8 +24,9 @@ document.addEventListener('submit', async function (e) {
   const d       = form.dataset;
   const btn     = form.querySelector('[type=submit]');
   const msg     = d.msgTarget ? document.querySelector(d.msgTarget) : null;
-  const okClass  = d.msgOkClass  || 'text-sm text-center text-green-600 font-medium';
-  const errClass = d.msgErrClass || 'text-sm text-center text-red-500';
+  // Defaults read the design tokens (tokens.css) so they flip with .dark.
+  const okClass  = d.msgOkClass  || 'text-sm text-center font-medium text-[color:var(--color-success)]';
+  const errClass = d.msgErrClass || 'text-sm text-center font-medium text-[color:var(--color-danger)]';
   const restore = btn ? btn.innerHTML : '';
 
   if (btn) {

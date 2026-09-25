@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import Service, ServingArea, FlatPage, FAQCategory, GeneralFAQ
 from .forms import ServiceInquiryForm
+from core.branding import get_site_name
 
 
 # ── Services ────────────────────────────────────────────────────────
@@ -87,7 +88,7 @@ def area_detail(request, slug):
         'area':             area,
         'other_areas':      other,
         'page_title':       area.meta_title or f'Electronics Delivery & Service in {area.city}',
-        'meta_description': area.meta_description or f'TechZone serves {area.city}, {area.state} with electronics delivery, installation and repair.',
+        'meta_description': area.meta_description or f'{get_site_name()} serves {area.city}, {area.state} with electronics delivery, installation and repair.',
     })
 
 
@@ -112,5 +113,5 @@ def faqs(request):
         'categories':       categories,
         'uncategorised':    uncategorised,
         'page_title':       'Frequently Asked Questions',
-        'meta_description': 'Answers to common questions about TechZone products, delivery, warranty and services.',
+        'meta_description': f'Answers to common questions about {get_site_name()} products, delivery, warranty and services.',
     })

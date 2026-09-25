@@ -28,7 +28,7 @@
       } catch (e) { /* localStorage blocked (private mode) — fall back to light */ }
     })();
   </script>
-  <title>{% block title %}{{ page_title|default:"TechZone — Premium Electronics" }}{% endblock %}</title>
+  <title>{% block title %}{% if page_title %}{{ page_title }}{% else %}{{ site_name }} — Premium Electronics{% endif %}{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}{{ meta_description|default:site_settings.meta_description }}{% endblock %}">
   {% if meta_keywords or site_settings.meta_keywords %}<meta name="keywords" content="{{ meta_keywords|default:site_settings.meta_keywords }}">{% endif %}
   <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
@@ -36,8 +36,8 @@
   <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
 
   <!-- Open Graph / Twitter -->
-  <meta property="og:site_name" content="{{ site_settings.site_name|default:'TechZone' }}">
-  <meta property="og:title" content="{% block og_title %}{{ page_title|default:'TechZone — Premium Electronics' }}{% endblock %}">
+  <meta property="og:site_name" content="{{ site_name }}">
+  <meta property="og:title" content="{% block og_title %}{% if page_title %}{{ page_title }}{% else %}{{ site_name }} — Premium Electronics{% endif %}{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{{ meta_description|default:site_settings.meta_description }}{% endblock %}">
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
@@ -75,7 +75,7 @@
       theme: {
         extend: {
           colors: {
-            primary: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a',950:'#172554' },
+            primary: { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#0d9488',600:'#0f766e',700:'#115e59',800:'#134e4a',900:'#0b3b38',950:'#042f2e' },
             accent: { 400:'#fb923c',500:'#f97316',600:'#ea580c' },
           },
           fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
@@ -84,6 +84,9 @@
     }
   </script>
   {% endif %}
+  {# Design system: tokens (colours, radius, shadow…) then shared components. #}
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/product-card.css' %}">
   {% block extra_head %}{% endblock %}
@@ -99,7 +102,7 @@
   </script>
   {% endif %}
 </head>
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased" id="body">
+<body class="font-sans antialiased" id="body">{# background + text colour come from tokens (components.css: body) #}
 
 <a href="#main-content" class="skip-link">Skip to main content</a>
 
@@ -107,14 +110,23 @@
 
 <main id="main-content" tabindex="-1">
   {% if messages %}
-  <div class="fixed top-20 right-4 z-50 space-y-2" id="toast-container">
+  <style>
+    .toast-msg{box-shadow:var(--shadow-lg);border-radius:var(--radius-lg);}
+    .toast-msg .toast-text{font-size:var(--text-sm);color:var(--color-text-soft);}
+    .toast-msg .toast-icon{font-size:20px;flex-shrink:0;color:var(--color-primary);}
+    .toast-msg.is-success .toast-icon{color:var(--color-success);}
+    .toast-msg.is-error .toast-icon{color:var(--color-danger);}
+    .toast-msg.is-warning .toast-icon{color:var(--color-warning);}
+  </style>
+  <div class="fixed top-20 right-4 z-50 space-y-2" id="toast-container" role="status" aria-live="polite">
     {% for message in messages %}
-    <div class="toast-msg flex items-center gap-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl px-4 py-3 max-w-sm animate-fade-in">
-      {% if message.tags == 'success' %}<i class="ti ti-circle-check text-green-500 text-xl flex-shrink-0"></i>
-      {% elif message.tags == 'error' %}<i class="ti ti-circle-x text-red-500 text-xl flex-shrink-0"></i>
-      {% else %}<i class="ti ti-info-circle text-blue-500 text-xl flex-shrink-0"></i>{% endif %}
-      <span class="text-sm text-gray-700 dark:text-gray-300">{{ message }}</span>
-      <button onclick="this.closest('.toast-msg').remove()" class="ml-auto text-gray-400 hover:text-gray-600 flex-shrink-0"><i class="ti ti-x text-sm"></i></button>
+    <div class="toast-msg card is-{{ message.tags|default:'info' }} flex items-center gap-3 px-4 py-3 max-w-sm animate-fade-in">
+      {% if message.tags == 'success' %}<i class="ti ti-circle-check toast-icon"></i>
+      {% elif message.tags == 'error' %}<i class="ti ti-circle-x toast-icon"></i>
+      {% elif message.tags == 'warning' %}<i class="ti ti-alert-triangle toast-icon"></i>
+      {% else %}<i class="ti ti-info-circle toast-icon"></i>{% endif %}
+      <span class="toast-text">{{ message }}</span>
+      <button type="button" onclick="this.closest('.toast-msg').remove()" class="btn btn-ghost btn-icon btn-sm btn-round ml-auto flex-shrink-0" aria-label="Dismiss"><i class="ti ti-x"></i></button>
     </div>
     {% endfor %}
   </div>

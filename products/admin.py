@@ -72,7 +72,7 @@ class CategoryAdmin(SpreadsheetImportMixin, admin.ModelAdmin):
         ('slug',             False, 'URL slug. Auto-generated from the name when blank. Also used as the match key on re-import.'),
         ('parent',           False, 'Parent category, referenced by its name or slug. Leave blank for a top-level category.'),
         ('icon',             False, 'CSS icon class, e.g. <code>ti ti-device-laptop</code>.'),
-        ('color',            False, 'Hex colour, e.g. <code>#2563eb</code>.'),
+        ('color',            False, 'Hex colour, e.g. <code>#0f766e</code>.'),
         ('description',      False, 'Long description text.'),
         ('is_active',        False, 'true / false (default true).'),
         ('is_featured',      False, 'true / false (default false).'),
@@ -144,12 +144,12 @@ class CategoryAdmin(SpreadsheetImportMixin, admin.ModelAdmin):
 
     def _icon(self, obj):
         if obj.icon:
-            return format_html('<i class="{}" style="font-size:18px;color:{};"></i>', obj.icon, obj.color or '#2563eb')
+            return format_html('<i class="{}" style="font-size:18px;color:{};"></i>', obj.icon, obj.color or '#0f766e')
         return '—'
     _icon.short_description = 'Icon'
 
     def _color(self, obj):
-        return format_html('<span style="display:inline-block;width:22px;height:22px;background:{};border-radius:4px;border:1px solid #ddd;"></span>', obj.color or '#2563eb')
+        return format_html('<span style="display:inline-block;width:22px;height:22px;background:{};border-radius:4px;border:1px solid #ddd;"></span>', obj.color or '#0f766e')
     _color.short_description = 'Colour'
 
     def _products(self, obj):

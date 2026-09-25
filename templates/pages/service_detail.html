@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load ui %}
 {% load static %}
-{% block title %}{{ service.meta_title|default:service.title }} — TechZone{% endblock %}
+{% block title %}{{ service.meta_title|default:service.title }} — {{ site_name }}{% endblock %}
 {% block meta_description %}{{ service.meta_description|default:service.short_description }}{% endblock %}
 {% block content %}
 
@@ -13,20 +14,14 @@
     <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
   </div>
   <div class="relative max-w-7xl mx-auto px-4 py-16">
-    <nav class="flex items-center gap-2 text-xs text-white/70 mb-6">
-      <a href="{% url 'core:homepage' %}" class="hover:text-white">Home</a>
-      <i class="ti ti-chevron-right text-[10px]"></i>
-      <a href="{% url 'pages:services' %}" class="hover:text-white">Services</a>
-      <i class="ti ti-chevron-right text-[10px]"></i>
-      <span class="text-white font-semibold">{{ service.title }}</span>
-    </nav>
     <div class="flex items-start gap-5 max-w-3xl">
       <div class="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center flex-shrink-0 backdrop-blur">
         <i class="ti {{ service.icon }} text-3xl"></i>
       </div>
       <div>
+        {% url 'pages:services' as services_url %}{% breadcrumbs "Services" services_url service.title on_dark=True %}
         <h1 class="text-3xl md:text-4xl font-extrabold mb-3">{{ service.title }}</h1>
-        <p class="text-blue-100 text-lg leading-relaxed">{{ service.short_description }}</p>
+        <p class="text-primary-50 text-lg leading-relaxed">{{ service.short_description }}</p>
         {% if service.price_info %}
         <div class="inline-flex items-center gap-2 mt-5 bg-accent-500 px-4 py-2 rounded-xl font-semibold text-sm">
           <i class="ti ti-tag"></i> {{ service.price_info }}
@@ -59,10 +54,8 @@
       <h2 class="text-2xl font-bold text-gray-900 dark:text-white mt-10 mb-6">What's Included</h2>
       <div class="grid sm:grid-cols-2 gap-4">
         {% for f in service.features.all %}
-        <div class="flex items-start gap-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5">
-          <div class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-950 flex items-center justify-center flex-shrink-0">
-            <i class="ti {{ f.icon }} text-primary-600 text-lg"></i>
-          </div>
+        <div class="tile rise flex items-start gap-3 p-5" style="--c: {{ service.color|default:'#0f766e' }}; --i: {{ forloop.counter0 }}">
+          <span class="chip chip-sm"><i class="ti {{ f.icon }}" aria-hidden="true"></i></span>
           <div>
             <h3 class="font-semibold text-gray-900 dark:text-white text-sm mb-1">{{ f.title }}</h3>
             {% if f.description %}<p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{{ f.description }}</p>{% endif %}
@@ -76,7 +69,7 @@
     <!-- Inquiry sidebar -->
     <div class="lg:col-span-1">
       <div class="sticky top-24 space-y-6">
-        <div id="inquiry" class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+        <div id="inquiry" class="card p-6">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Request This Service</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">Fill in your details and we'll get back within 24 hours.</p>
           <form id="service-inquiry-form" method="post" action="{% url 'pages:service_inquiry' service.slug %}" class="space-y-3"
@@ -89,22 +82,22 @@
             {{ inquiry_form.phone }}
             {{ inquiry_form.city }}
             {{ inquiry_form.message }}
-            <button type="submit" class="btn-primary w-full justify-center"><i class="ti ti-send"></i> Send Inquiry</button>
+            <button type="submit" class="btn btn-primary btn-block"><i class="ti ti-send"></i> Send Inquiry</button>
             <p id="inquiry-msg" class="hidden text-sm text-center"></p>
           </form>
           {% if site_settings.whatsapp %}
           <a href="https://wa.me/{{ site_settings.whatsapp }}?text=I'm%20interested%20in%20{{ service.title|urlencode }}" target="_blank"
-             class="mt-3 flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-xl font-medium text-sm transition-colors">
+             class="btn btn-success btn-block mt-3">
             <i class="ti ti-brand-whatsapp"></i> Chat on WhatsApp
           </a>
           {% endif %}
         </div>
 
         {% if site_settings.phone %}
-        <div class="bg-primary-50 dark:bg-primary-950 border border-primary-100 dark:border-primary-900 rounded-2xl p-6 text-center">
+        <div class="card p-6 text-center" style="background:color-mix(in srgb,var(--color-primary) 7%,var(--color-bg))">
           <i class="ti ti-phone-call text-3xl text-primary-600 mb-2 block"></i>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Prefer to call?</p>
-          <a href="tel:{{ site_settings.phone }}" class="text-lg font-bold text-primary-600">{{ site_settings.phone }}</a>
+          <a href="tel:{{ site_settings.phone }}" class="link text-lg font-bold">{{ site_settings.phone }}</a>
         </div>
         {% endif %}
       </div>
@@ -117,10 +110,8 @@
     <h2 class="section-title mb-8">Explore Other Services</h2>
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
       {% for svc in other_services %}
-      <a href="{{ svc.get_absolute_url }}" class="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-6 hover:shadow-lg hover:-translate-y-1 transition-all">
-        <div class="w-12 h-12 bg-primary-100 dark:bg-primary-950 rounded-xl flex items-center justify-center mb-4">
-          <i class="ti {{ svc.icon }} text-xl text-primary-600"></i>
-        </div>
+      <a href="{{ svc.get_absolute_url }}" class="tile rise group block p-6" style="--c: {{ svc.color|default:'#0f766e' }}; --i: {{ forloop.counter0 }}">
+        <span class="chip mb-4"><i class="ti {{ svc.icon }}" aria-hidden="true"></i></span>
         <h3 class="font-bold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 transition-colors">{{ svc.title }}</h3>
         <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{{ svc.short_description }}</p>
       </a>

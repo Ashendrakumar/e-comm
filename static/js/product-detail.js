@@ -80,7 +80,7 @@ document.getElementById('review-form')?.addEventListener('submit', async e=>{
     return;
   }
   btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader animate-spin text-sm"></i> Submitting…';
+  btn.innerHTML = '<i class="ti ti-loader animate-spin"></i> Submitting…';
 
   try{
     const res  = await fetch(PD.dataset.reviewUrl, {
@@ -90,20 +90,20 @@ document.getElementById('review-form')?.addEventListener('submit', async e=>{
     const data = await res.json();
     msgEl.classList.remove('hidden');
     if(data.success){
-      msgEl.className = 'text-sm font-semibold p-3 rounded-xl text-center bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800';
+      msgEl.className = 'pd-msg is-success';
       msgEl.textContent = data.message;
       form.reset();
       document.getElementById('rating-input').value = '';
     } else {
-      msgEl.className = 'text-sm font-semibold p-3 rounded-xl text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800';
+      msgEl.className = 'pd-msg is-error';
       msgEl.textContent = data.message || 'Please fix the errors above.';
     }
   }catch{
-    msgEl.classList.remove('hidden');
+    msgEl.className = 'pd-msg is-error';
     msgEl.textContent = 'Something went wrong. Please try again.';
   }
   btn.disabled = false;
-  btn.innerHTML = '<i class="ti ti-send text-sm"></i> Submit Review';
+  btn.innerHTML = '<i class="ti ti-send"></i> Submit Review';
 });
 
 // ── Mark helpful ───────────────────────────────────────────
@@ -116,7 +116,7 @@ async function markHelpful(reviewId, btn){
     const el   = document.querySelector(`.helpful-count-${reviewId}`);
     if(el) el.textContent = data.helpful_count;
     btn.disabled = true;
-    btn.classList.add('bg-primary-50','dark:bg-primary-950','text-primary-700');
+    btn.classList.add('is-voted');   // styled in product-detail.css
   }catch{}
 }
 
@@ -135,7 +135,7 @@ document.getElementById('inquiry-form')?.addEventListener('submit', async e=>{
   const msgEl = document.getElementById('inquiry-msg');
   const btn   = document.getElementById('inquiry-submit-btn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader animate-spin text-sm"></i> Sending…';
+  btn.innerHTML = '<i class="ti ti-loader animate-spin"></i> Sending…';
   try{
     const res  = await fetch(PD.dataset.inquiryUrl, {
       method:'POST', body: new FormData(form),
@@ -144,16 +144,16 @@ document.getElementById('inquiry-form')?.addEventListener('submit', async e=>{
     const data = await res.json();
     msgEl.classList.remove('hidden');
     if(data.success){
-      msgEl.className = 'text-sm font-semibold p-3 rounded-xl text-center bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800';
+      msgEl.className = 'pd-msg is-success';
       msgEl.innerHTML = '<i class="ti ti-circle-check mr-1"></i>' + data.message;
       form.reset();
       setTimeout(()=>closeInquiryModal(), 3000);
     } else {
-      msgEl.className = 'text-sm font-semibold p-3 rounded-xl text-center bg-red-50 text-red-700 border border-red-200';
+      msgEl.className = 'pd-msg is-error';
       msgEl.textContent = data.message;
     }
   }catch{
-    msgEl.classList.remove('hidden');
+    msgEl.className = 'pd-msg is-error';
     msgEl.textContent = 'Something went wrong. Please try again.';
   }
   btn.disabled = false;
@@ -165,7 +165,7 @@ function copyLink(){
   navigator.clipboard.writeText(window.location.href).then(()=>{
     const icon  = document.getElementById('copy-icon');
     const toast = document.getElementById('copy-toast');
-    icon.className  = 'ti ti-check text-green-500';
+    icon.className  = 'ti ti-check pd-success';
     toast.classList.remove('hidden');
     setTimeout(()=>{ icon.className='ti ti-link'; toast.classList.add('hidden'); }, 2500);
   });
@@ -182,12 +182,16 @@ async function toggleWishlistBtn(btn){
     if(res.redirected||res.status===302){ showToast('Sign in to save to wishlist','info'); return; }
     const data = await res.json();
     if(data.status==='added'){
-      icon.className='ti ti-heart-filled text-red-500 text-xl';
-      btn.classList.add('border-red-400','bg-red-50','dark:bg-red-950');
+      icon.className='ti ti-heart-filled';
+      btn.classList.add('is-active');           // .pd-wishlist.is-active in product-detail.css
+      btn.setAttribute('aria-pressed','true');
+      btn.title='Remove from Wishlist';
       showToast('Added to wishlist ❤️','success');
     } else {
-      icon.className='ti ti-heart text-xl';
-      btn.classList.remove('border-red-400','bg-red-50','dark:bg-red-950');
+      icon.className='ti ti-heart';
+      btn.classList.remove('is-active');
+      btn.setAttribute('aria-pressed','false');
+      btn.title='Add to Wishlist';
       showToast('Removed from wishlist','info');
     }
   }catch{ showToast('Something went wrong','error'); }

@@ -2,6 +2,7 @@
 TechZone Electronics - Base Settings
 """
 import os
+import sys
 from pathlib import Path
 import environ
 
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'core.middleware.FriendlyDebug404Middleware',   # dev: show templates/404.html instead of Django's debug 404
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -113,7 +115,11 @@ LANGUAGES = [
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'techzone.storage.StaticStorage'   # WhiteNoise manifest + dev cache-busting
+# Tests run with DEBUG=False, where the manifest storage demands a fresh
+# `collectstatic`; plain storage keeps the suite independent of that build step.
+if 'test' in sys.argv[1:2]:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
