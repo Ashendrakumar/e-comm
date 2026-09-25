@@ -152,6 +152,10 @@ class SiteSettings(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     whatsapp = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
+    notification_email = models.EmailField(
+        blank=True,
+        help_text='Where new enquiries (product, contact and service) are emailed. '
+                  'Leave empty to use the contact email above.')
     address = models.TextField(blank=True)
     google_maps_embed = models.TextField(blank=True)
     working_hours = models.CharField(max_length=200, blank=True, default='Mon–Sat: 10am – 8pm')

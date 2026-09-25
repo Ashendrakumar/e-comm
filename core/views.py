@@ -6,6 +6,7 @@ from .models import Banner, Testimonial, WhyChooseUs, Brand
 from .forms import ContactForm, NewsletterForm
 from products.models import Category, Product
 from .branding import get_site_name
+from .notifications import notify_staff
 
 
 def homepage(request):
@@ -60,19 +61,13 @@ def homepage(request):
 
 
 def _notify_inquiry(inquiry):
-    """Best-effort email notification to the business (console backend in dev)."""
-    from django.core.mail import send_mail
-    from django.conf import settings
-    try:
-        send_mail(
-            subject=f'[{inquiry.get_inquiry_type_display()}] {inquiry.subject}',
-            message=(f'From: {inquiry.name} <{inquiry.email}> {inquiry.phone}\n\n{inquiry.message}'),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.DEFAULT_FROM_EMAIL],
-            fail_silently=True,
-        )
-    except Exception:
-        pass
+    """Email the shop about a new contact / city-page enquiry (best-effort)."""
+    notify_staff(
+        subject=f'[{get_site_name()}] {inquiry.get_inquiry_type_display()}: {inquiry.subject or "New enquiry"}',
+        message=(f'From: {inquiry.name} <{inquiry.email}> {inquiry.phone}\n\n{inquiry.message}\n\n'
+                 f'Manage it in the admin: Core -> Contact inquiries.'),
+        reply_to=inquiry.email,
+    )
 
 
 @require_POST

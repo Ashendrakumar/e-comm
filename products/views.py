@@ -5,11 +5,10 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Min, Max, Avg, Count
 from django.urls import reverse
-from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from .models import Product, Category, Review, Wishlist, ProductInquiry
+from .models import Product, Category, Review, ProductInquiry
 from .forms import ReviewForm, ProductInquiryForm
 from .related import (
     get_related_products,
@@ -20,6 +19,7 @@ from .related import (
 )
 from core.models import Brand
 from core.branding import get_site_name
+from core.notifications import notify_staff
 
 
 # ─── filter helpers ───────────────────────────────────────────────────────────
@@ -230,14 +230,25 @@ def quick_view(request, slug):
 
 
 # ─── wishlist ─────────────────────────────────────────────────────────────────
-@login_required
-def toggle_wishlist(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    item, created = Wishlist.objects.get_or_create(user=request.user, product=product)
-    if not created:
-        item.delete()
-        return JsonResponse({'status': 'removed', 'message': 'Removed from wishlist'})
-    return JsonResponse({'status': 'added', 'message': 'Added to wishlist'})
+# Saved in the visitor's browser (localStorage 'tzWishlist', see product-card.js),
+# so it works without an account. This page renders whatever ids the browser sends.
+def wishlist_page(request):
+    ids = []
+    for raw in request.GET.getlist('ids')[:60]:
+        try:
+            pk = uuid.UUID(str(raw))
+        except ValueError:
+            continue
+        if pk not in ids:
+            ids.append(pk)
+    found = {p.pk: p for p in (Product.objects.filter(pk__in=ids, is_active=True)
+                               .select_related('category', 'brand').prefetch_related('images', 'reviews'))}
+    products = [found[pk] for pk in ids if pk in found]      # keep the order they were saved in
+    return render(request, 'products/wishlist.html', {
+        'products': products,
+        'has_ids': bool(request.GET.getlist('ids')),
+        'page_title': 'My Wishlist',
+    })
 
 
 # ─── compare ──────────────────────────────────────────────────────────────────
@@ -386,11 +397,6 @@ def product_detail(request, slug):
                        .exclude(pk=product.pk)
                        .select_related('brand').prefetch_related('images'))
 
-    # ── Wishlist state ────────────────────────────────────────────
-    in_wishlist = False
-    if request.user.is_authenticated:
-        in_wishlist = Wishlist.objects.filter(user=request.user, product=product).exists()
-
     return render(request, 'products/detail.html', {
         'product':              product,
         'related_products':     related_products,
@@ -403,7 +409,6 @@ def product_detail(request, slug):
         'inquiry_form':         inquiry_form,
         'breadcrumbs':          breadcrumbs,
         'recently_viewed':      recently_viewed,
-        'in_wishlist':          in_wishlist,
         'page_title':           product.meta_title or product.name,
         'meta_description':     product.meta_description or product.short_description,
         'meta_keywords':        product.meta_keywords,
@@ -439,6 +444,13 @@ def submit_inquiry(request, slug):
         inquiry         = form.save(commit=False)
         inquiry.product = product
         inquiry.save()
+        notify_staff(
+            subject=f'[{get_site_name()}] Product enquiry: {product.name}',
+            message=(f'{inquiry.name} ({inquiry.email}, {inquiry.phone}) asked about '
+                     f'{product.name} ({request.build_absolute_uri(product.get_absolute_url())}):\n\n'
+                     f'{inquiry.message}\n\nManage it in the admin: Products -> Product inquiries.'),
+            reply_to=inquiry.email,
+        )
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': 'Enquiry sent! We will respond within 24 hours.'})
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

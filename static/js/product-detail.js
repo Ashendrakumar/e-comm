@@ -172,30 +172,9 @@ function copyLink(){
 }
 
 // ── Wishlist ───────────────────────────────────────────────
-async function toggleWishlistBtn(btn){
-  const pid = btn.dataset.product;
-  const icon= btn.querySelector('i');
-  try{
-    const res  = await fetch(PD.dataset.wishlistUrl.replace(PD_UUID, pid),{
-      method:'POST', headers:{'X-CSRFToken':CSRF,'X-Requested-With':'XMLHttpRequest'}
-    });
-    if(res.redirected||res.status===302){ showToast('Sign in to save to wishlist','info'); return; }
-    const data = await res.json();
-    if(data.status==='added'){
-      icon.className='ti ti-heart-filled';
-      btn.classList.add('is-active');           // .pd-wishlist.is-active in product-detail.css
-      btn.setAttribute('aria-pressed','true');
-      btn.title='Remove from Wishlist';
-      showToast('Added to wishlist ❤️','success');
-    } else {
-      icon.className='ti ti-heart';
-      btn.classList.remove('is-active');
-      btn.setAttribute('aria-pressed','false');
-      btn.title='Add to Wishlist';
-      showToast('Removed from wishlist','info');
-    }
-  }catch{ showToast('Something went wrong','error'); }
-}
+// Stored in the browser by the shared toggleWishlist() in product-card.js,
+// which also restyles this button (.pd-wishlist.is-active) and the header count.
+function toggleWishlistBtn(btn){ toggleWishlist(btn.dataset.product); }
 
 // Compare (toggleCompare / compare bar) and showToast() are provided globally by
 // products/partials/product_card_scripts.html — the compare button on this page

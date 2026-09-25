@@ -5,7 +5,7 @@
 const _pcCfg = document.getElementById('pc-config');
 const PC_URLS = {
   quickView: _pcCfg.dataset.quickViewUrl,
-  wishlist:  _pcCfg.dataset.wishlistUrl,
+  wishlist:  _pcCfg.dataset.wishlistPageUrl,   // /products/wishlist/
   compare:   _pcCfg.dataset.compareUrl,
 };
 const PC_UUID = '00000000-0000-0000-0000-000000000000';
@@ -137,32 +137,54 @@ function goCompare(){
 
 updateCompareUI();
 
-// ── Wishlist (event-delegated so it works for cards added later) ─────
-document.addEventListener('click',async e=>{
-  const btn=e.target.closest('.wishlist-btn');
-  if(!btn)return; e.preventDefault();
-  const pid=btn.dataset.product;
-  try{
-    const res=await fetch(PC_URLS.wishlist.replace(PC_UUID, pid),{
-      method:'POST',
-      headers:{'X-CSRFToken':(window.csrfToken||''),'X-Requested-With':'XMLHttpRequest'}
-    });
-    if(res.redirected||res.status===302||res.url.includes('login')){
-      showToast('Sign in to save wishlist items','info'); return;
-    }
-    const data=await res.json();
+// ── Wishlist — saved in this browser (localStorage 'tzWishlist'), no account needed ──
+// Every heart on the page (.wishlist-btn on cards, #wishlist-btn on the product page)
+// and every [data-wishlist-count] / [data-wishlist-link] in the header is kept in step.
+const WL_KEY='tzWishlist', WL_MAX=60;
+function getWishlist(){
+  try{ const v=JSON.parse(localStorage.getItem(WL_KEY)||'[]'); return Array.isArray(v)?v.filter(x=>typeof x==='string'):[]; }
+  catch(e){ return []; }
+}
+function setWishlist(ids){ try{ localStorage.setItem(WL_KEY,JSON.stringify(ids.slice(0,WL_MAX))); }catch(e){} }
+function wishlistUrl(ids){ return PC_URLS.wishlist + (ids.length ? '?'+ids.map(id=>'ids='+encodeURIComponent(id)).join('&') : ''); }
+
+function syncWishlistUI(){
+  const ids=getWishlist();
+  document.querySelectorAll('.wishlist-btn[data-product], #wishlist-btn[data-product]').forEach(btn=>{
+    const on=ids.includes(btn.dataset.product);
     const icon=btn.querySelector('i');
-    if(data.status==='added'){
-      icon.className='ti ti-heart-filled';   // coloured by .pc-wish .ti-heart-filled
-      btn.setAttribute('aria-label','Remove from wishlist');
-      showToast('Added to wishlist ❤️','success');
-    } else {
-      icon.className='ti ti-heart';
-      btn.setAttribute('aria-label','Add to wishlist');
-      showToast('Removed from wishlist','info');
-    }
-  }catch{showToast('Something went wrong','error');}
+    if(icon) icon.className=on?'ti ti-heart-filled':'ti ti-heart';   // coloured via CSS
+    btn.classList.toggle('is-active',on);                             // .pd-wishlist.is-active on the product page
+    btn.setAttribute('aria-pressed',on?'true':'false');
+    const label=on?'Remove from wishlist':'Add to wishlist';
+    btn.setAttribute('aria-label',label);
+    if(!btn.classList.contains('pc-act')) btn.title=label;            // card buttons use a styled tooltip instead
+  });
+  document.querySelectorAll('[data-wishlist-count]').forEach(el=>{ el.textContent=ids.length; el.hidden=ids.length===0; });
+  document.querySelectorAll('[data-wishlist-link]').forEach(a=>{ a.href=wishlistUrl(ids); });
+}
+
+function toggleWishlist(id){
+  if(!id) return;
+  let ids=getWishlist();
+  if(ids.includes(id)){
+    ids=ids.filter(x=>x!==id); showToast('Removed from wishlist','info');
+  } else {
+    if(ids.length>=WL_MAX){ showToast(`Your wishlist is full (${WL_MAX} items)`,'warning'); return; }
+    ids=[id,...ids]; showToast('Saved to your wishlist','success');
+  }
+  setWishlist(ids); syncWishlistUI();
+  document.dispatchEvent(new CustomEvent('wishlist:change',{detail:{id,ids}}));
+}
+
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('.wishlist-btn');
+  if(!btn) return;
+  e.preventDefault(); toggleWishlist(btn.dataset.product);
 });
+// Keep several open tabs in step.
+window.addEventListener('storage',e=>{ if(e.key===WL_KEY) syncWishlistUI(); });
+syncWishlistUI();
 
 // Expose the compare bar's height (it wraps to 3 rows on phones) so the floating
 // WhatsApp button can sit above it — see .wa-fab in product-card.css.

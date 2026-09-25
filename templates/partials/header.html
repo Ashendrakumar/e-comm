@@ -49,6 +49,12 @@
   .mega-foot{border-top:1px solid var(--color-border-subtle);}
 
   /* Mobile drawer */
+  /* Wishlist count badge on the header heart */
+  .hdr-wish{position:relative;}
+  .hdr-badge{position:absolute;top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;display:grid;place-items:center;
+    border-radius:var(--radius-full);background:var(--color-danger);color:var(--white);font-size:10px;font-weight:700;line-height:1;
+    font-variant-numeric:tabular-nums;box-shadow:0 0 0 2px var(--color-bg);}
+  @media (min-width:1024px){.hdr-badge{position:static;margin-left:2px;box-shadow:none;}}
   .m-backdrop{background:var(--color-overlay);}
   .m-panel{background:var(--color-bg);box-shadow:var(--shadow-lg);}
   .m-rule{border-color:var(--color-border-subtle);}
@@ -105,19 +111,14 @@
           </a>
         </div>
         {% endif %}
-        <div class="hidden md:block">
-          {% if user.is_authenticated %}
-          <a href="/admin/" class="btn btn-ghost btn-round" title="My account">
-            <i class="ti ti-user-circle"></i>
-            <span class="hidden lg:inline">{{ user.get_short_name|default:user.username }}</span>
-          </a>
-          {% else %}
-          <a href="/admin/" class="btn btn-ghost btn-round" title="Sign in">
-            <i class="ti ti-login"></i>
-            <span class="hidden lg:inline">Sign In</span>
-          </a>
-          {% endif %}
-        </div>
+        {% comment %}Wishlist lives in the visitor's browser (no account needed); product-card.js
+           fills the badge and appends the saved ids to the link. Staff use /admin/ directly.{% endcomment %}
+        <a href="{% url 'products:wishlist' %}" class="btn btn-ghost btn-round hdr-wish" data-wishlist-link
+           aria-label="Wishlist">
+          <i class="ti ti-heart" aria-hidden="true"></i>
+          <span class="hidden lg:inline">Wishlist</span>
+          <span class="hdr-badge" data-wishlist-count hidden>0</span>
+        </a>
         <div class="lg:hidden">
           <button type="button" onclick="toggleMobileMenu()" aria-label="Open menu" aria-controls="mobile-menu" aria-expanded="false"
             id="mobile-menu-toggle" class="btn btn-ghost btn-icon btn-round">
@@ -290,6 +291,11 @@
       <a href="{% url 'core:contact' %}"
         class="m-nav-link{% if request.resolver_match.url_name == 'contact' %} is-active{% endif %}">
         <i class="ti ti-headset"></i> Contact Us
+      </a>
+      <a href="{% url 'products:wishlist' %}" data-wishlist-link
+        class="m-nav-link{% if request.resolver_match.url_name == 'wishlist' %} is-active{% endif %}">
+        <i class="ti ti-heart"></i> My Wishlist
+        <span class="check-count ml-auto" data-wishlist-count hidden>0</span>
       </a>
     </nav>
     {% if site_settings.whatsapp %}

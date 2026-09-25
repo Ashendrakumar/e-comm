@@ -2,11 +2,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.core.mail import send_mail
 from django.conf import settings
 from .models import Service, ServingArea, FlatPage, FAQCategory, GeneralFAQ
 from .forms import ServiceInquiryForm
 from core.branding import get_site_name
+from core.notifications import notify_staff
 
 
 # ── Services ────────────────────────────────────────────────────────
@@ -41,17 +41,12 @@ def service_inquiry(request, slug):
         inquiry         = form.save(commit=False)
         inquiry.service = service
         inquiry.save()
-        # Best-effort email notification (console backend in dev)
-        try:
-            send_mail(
-                subject=f'New service inquiry: {service.title}',
-                message=f'{inquiry.name} ({inquiry.email}, {inquiry.phone}) from {inquiry.city}:\n\n{inquiry.message}',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.DEFAULT_FROM_EMAIL],
-                fail_silently=True,
-            )
-        except Exception:
-            pass
+        notify_staff(
+            subject=f'[{get_site_name()}] Service enquiry: {service.title}',
+            message=(f'{inquiry.name} ({inquiry.email}, {inquiry.phone}) from {inquiry.city}:\n\n'
+                     f'{inquiry.message}\n\nManage it in the admin: Pages -> Service inquiries.'),
+            reply_to=inquiry.email,
+        )
         msg = 'Thank you! Our team will contact you shortly about this service.'
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': msg})

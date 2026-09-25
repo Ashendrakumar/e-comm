@@ -1,3 +1,4 @@
+import os
 from decimal import Decimal
 from django.test import TestCase
 from django.urls import reverse
@@ -96,3 +97,96 @@ class ProductAPITests(TestCase):
         resp = self.client.get('/api/v1/categories/')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()['count'], 1)
+
+
+from django.core import mail
+from core.models import SiteSettings
+
+
+class WishlistAndEnquiryTests(TestCase):
+    def setUp(self):
+        self.cat = Category.objects.create(name='Phones')
+        self.a = Product.objects.create(name='Phone A', category=self.cat, price=Decimal('100'), stock=2)
+        self.b = Product.objects.create(name='Phone B', category=self.cat, price=Decimal('200'), stock=2)
+
+    def test_wishlist_page_lists_saved_ids_in_order_and_ignores_junk(self):
+        url = reverse('products:wishlist')
+        resp = self.client.get(url, {'ids': [str(self.b.pk), 'not-a-uuid', str(self.a.pk), str(self.b.pk)]})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual([p.pk for p in resp.context['products']], [self.b.pk, self.a.pk])
+
+    def test_empty_wishlist_page_renders(self):
+        resp = self.client.get(reverse('products:wishlist'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Your wishlist is empty')
+
+    def test_product_enquiry_emails_the_notification_address(self):
+        s = SiteSettings.get_settings()
+        s.notification_email = 'owner@example.com'
+        s.save()
+        resp = self.client.post(reverse('products:submit_inquiry', args=[self.a.slug]),
+                                {'name': 'Priya', 'email': 'priya@example.com', 'phone': '9000000000',
+                                 'message': 'Is it in stock?'},
+                                HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertTrue(resp.json()['success'])
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['owner@example.com'])
+        self.assertIn('Phone A', mail.outbox[0].subject)
+        self.assertEqual(mail.outbox[0].reply_to, ['priya@example.com'])
+
+
+import tempfile
+from pathlib import Path
+from django.core.management import call_command
+from django.test import override_settings
+
+
+class ImportProductImagesTests(TestCase):
+    def setUp(self):
+        self.media = tempfile.TemporaryDirectory()
+        self.src = tempfile.TemporaryDirectory()
+        self.override = override_settings(MEDIA_ROOT=self.media.name)
+        self.override.enable()
+        cat = Category.objects.create(name='Phones')
+        self.cam = Product.objects.create(name='Canon EOS R50', category=cat, price=Decimal('1'))
+        self.phone = Product.objects.create(name='iPhone 15', category=cat, price=Decimal('1'))
+
+    def tearDown(self):
+        self.override.disable()
+        self.media.cleanup(); self.src.cleanup()
+
+    def _img(self, path, size=(2400, 1600)):
+        from PIL import Image
+        path.parent.mkdir(parents=True, exist_ok=True)
+        Image.new('RGB', size, (15, 118, 110)).save(path)
+
+    def test_folder_per_product_and_loose_files(self):
+        root = Path(self.src.name)
+        d = root / 'Cameras' / self.cam.sku
+        for n in ('10', '2', 'main'):
+            self._img(d / f'{n}.jpg')
+        self._img(root / 'iphone-15.jpg', (800, 800))          # whole name = slug, "15" is not an index
+        call_command('import_product_images', str(root), apply=True, stdout=open(os.devnull, 'w'))
+
+        imgs = list(self.cam.images.order_by('order'))
+        self.assertEqual(len(imgs), 3)
+        self.assertTrue(imgs[0].is_primary)
+        self.assertTrue(imgs[0].image.name.endswith('-1.webp'))
+        from PIL import Image
+        with Image.open(imgs[0].image.path) as im:
+            self.assertLessEqual(max(im.size), 1600)
+        self.assertEqual(self.phone.images.count(), 1)
+
+    def test_skip_mode_leaves_products_with_images_alone(self):
+        root = Path(self.src.name)
+        self._img(root / self.cam.sku / 'a.jpg')
+        call_command('import_product_images', str(root), apply=True, stdout=open(os.devnull, 'w'))
+        call_command('import_product_images', str(root), apply=True, stdout=open(os.devnull, 'w'))
+        self.assertEqual(self.cam.images.count(), 1)
+
+    def test_dry_run_saves_nothing(self):
+        root = Path(self.src.name)
+        self._img(root / self.cam.sku / 'a.jpg')
+        call_command('import_product_images', str(root), stdout=open(os.devnull, 'w'))
+        self.assertEqual(self.cam.images.count(), 0)
+

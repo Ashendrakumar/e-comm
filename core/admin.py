@@ -9,6 +9,8 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Branding', {'fields': ('site_name', 'tagline', 'logo', 'favicon')}),
         ('Contact', {'fields': ('phone', 'whatsapp', 'email', 'address', 'working_hours')}),
+        ('Enquiry notifications', {'fields': ('notification_email',),
+                                   'description': 'Every new product, contact and service enquiry is emailed here.'}),
         ('Maps', {'fields': ('google_maps_embed',)}),
         ('SEO', {'fields': ('meta_description', 'meta_keywords', 'google_analytics_id')}),
     )

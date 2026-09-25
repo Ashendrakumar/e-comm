@@ -262,11 +262,10 @@
         {% endif %}
         <div class="pd-ctas-icons">
           <button type="button" id="wishlist-btn"
-                  class="btn btn-secondary btn-icon pd-icon-btn pd-wishlist{% if in_wishlist %} is-active{% endif %}"
+                  class="btn btn-secondary btn-icon pd-icon-btn pd-wishlist"
                   data-product="{{ product.pk }}" onclick="toggleWishlistBtn(this)"
-                  aria-pressed="{% if in_wishlist %}true{% else %}false{% endif %}"
-                  title="{% if in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
-            <i class="ti {% if in_wishlist %}ti-heart-filled{% else %}ti-heart{% endif %}"></i>
+                  aria-pressed="false" aria-label="Add to wishlist" title="Add to wishlist">
+            <i class="ti ti-heart"></i>
           </button>
           <button type="button" onclick="toggleCompare('{{ product.pk }}','{{ product.name|escapejs }}')"
                   class="compare-btn btn btn-secondary btn-icon pd-icon-btn"
@@ -639,9 +638,18 @@
         <label class="label" for="iq-message">Message <span class="req">*</span></label>
         <textarea id="iq-message" name="message" required rows="4" placeholder="Ask about price, availability, bulk orders, specifications…" class="textarea"></textarea>
       </div>
-      <button type="submit" class="btn btn-primary btn-lg btn-block" id="inquiry-submit-btn">
-        <i class="ti ti-send"></i> Send Enquiry
-      </button>
+      <div class="{% if site_settings.whatsapp %}btn-pair{% endif %}">
+        <button type="submit" class="btn btn-primary btn-block" id="inquiry-submit-btn">
+          <i class="ti ti-send"></i> Send Enquiry
+        </button>
+        {% if site_settings.whatsapp %}
+        <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi!%20I'm%20interested%20in%20*{{ product.name|urlencode }}*%20priced%20at%20₹{{ product.effective_price|floatformat:0 }}.%20Please%20provide%20more%20details."
+           target="_blank" rel="noopener" class="btn btn-success btn-block">
+          <i class="ti ti-brand-whatsapp"></i> Chat on WhatsApp
+        </a>
+        {% endif %}
+      </div>
+      <p class="field-hint text-center">Prefer to chat? WhatsApp gets you the fastest reply.</p>
       <div id="inquiry-msg" class="hidden pd-msg" role="status"></div>
     </form>
   </div>
@@ -776,7 +784,6 @@
 <div id="pd-config" hidden
      data-review-url="{% url 'products:submit_review' product.slug %}"
      data-inquiry-url="{% url 'products:submit_inquiry' product.slug %}"
-     data-helpful-url="{% url 'products:mark_helpful' 999999999 %}"
-     data-wishlist-url="{% url 'products:toggle_wishlist' '00000000-0000-0000-0000-000000000000' %}"></div>
+     data-helpful-url="{% url 'products:mark_helpful' 999999999 %}"></div>
 <script src="{% static 'js/product-detail.js' %}"></script>
 {% endblock %}
