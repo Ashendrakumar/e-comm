@@ -121,6 +121,11 @@ STATICFILES_STORAGE = 'techzone.storage.StaticStorage'   # WhiteNoise manifest +
 if 'test' in sys.argv[1:2]:
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
+# Product-image import (Admin -> Products -> "Import images from Drive", or
+# `manage.py import_product_images`). Point it at a Google Drive for desktop folder,
+# e.g. PRODUCT_IMAGES_DIR="G:\My Drive\Product Images" in .env.
+PRODUCT_IMAGES_DIR = os.environ.get('PRODUCT_IMAGES_DIR', '')
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 

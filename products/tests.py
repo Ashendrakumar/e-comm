@@ -190,3 +190,33 @@ class ImportProductImagesTests(TestCase):
         call_command('import_product_images', str(root), stdout=open(os.devnull, 'w'))
         self.assertEqual(self.cam.images.count(), 0)
 
+    def test_sku_dash_name_folders_and_name_fallback(self):
+        root = Path(self.src.name)
+        self._img(root / 'Cameras' / f'{self.cam.sku} - Canon EOS R50' / 'main.jpg')
+        self._img(root / 'Phones' / 'TZ-OLDSKU99 - iPhone 15' / 'main.jpg')   # stale SKU, name still matches
+        call_command('import_product_images', str(root), apply=True, stdout=open(os.devnull, 'w'))
+        self.assertEqual(self.cam.images.count(), 1)
+        self.assertEqual(self.phone.images.count(), 1)
+
+    def test_create_folders_makes_one_folder_per_product_without_photos(self):
+        from products.image_import import create_folders
+        root = Path(self.src.name) / 'Drive'
+        self.assertEqual(create_folders(root), (2, 0))
+        self.assertTrue((root / 'Phones' / f'{self.cam.sku} - Canon EOS R50').is_dir())
+        self.assertEqual(create_folders(root), (0, 2))           # safe to run again
+
+    def test_admin_preview_then_import(self):
+        from django.contrib.auth.models import User
+        admin = User.objects.create_superuser('boss', 'b@example.com', 'pw')
+        self.client.force_login(admin)
+        root = Path(self.src.name)
+        self._img(root / self.cam.sku / 'main.jpg')
+        url = reverse('admin:products_product_import_images')
+        self.assertContains(self.client.get(reverse('admin:products_product_changelist')), 'Import images from Drive')
+        resp = self.client.post(url, {'folder': str(root), 'mode': 'skip', 'action': 'preview'})
+        self.assertContains(resp, 'nothing saved yet')
+        self.assertEqual(self.cam.images.count(), 0)
+        resp = self.client.post(url, {'folder': str(root), 'mode': 'skip', 'action': 'apply'})
+        self.assertContains(resp, 'Import finished')
+        self.assertEqual(self.cam.images.count(), 1)
+

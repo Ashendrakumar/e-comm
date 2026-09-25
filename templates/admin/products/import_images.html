@@ -1,0 +1,102 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:products_product_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; Import images
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .ii-wrap{max-width:980px;}
+  .ii-card{background:var(--body-bg,#fff);border:1px solid var(--hairline-color,#e5e7eb);border-radius:12px;padding:18px 20px;margin-bottom:18px;}
+  .ii-card h2{font-size:15px;margin:0 0 10px;}
+  .ii-card p,.ii-card li{font-size:13px;line-height:1.6;}
+  .ii-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;}
+  .ii-row input[type=text]{flex:1;min-width:260px;padding:8px 10px;border-radius:8px;}
+  .ii-btn{background:#0f766e;color:#fff;border:0;padding:9px 16px;border-radius:8px;font-weight:600;cursor:pointer;}
+  .ii-btn.alt{background:transparent;color:#0f766e;border:1.5px solid #0f766e;}
+  .ii-btn.warn{background:#b45309;}
+  pre.ii-tree{background:rgba(0,0,0,.04);border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.55;overflow:auto;}
+  table.ii-res{border-collapse:collapse;width:100%;font-size:13px;}
+  table.ii-res th,table.ii-res td{border-bottom:1px solid var(--hairline-color,#eee);text-align:left;padding:7px 10px;vertical-align:top;}
+  table.ii-res th{background:rgba(0,0,0,.03);}
+  .ii-pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;}
+  .s-ready,.s-done{background:#dcfce7;color:#15803d}.s-skipped{background:#f3f4f6;color:#6b7280}
+  .s-unmatched{background:#fef3c7;color:#a16207}.s-error{background:#fee2e2;color:#b91c1c}
+  .ii-sum{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin:4px 0 12px;}
+  .ii-sum b{font-size:18px;display:block;}
+</style>
+
+<div class="ii-wrap">
+  <div class="ii-card">
+    <h2>1 · Where are the photos?</h2>
+    <p>Use a <b>Google Drive for desktop</b> folder on this computer (it appears as e.g. <code>G:\My Drive\Product Images</code>).
+      {% if configured %}The default comes from <code>PRODUCT_IMAGES_DIR</code>.{% else %}Tip: set <code>PRODUCT_IMAGES_DIR</code> in <code>.env</code> so this is filled in for you.{% endif %}</p>
+    <form method="post">{% csrf_token %}
+      <div class="ii-row">
+        <input type="text" name="folder" id="ii-folder" value="{{ folder }}" placeholder="G:\My Drive\Product Images" aria-label="Photos folder">
+        <button class="ii-btn alt" name="action" value="folders" type="submit" title="Makes Category/SKU - Name folders for products without photos">Create product folders</button>
+      </div>
+      <p style="margin-top:10px">“Create product folders” makes one folder per product that has no photos yet — it never renames or deletes anything. Drop each product’s photos into its folder:</p>
+<pre class="ii-tree">Product Images\
+  Cameras\
+    TZ-32E6AADD - Canon EOS R50\
+      main.jpg      ← main / cover / front = the primary photo
+      2.jpg
+      3.jpg        (order follows the numbers)
+  TZ-55F23A1E-1.jpg ← loose files named SKU-1, SKU-2 … also work</pre>
+
+      <h2 style="margin-top:16px">2 · Preview, then import</h2>
+      <div class="ii-row">
+        <label for="ii-mode">For products that already have photos:</label>
+        <select name="mode" id="ii-mode">
+          <option value="skip" {% if mode == 'skip' %}selected{% endif %}>Leave them alone (recommended)</option>
+          <option value="append" {% if mode == 'append' %}selected{% endif %}>Add the new photos after them</option>
+          <option value="replace" {% if mode == 'replace' %}selected{% endif %}>Replace their photos</option>
+        </select>
+      </div>
+      <div class="ii-row">
+        <button class="ii-btn alt" name="action" value="preview" type="submit">Preview</button>
+        <button class="ii-btn{% if mode == 'replace' %} warn{% endif %}" name="action" value="apply" type="submit">Import now</button>
+        <span style="font-size:12px;opacity:.7">Photos are resized to 1600 px and saved as WebP.</span>
+      </div>
+    </form>
+  </div>
+
+  {% if result %}
+  <div class="ii-card">
+    <h2>{% if applied %}Import finished{% else %}Preview — nothing saved yet{% endif %}</h2>
+    <div class="ii-sum">
+      <span><b>{{ result.added }}</b>photo(s) {% if applied %}imported{% else %}ready{% endif %}</span>
+      <span><b>{{ result.products }}</b>product(s)</span>
+      <span><b>{{ result.skipped }}</b>skipped</span>
+      <span><b>{{ result.unmatched }}</b>unmatched</span>
+      <span><b>{{ result.errors }}</b>error(s)</span>
+    </div>
+    {% if result.rows %}
+    <table class="ii-res">
+      <thead><tr><th>Folder / file</th><th>Product</th><th>Photos</th><th>Status</th><th>Details</th></tr></thead>
+      <tbody>
+      {% for r in result.rows %}
+        <tr>
+          <td><code>{{ r.key }}</code></td>
+          <td>{% if r.product_id %}<a href="{% url 'admin:products_product_change' r.product_id %}">{{ r.product }}</a>{% else %}—{% endif %}</td>
+          <td>{{ r.found }}</td>
+          <td><span class="ii-pill s-{{ r.status }}">{{ r.status }}</span></td>
+          <td>{{ r.detail }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No photos found in that folder yet. Add some, then preview again.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

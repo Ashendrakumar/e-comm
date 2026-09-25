@@ -1,3 +1,5 @@
+from django.contrib import messages
+from django.urls import reverse
 from decimal import Decimal
 from django.contrib import admin
 from django.utils.html import format_html
@@ -168,6 +170,51 @@ class CategoryAdmin(SpreadsheetImportMixin, admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(SpreadsheetImportMixin, admin.ModelAdmin):
+    # "Import images from Drive" page (products/image_import.py); button in the changelist.
+    def get_urls(self):
+        from django.urls import path
+        info = self.model._meta.app_label, self.model._meta.model_name
+        return [path('import-images/', self.admin_site.admin_view(self.drive_import_view),
+                     name='%s_%s_import_images' % info)] + super().get_urls()
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['drive_import_url'] = reverse('admin:products_product_import_images')
+        return super().changelist_view(request, extra_context)
+
+    def drive_import_view(self, request):
+        from pathlib import Path
+        from django.conf import settings
+        from django.core.exceptions import PermissionDenied
+        from django.template.response import TemplateResponse
+        from .image_import import ImageImporter, create_folders
+        if not request.user.has_perm('products.add_productimage'):
+            raise PermissionDenied
+        folder = (request.POST.get('folder') or getattr(settings, 'PRODUCT_IMAGES_DIR', '') or '').strip()
+        mode = request.POST.get('mode', 'skip') if request.POST.get('mode') in ('skip', 'append', 'replace') else 'skip'
+        result = created = None
+        action = request.POST.get('action')
+        if request.method == 'POST' and folder:
+            root = Path(folder)
+            if action == 'folders':
+                created = create_folders(root)
+                self.message_user(request, f'Folders ready: {created[0]} created, {created[1]} already there. '
+                                           f'Add photos to them, then preview.', messages.SUCCESS)
+            elif not root.exists():
+                self.message_user(request, f'Folder not found: {folder}. Is Google Drive for desktop running '
+                                           f'and signed in on this computer?', messages.ERROR)
+            else:
+                result = ImageImporter(mode=mode).run(root, apply=(action == 'apply'))
+                if action == 'apply':
+                    self.message_user(request, f'Imported {result.added} image(s) for {result.products} product(s).',
+                                      messages.SUCCESS)
+        return TemplateResponse(request, 'admin/products/import_images.html', {
+            **self.admin_site.each_context(request),
+            'opts': self.model._meta, 'title': 'Import product images from Drive',
+            'folder': folder, 'configured': getattr(settings, 'PRODUCT_IMAGES_DIR', ''),
+            'mode': mode, 'result': result, 'applied': action == 'apply',
+        })
+
     list_display   = ('_thumb', 'name', 'sku', 'category', 'brand', '_price', '_discount', '_stock', 'is_active', 'is_featured', 'is_trending')
     list_editable  = ('is_active', 'is_featured', 'is_trending')
     list_filter    = ('is_active', 'is_featured', 'is_trending', 'is_new_arrival', 'category', 'brand', 'condition')

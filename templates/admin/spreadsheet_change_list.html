@@ -8,5 +8,10 @@
          style="background-image:none;">⬆ {% trans "Import from spreadsheet" %}</a>
     </li>
   {% endif %}
+  {% if drive_import_url %}
+    <li>
+      <a href="{{ drive_import_url }}" class="addlink" style="background-image:none;">🖼 Import images from Drive</a>
+    </li>
+  {% endif %}
   {{ block.super }}
 {% endblock %}
