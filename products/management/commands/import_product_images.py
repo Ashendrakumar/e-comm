@@ -2,7 +2,7 @@
 
     python manage.py import_product_images                     # preview PRODUCT_IMAGES_DIR
     python manage.py import_product_images --apply             # import it
-    python manage.py import_product_images --create-folders    # make a folder per product
+    python manage.py create_product_folders                    # make a folder per product first
     python manage.py import_product_images "D:\\photos.zip" --apply --mode replace
 
 The folder defaults to settings.PRODUCT_IMAGES_DIR (env var of the same name).
@@ -13,9 +13,10 @@ import csv
 from pathlib import Path
 
 from django.conf import settings
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 
-from products.image_import import ImageImporter, create_folders
+from products.image_import import ImageImporter
 
 
 class Command(BaseCommand):
@@ -27,9 +28,9 @@ class Command(BaseCommand):
         parser.add_argument('--mode', choices=['skip', 'append', 'replace'], default='skip',
                             help='skip: only products without images (default) | append | replace')
         parser.add_argument('--create-folders', action='store_true',
-                            help='Create <Category>/<SKU> - <Name>/ folders for products that have no images')
-        parser.add_argument('--all-products', action='store_true',
-                            help='With --create-folders: include products that already have images')
+                            help='Same as the create_product_folders command: a folder per product')
+        parser.add_argument('--only-missing', action='store_true',
+                            help='With --create-folders: skip products that already have images')
         parser.add_argument('--max-px', type=int, default=1600, help='Longest side after resizing (default 1600)')
         parser.add_argument('--format', choices=['jpeg', 'webp'], default='webp', help='Output format when resizing')
         parser.add_argument('--no-resize', action='store_true', help='Keep original files as they are')
@@ -39,14 +40,10 @@ class Command(BaseCommand):
         source = opts['source'] or getattr(settings, 'PRODUCT_IMAGES_DIR', '')
         if not source:
             raise CommandError('Give a folder, or set PRODUCT_IMAGES_DIR (e.g. "G:\\My Drive\\Product Images").')
-        source = Path(source)
-
         if opts['create_folders']:
-            created, existing = create_folders(source, only_missing=not opts['all_products'])
-            self.stdout.write(self.style.SUCCESS(
-                f'Folders ready in {source}: {created} created, {existing} already there. '
-                f"Drop each product's photos into its folder, then run with --apply."))
+            call_command('create_product_folders', source, only_missing=opts['only_missing'], stdout=self.stdout)
             return
+        source = Path(source)
 
         if not source.exists():
             raise CommandError(f'Not found: {source}. Is Google Drive for desktop running and signed in?')

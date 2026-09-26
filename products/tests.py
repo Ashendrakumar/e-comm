@@ -138,7 +138,9 @@ class WishlistAndEnquiryTests(TestCase):
 import tempfile
 from pathlib import Path
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import override_settings
+from .models import ProductImage
 
 
 class ImportProductImagesTests(TestCase):
@@ -198,12 +200,33 @@ class ImportProductImagesTests(TestCase):
         self.assertEqual(self.cam.images.count(), 1)
         self.assertEqual(self.phone.images.count(), 1)
 
-    def test_create_folders_makes_one_folder_per_product_without_photos(self):
+    def test_create_folders_makes_one_folder_per_product(self):
         from products.image_import import create_folders
         root = Path(self.src.name) / 'Drive'
-        self.assertEqual(create_folders(root), (2, 0))
+        ProductImage.objects.create(product=self.phone, image='products/x.jpg')   # has photos: still gets one
+        created, existing = create_folders(root)
+        self.assertEqual((len(created), existing), (2, 0))
         self.assertTrue((root / 'Phones' / f'{self.cam.sku} - Canon EOS R50').is_dir())
-        self.assertEqual(create_folders(root), (0, 2))           # safe to run again
+        created, existing = create_folders(root)                 # safe to run again
+        self.assertEqual((len(created), existing), (0, 2))
+        self.assertEqual(len(create_folders(root / 'new', only_missing=True)[0]), 1)
+
+    def test_create_folders_keeps_renamed_or_moved_folders(self):
+        from products.image_import import create_folders
+        root = Path(self.src.name)
+        (root / 'Old category' / self.cam.sku).mkdir(parents=True)   # moved + renamed by hand
+        created, existing = create_folders(root)
+        self.assertEqual((len(created), existing), (1, 1))
+        self.assertFalse((root / 'Phones' / f'{self.cam.sku} - Canon EOS R50').exists())
+
+    def test_create_product_folders_command_and_missing_drive(self):
+        root = Path(self.src.name) / 'Drive'
+        call_command('create_product_folders', str(root), dry_run=True, stdout=open(os.devnull, 'w'))
+        self.assertFalse(root.exists())
+        call_command('create_product_folders', str(root), stdout=open(os.devnull, 'w'))
+        self.assertEqual(len(list(root.glob('*/*'))), 2)
+        with self.assertRaisesMessage(CommandError, 'Google Drive for desktop'):
+            call_command('create_product_folders', str(root.parent / 'nope' / 'Drive'))
 
     def test_admin_preview_then_import(self):
         from django.contrib.auth.models import User

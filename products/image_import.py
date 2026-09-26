@@ -190,23 +190,41 @@ class ImageImporter:
             return base + '.jpg', out.getvalue()
 
 
-def create_folders(root, only_missing=True):
+class FolderError(Exception):
+    """The photos folder can't be created (usually Drive for desktop isn't running)."""
+
+
+def create_folders(root, only_missing=False, dry_run=False):
     """Make <root>/<Category>/<SKU> - <Product name>/ for every active product.
 
-    Never renames or deletes anything. With only_missing, products that already
-    have images are left out. Returns (created, existing) counts.
+    A product that already has a folder anywhere under root — matched by SKU, slug or
+    name, like the importer — is left alone, so renamed or moved folders aren't
+    duplicated. Never renames or deletes anything. Only root itself may be missing;
+    its parent (e.g. G:\\My Drive) must exist. With only_missing, products that already
+    have images are skipped. Returns (list of created folders, number already there).
     """
     root = Path(root)
-    root.mkdir(parents=True, exist_ok=True)
-    created = existing = 0
+    if not root.is_dir() and not root.parent.is_dir():
+        raise FolderError(f'{root.parent} not found. Is Google Drive for desktop running and signed in?')
+
+    matcher, have = ImageImporter(), set()
+    for _, dirnames, _ in os.walk(root):
+        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
+        have.update(p.pk for p in map(matcher.match, dirnames) if p)
+
     qs = Product.objects.filter(is_active=True).select_related('category').order_by('category__name', 'name')
     if only_missing:
         qs = qs.filter(images__isnull=True)
-    for p in qs:
-        folder = root / safe_name(p.category.name if p.category_id else 'Uncategorised') / safe_name(f'{p.sku} - {p.name}')
-        if folder.exists():
-            existing += 1
-        else:
-            folder.mkdir(parents=True)
-            created += 1
+    created, existing = [], 0
+    try:
+        for p in qs:
+            if p.pk in have:
+                existing += 1
+                continue
+            folder = root / safe_name(p.category.name if p.category_id else 'Uncategorised') / safe_name(f'{p.sku} - {p.name}')
+            if not dry_run:
+                folder.mkdir(parents=True, exist_ok=True)
+            created.append(folder)
+    except OSError as exc:
+        raise FolderError(f'Could not create folders in {root}: {exc}') from exc
     return created, existing

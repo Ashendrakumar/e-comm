@@ -187,7 +187,7 @@ class ProductAdmin(SpreadsheetImportMixin, admin.ModelAdmin):
         from django.conf import settings
         from django.core.exceptions import PermissionDenied
         from django.template.response import TemplateResponse
-        from .image_import import ImageImporter, create_folders
+        from .image_import import FolderError, ImageImporter, create_folders
         if not request.user.has_perm('products.add_productimage'):
             raise PermissionDenied
         folder = (request.POST.get('folder') or getattr(settings, 'PRODUCT_IMAGES_DIR', '') or '').strip()
@@ -197,9 +197,13 @@ class ProductAdmin(SpreadsheetImportMixin, admin.ModelAdmin):
         if request.method == 'POST' and folder:
             root = Path(folder)
             if action == 'folders':
-                created = create_folders(root)
-                self.message_user(request, f'Folders ready: {created[0]} created, {created[1]} already there. '
-                                           f'Add photos to them, then preview.', messages.SUCCESS)
+                try:
+                    created, existing = create_folders(root)
+                except FolderError as exc:
+                    self.message_user(request, str(exc), messages.ERROR)
+                else:
+                    self.message_user(request, f'Folders ready: {len(created)} created, {existing} product(s) '
+                                               f'already had one. Add photos to them, then preview.', messages.SUCCESS)
             elif not root.exists():
                 self.message_user(request, f'Folder not found: {folder}. Is Google Drive for desktop running '
                                            f'and signed in on this computer?', messages.ERROR)

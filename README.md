@@ -125,6 +125,36 @@ serves `static/` straight off disk.
 
 ---
 
+## Product photos from Google Drive
+
+Bulk-import product photos from a Google Drive for desktop folder instead of uploading them one by one.
+Full guide: [docs/PRODUCT_IMAGES.md](docs/PRODUCT_IMAGES.md).
+
+1. Set the folder in `.env`: `PRODUCT_IMAGES_DIR=G:\My Drive\Product Images`
+2. Generate the folder tree — one `Category\SKU - Product name\` folder per active product:
+
+   ```bash
+   python manage.py create_product_folders                  # uses PRODUCT_IMAGES_DIR
+   python manage.py create_product_folders --dry-run        # only list what would be created
+   python manage.py create_product_folders --only-missing   # skip products that already have photos
+   ```
+
+   Folders that already exist (matched by SKU, slug or name, even if renamed or moved) are left
+   alone and nothing is renamed or deleted, so re-run it whenever you add products. Only
+   `G:\My Drive` must exist — `Product Images` and everything below it are created for you.
+   Also available as `scripts\create_product_folders.bat` and the admin's **Create product folders** button.
+3. Drop each product's photos into its folder (`main.jpg` = primary photo; `2.jpg`, `3.jpg`… set the order).
+4. Import (photos are resized to 1600 px and saved as WebP):
+
+   ```bash
+   python manage.py import_product_images            # preview, nothing saved
+   python manage.py import_product_images --apply    # import
+   ```
+
+   Or Admin → *Products* → **Import images from Drive** → **Preview** → **Import now**.
+
+---
+
 ## Testing
 
 ```bash

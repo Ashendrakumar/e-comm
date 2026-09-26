@@ -40,9 +40,9 @@
     <form method="post">{% csrf_token %}
       <div class="ii-row">
         <input type="text" name="folder" id="ii-folder" value="{{ folder }}" placeholder="G:\My Drive\Product Images" aria-label="Photos folder">
-        <button class="ii-btn alt" name="action" value="folders" type="submit" title="Makes Category/SKU - Name folders for products without photos">Create product folders</button>
+        <button class="ii-btn alt" name="action" value="folders" type="submit" title="Makes Category/SKU - Name folders for every product; existing folders are kept">Create product folders</button>
       </div>
-      <p style="margin-top:10px">“Create product folders” makes one folder per product that has no photos yet — it never renames or deletes anything. Drop each product’s photos into its folder:</p>
+      <p style="margin-top:10px">“Create product folders” builds the whole tree — one folder per product, grouped by category. Products that already have a folder are left alone and nothing is renamed or deleted, so it’s safe to click again after adding products. Drop each product’s photos into its folder:</p>
 <pre class="ii-tree">Product Images\
   Cameras\
     TZ-32E6AADD - Canon EOS R50\

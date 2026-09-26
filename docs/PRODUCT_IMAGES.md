@@ -16,10 +16,19 @@ uploading them one by one in the admin.
    ```
 
    Restart the server after editing `.env`.
-4. **Create one folder per product** — Admin → *Products* → **Import images from Drive** →
-   **Create product folders** (or `python manage.py import_product_images --create-folders`).
-   You get `Category\SKU - Product name\` for every product that has no photos yet.
-   It never renames or deletes anything, so it's safe to run again after adding products.
+4. **Create the folder tree** — Admin → *Products* → **Import images from Drive** →
+   **Create product folders**, or double-click `scripts\create_product_folders.bat`, or:
+
+   ```
+   python manage.py create_product_folders              # every active product
+   python manage.py create_product_folders --dry-run    # just list what it would make
+   python manage.py create_product_folders --only-missing   # skip products that have photos
+   ```
+
+   You get `Product Images\Category\SKU - Product name\` for every active product; the
+   `Product Images` folder itself is created too (only `My Drive` must already exist).
+   A product that already has a folder — matched by SKU, slug or name, even if you renamed
+   or moved it — is left alone. Nothing is renamed or deleted, so re-run it after adding products.
 
    > In Drive for desktop settings, choose **Mirror files** (or mark the folder
    > *Available offline*) so the photos are really on this computer when importing.
@@ -82,7 +91,7 @@ python manage.py import_product_images samples/product-images --apply    # impor
 | `source` | `PRODUCT_IMAGES_DIR` | A folder or a `.zip` (e.g. a folder downloaded from Drive) |
 | `--apply` | off (preview) | Save the images |
 | `--mode skip\|append\|replace` | `skip` | What to do with products that already have photos |
-| `--create-folders` | | Make `Category\SKU - Name\` folders (add `--all-products` to include ones with photos) |
+| `--create-folders` | | Same as `create_product_folders` (add `--only-missing` to skip products with photos) |
 | `--max-px` | `1600` | Longest side after resizing |
 | `--format webp\|jpeg` | `webp` | Output format |
 | `--no-resize` | | Keep originals (must be under 5 MB) |
