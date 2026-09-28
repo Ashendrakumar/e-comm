@@ -27,6 +27,18 @@
   .btn.wa-fab i{font-size:24px;}
   .wa-fab{box-shadow:var(--shadow-lg);transition:transform var(--duration) var(--ease),background var(--duration) var(--ease);}
   .wa-fab:hover{transform:scale(1.1);}
+  /* Back-to-top: bottom-right, stacked above the WhatsApp button when that's shown.
+     Hidden until the visitor scrolls (base.js toggles .show). */
+  .btn.to-top-fab{width:48px;height:48px;font-size:20px;}
+  .to-top-fab{position:fixed;right:28px;bottom:24px;z-index:40;box-shadow:var(--shadow-lg);
+    opacity:0;visibility:hidden;transform:translateY(12px);
+    transition:opacity var(--duration) var(--ease),transform var(--duration) var(--ease),visibility var(--duration),bottom .3s ease;}
+  .to-top-fab.show{opacity:1;visibility:visible;transform:none;}
+  .to-top-fab.show:hover{transform:translateY(-2px);}
+  .wa-fab ~ .to-top-fab{bottom:92px;}                    /* 24px + 56px WhatsApp button + 12px gap */
+  body:has(#compare-bar.show) .to-top-fab{bottom:calc(var(--cmp-bar-h,72px) + 16px);}
+  body:has(#compare-bar.show) .wa-fab ~ .to-top-fab{bottom:calc(var(--cmp-bar-h,72px) + 84px);}
+  @media (prefers-reduced-motion:reduce){.to-top-fab{transition:none;}}
 </style>
 
 <!-- Main Footer -->
@@ -181,3 +193,9 @@
   <i class="ti ti-brand-whatsapp"></i>
 </a>
 {% endif %}
+
+<!-- Back to top (must stay after the WhatsApp button — the CSS stacks it with `~`) -->
+<button type="button" id="to-top" class="btn btn-primary btn-icon btn-round to-top-fab"
+        onclick="scrollToTop()" title="Back to top" aria-label="Back to top">
+  <i class="ti ti-arrow-up" aria-hidden="true"></i>
+</button>

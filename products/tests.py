@@ -50,10 +50,41 @@ class ProductViewTests(TestCase):
         resp = self.client.get(self.cat.get_absolute_url())
         self.assertEqual(resp.status_code, 200)
 
+    def test_infinite_scroll_batches(self):
+        from .views import FIRST_BATCH, NEXT_BATCH
+        total = FIRST_BATCH + 2 * NEXT_BATCH + 1          # two full batches, then a last one of 1
+        for i in range(total - 1):                         # + Phone X from setUp
+            Product.objects.create(name=f'Phone {i}', category=self.cat, price=Decimal('100'), stock=1)
+        resp = self.client.get(reverse('products:list'))
+        self.assertEqual(len(resp.context['products']), FIRST_BATCH)
+        self.assertEqual(resp.context['next_offset'], FIRST_BATCH)
+
+        url = reverse('products:ajax_filter')
+        data = self.client.get(url, {'offset': FIRST_BATCH}).json()
+        self.assertTrue(data['append'])
+        self.assertEqual(data['html'].count('aria-label="Add to wishlist"'), NEXT_BATCH)
+        self.assertEqual(data['next_offset'], FIRST_BATCH + NEXT_BATCH)
+        last = self.client.get(url, {'offset': FIRST_BATCH + 2 * NEXT_BATCH}).json()
+        self.assertEqual(last['html'].count('aria-label="Add to wishlist"'), 1)
+        self.assertIsNone(last['next_offset'])
+
+        first = self.client.get(url).json()                # a filter change starts over
+        self.assertEqual(first['next_offset'], FIRST_BATCH)
+        self.assertIn(f'data-batch="{NEXT_BATCH}"', first['load_more'])
+
     def test_detail_page_and_jsonld(self):
         resp = self.client.get(self.p.get_absolute_url())
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, '"@type": "Product"')
+
+    def test_detail_gallery_thumbnails(self):
+        from .models import ProductImage
+        for i in range(3):
+            ProductImage.objects.create(product=self.p, image=f'products/pic-{i}.jpg', order=i)
+        resp = self.client.get(self.p.get_absolute_url())
+        self.assertContains(resp, 'aria-label="Show image ', count=3)
+        self.assertContains(resp, 'data-index="2"')
+        self.assertContains(resp, 'class="pd-thumb is-active" data-index="0"')
 
     def test_inactive_product_hidden(self):
         self.p.is_active = False

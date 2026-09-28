@@ -8,19 +8,25 @@ const PD_UUID = '00000000-0000-0000-0000-000000000000';
 const CSRF = document.cookie.split(';').reduce((a,c)=>{const[k,v]=c.trim().split('=');return k==='csrftoken'?decodeURIComponent(v):a;},'');
 
 // ── Gallery Swiper ─────────────────────────────────────────
-const thumbSwiper = new Swiper('.gallery-thumb-swiper', {
-  spaceBetween: 8,
-  slidesPerView: 'auto',
-  freeMode: true,
-  watchSlidesProgress: true,
-});
 const mainSwiper = new Swiper('.main-gallery-swiper', {
   spaceBetween: 0,
   navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
   pagination: { el: '.swiper-pagination', clickable: true },
-  thumbs: { swiper: thumbSwiper },
   keyboard: { enabled: true },
 });
+
+// Thumbnails (.pd-thumb) pick the slide; the active one follows swipes / arrows too.
+const pdThumbs = [...document.querySelectorAll('.pd-thumb')];
+function markThumb(i){
+  pdThumbs.forEach((t, n) => {
+    const on = n === i;
+    t.classList.toggle('is-active', on);
+    if (on) { t.setAttribute('aria-current', 'true'); t.scrollIntoView({block: 'nearest', inline: 'nearest'}); }
+    else t.removeAttribute('aria-current');
+  });
+}
+pdThumbs.forEach(t => t.addEventListener('click', () => mainSwiper.slideTo(+t.dataset.index)));
+mainSwiper.on?.('slideChange', () => markThumb(mainSwiper.activeIndex));
 
 // ── Zoom overlay ───────────────────────────────────────────
 function openZoom(src){

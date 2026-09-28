@@ -47,10 +47,6 @@
       <div class="lp-sticky space-y-4">
 
         <form method="get" id="filter-form" data-ajax-url="{% url 'products:ajax_filter' %}" class="space-y-0">
-          <!-- Preserve sort/view/per_page -->
-          {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
-          {% if request.GET.view %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
-          {% if request.GET.per_page %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}
 
           <div class="card card-pad">
 
@@ -62,7 +58,7 @@
               <a href="{{ clear_url }}" class="btn-link">Clear all</a>
             </div>
 
-            {% include "products/partials/filter_panel.html" %}
+            {% include "products/partials/filter_panel.html" with filter_form_id="desktop" %}
 
             <button type="submit" class="btn btn-primary btn-block mt-4">
               <i class="ti ti-search"></i> Apply Filters
@@ -75,61 +71,18 @@
     <!-- ══ PRODUCT AREA ════════════════════════════════════════ -->
     <div class="flex-1 min-w-0">
 
-      <!-- Toolbar -->
-      <div class="card flex items-center justify-between mb-4 gap-3 flex-wrap px-4 py-3">
-        <p class="text-sm text-muted font-medium">
-          <span id="live-count" class="lp-strong font-bold">{{ total_count }}</span> results
-        </p>
-
-        <div class="flex items-center gap-2 flex-wrap">
-
-          <!-- Mobile filter (wrapper carries lg:hidden — .btn's display would override it) -->
-          <div class="lg:hidden">
-            <button type="button" onclick="openMobileFilter()" class="btn btn-secondary btn-sm">
-              <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters
-              {% if active_chips %}<span class="lp-badge">{{ active_chips|length }}</span>{% endif %}
-            </button>
-          </div>
-
-          <!-- Sort (AJAX) -->
-          <div>
-            <select id="sort-select" onchange="doAjaxFilter()" class="select select-sm" aria-label="Sort products">
-              <option value="-created_at"  {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
-              <option value="price"        {% if sort == 'price' %}selected{% endif %}>Price: Low → High</option>
-              <option value="-price"       {% if sort == '-price' %}selected{% endif %}>Price: High → Low</option>
-              <option value="name"         {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
-              <option value="-name"        {% if sort == '-name' %}selected{% endif %}>Name Z–A</option>
-              <option value="-views_count" {% if sort == '-views_count' %}selected{% endif %}>Most Popular</option>
-            </select>
-          </div>
-
-          <!-- Per page (AJAX) -->
-          <div class="hidden md:block">
-            <select id="perpage-select" onchange="doAjaxFilter()" class="select select-sm" aria-label="Products per page">
-              <option value="12" {% if per_page == 12 %}selected{% endif %}>12 / page</option>
-              <option value="24" {% if per_page == 24 %}selected{% endif %}>24 / page</option>
-              <option value="48" {% if per_page == 48 %}selected{% endif %}>48 / page</option>
-            </select>
-          </div>
-
-          <!-- Grid / List (disabled; setView() in product-filters.js swaps btn-primary/btn-ghost) -->
-          <!-- <div class="lp-segment" role="group" aria-label="View">
-            <button type="button" onclick="setView('grid')" id="btn-grid" aria-label="Grid view"
-                    class="btn btn-icon btn-sm {% if view_mode != 'list' %}btn-primary{% else %}btn-ghost{% endif %}">
-              <i class="ti ti-layout-grid"></i>
-            </button>
-            <button type="button" onclick="setView('list')" id="btn-list" aria-label="List view"
-                    class="btn btn-icon btn-sm {% if view_mode == 'list' %}btn-primary{% else %}btn-ghost{% endif %}">
-              <i class="ti ti-list"></i>
-            </button>
-          </div> -->
-        </div>
+      <!-- Mobile filter + sort drawer (wrapper carries lg:hidden — .btn's display would override it) -->
+      <div class="lg:hidden mb-4">
+        <button type="button" onclick="openMobileFilter()" class="btn btn-secondary btn-sm">
+          <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters &amp; Sort
+          {% if active_chips %}<span class="lp-badge">{{ active_chips|length }}</span>{% endif %}
+        </button>
       </div>
 
       <!-- Products (AJAX target) -->
       <div id="products-section">
         {% include "products/partials/product_grid.html" %}
-        <div id="pagination-section">{% include "products/partials/pagination.html" %}</div>
+        <div id="load-more-section">{% include "products/partials/load_more.html" %}</div>
       </div>
 
     </div>
@@ -150,9 +103,7 @@
     </div>
     <div class="flex-1 p-5 overflow-y-auto">
       <form method="get" class="space-y-0">
-        {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
-        {% if request.GET.view %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
-        {% include "products/partials/filter_panel.html" %}
+        {% include "products/partials/filter_panel.html" with filter_form_id="mobile" %}
         <button type="submit" class="btn btn-primary btn-block mt-5">
           <i class="ti ti-search"></i> Apply Filters
         </button>
@@ -168,6 +119,6 @@
 
 {% block extra_scripts %}
 {# showToast() and CSRF are provided globally by products/partials/product_card_scripts.html #}
-{# All filter/sort/pagination behaviour is shared with the category route: #}
+{# All filter/sort/infinite-scroll behaviour is shared with the category route: #}
 {% include "products/partials/filter_scripts.html" %}
 {% endblock %}

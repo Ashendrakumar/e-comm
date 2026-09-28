@@ -5,10 +5,9 @@
 
   The hosting page must provide:
     #filter-form[data-ajax-url]     desktop filter <form> + the AJAX endpoint
-    #products-section               AJAX target wrapping the grid + #pagination-section
+    #products-section               AJAX target wrapping the grid + #load-more-section
   and may provide:
-    #sort-select #perpage-select    toolbar <select>s calling doAjaxFilter()
-    #live-count #result-count       spans showing the result count
+    #result-count                   span showing the result count
     #chip-wrap                      container for the active filter chips
     #mob-filter #mob-panel          mobile drawer
 {% endcomment %}

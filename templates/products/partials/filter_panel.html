@@ -16,6 +16,10 @@
      current_category currently narrowed-to slug ('' = cat_all_label)
      clear_url        where "Clear all" points
 
+   Also reads `sort` (current ordering) for the Sort select at the top, and
+   `filter_form_id` (include ... with filter_form_id="desktop") to keep that
+   select's id unique when the panel is on the page twice.
+
    Styles live in filter_panel_styles.html, behaviour in filter_scripts.html —
    include each of those ONCE per page. Controls use the shared components
    (label.check + input.checkbox/.radio + .check-count, label.pill, button.pill).
@@ -27,6 +31,19 @@
 {% if filter_config.scope_cat %}
 <input type="hidden" name="scope_cat" value="{{ filter_config.scope_cat }}">
 {% endif %}
+
+<!-- ── Sort ───────────────────────────────────────────────── -->
+<div class="filter-section">
+  <label class="acc-head" for="sort-{{ filter_form_id|default:'panel' }}"><span>Sort by</span></label>
+  <select name="sort" id="sort-{{ filter_form_id|default:'panel' }}" class="select select-sm w-full">
+    <option value="-created_at"  {% if sort == '-created_at' %}selected{% endif %}>Newest First</option>
+    <option value="price"        {% if sort == 'price' %}selected{% endif %}>Price: Low → High</option>
+    <option value="-price"       {% if sort == '-price' %}selected{% endif %}>Price: High → Low</option>
+    <option value="name"         {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
+    <option value="-name"        {% if sort == '-name' %}selected{% endif %}>Name Z–A</option>
+    <option value="-views_count" {% if sort == '-views_count' %}selected{% endif %}>Most Popular</option>
+  </select>
+</div>
 
 <!-- ── Keyword search ─────────────────────────────────────── -->
 <div class="filter-section is-flush">

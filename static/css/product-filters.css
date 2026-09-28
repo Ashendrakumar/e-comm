@@ -1,5 +1,5 @@
 /* Product listing pages: filter panel, toolbar, active-chip row, mobile drawer,
-   list-mode and skeleton loaders. Shared by the all-products route and the
+   and skeleton loaders. Shared by the all-products route and the
    category route — include from a page's extra_head block via
    products/partials/filter_panel_styles.html.
 
@@ -57,8 +57,6 @@
 /* Small counter on the mobile "Filters" button */
 .lp-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;
   font-size:10px;font-weight:700;line-height:1;border-radius:var(--radius-full);background:var(--color-primary);color:var(--color-on-primary);}
-/* Grid / list segmented toggle (buttons are .btn .btn-icon .btn-sm; setView swaps btn-primary/btn-ghost) */
-.lp-segment{display:inline-flex;gap:2px;padding:2px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-bg);}
 
 /* ── Mobile drawer ────────────────────────────────────────── */
 .lp-backdrop{background:var(--color-overlay);backdrop-filter:blur(4px);}
@@ -89,14 +87,6 @@
 .pill.filter-chip i{font-size:11px;opacity:.8;}
 .pill.filter-chip:hover i{opacity:1;}
 
-/* ── List mode ────────────────────────────────────────────── */
-/* The one place a card is deliberately NOT its fixed size: a single-column
-   list row. Height stays constant, width follows the column. */
-#product-grid.list-mode{display:flex!important;flex-direction:column!important;gap:10px!important;}
-#product-grid.list-mode .product-card{flex-direction:row!important;width:100%!important;flex:1 1 auto!important;height:150px!important;}
-#product-grid.list-mode .product-card .card-media{width:150px!important;height:150px!important;flex:0 0 150px!important;}
-#product-grid.list-mode .product-card .pc-rail{display:none!important;}
-#product-grid.list-mode .product-card .card-info{flex:1!important;height:auto!important;}
 
 /* ── Skeleton loader (injected by showSkeleton()) ─────────── */
 .skeleton{background:linear-gradient(90deg,var(--color-bg-muted) 25%,var(--color-border) 50%,var(--color-bg-muted) 75%);

@@ -1,5 +1,5 @@
-/* Site-wide behaviour: theme toggle, toasts, CSRF helper, mobile menu and
-   the Swiper carousels.
+/* Site-wide behaviour: theme toggle, toasts, CSRF helper, mobile menu,
+   the Swiper carousels and the back-to-top button.
    The INITIAL theme resolution deliberately stays inline in <head> (see
    base.html) — moving it here would cost a request before first paint and
    bring back the light->dark flash. */
@@ -57,3 +57,18 @@ document.addEventListener('keydown',e=>{
   if(e.key!=='Escape') return;
   document.querySelectorAll('details.dropdown[open]').forEach(d=>{ d.removeAttribute('open'); d.querySelector('summary')?.focus(); });
 });
+
+// Back to top (partials/footer.html: #to-top) — appears after scrolling one screen down
+function scrollToTop(){
+  const reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
+  document.getElementById('main-content')?.focus({preventScroll:true});   // keyboard users land at the top too
+}
+(function(){
+  const btn=document.getElementById('to-top');
+  if(!btn) return;
+  let ticking=false;
+  const update=()=>{ btn.classList.toggle('show',window.scrollY>window.innerHeight*0.8); ticking=false; };
+  window.addEventListener('scroll',()=>{ if(!ticking){ ticking=true; requestAnimationFrame(update); } },{passive:true});
+  update();
+})();

@@ -2,7 +2,6 @@ import uuid
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.core.paginator import Paginator
 from django.db.models import Q, Min, Max, Avg, Count
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -23,15 +22,27 @@ from core.notifications import notify_staff
 
 
 # ─── filter helpers ───────────────────────────────────────────────────────────
-PER_PAGE_CHOICES = (12, 24, 48)
+# Infinite scroll: the page opens with FIRST_BATCH products, and every time the
+# visitor scrolls to the end of the grid, product-filters.js asks ajax_filter for
+# the next NEXT_BATCH, starting at `offset`.
+FIRST_BATCH = 9
+NEXT_BATCH  = 6
 
 
-def _per_page(params):
+def _batch(qs, params):
+    """Slice one infinite-scroll batch out of `qs`.
+
+    Returns (products, total, next_offset); next_offset is None when nothing is left.
+    """
     try:
-        value = int(params.get('per_page', 12))
+        offset = max(int(params.get('offset', 0)), 0)
     except (TypeError, ValueError):
-        return 12
-    return value if value in PER_PAGE_CHOICES else 12
+        offset = 0
+    size     = FIRST_BATCH if offset == 0 else NEXT_BATCH
+    total    = qs.count()
+    products = list(qs[offset:offset + size])
+    end      = offset + len(products)
+    return products, total, (end if end < total else None)
 
 
 def _apply_filters(qs, params):
@@ -176,17 +187,15 @@ def _active_chips(params, brands_qs):
 
 # ─── product list ─────────────────────────────────────────────────────────────
 def product_list(request):
-    per_page = _per_page(request.GET)
     base_qs  = Product.objects.filter(is_active=True).select_related('category', 'brand').prefetch_related('images', 'reviews')
     qs, sort = _apply_filters(base_qs, request.GET)
     ctx      = _sidebar_context(base_qs, request.GET)
     config   = _filter_config(request.GET)
     chips    = _active_chips(request.GET, ctx['sidebar_brands'])
-    paginator = Paginator(qs, per_page)
-    page_obj  = paginator.get_page(request.GET.get('page', 1))
-    ctx.update(products=page_obj, sort=sort, q=request.GET.get('q', ''),
-               total_count=paginator.count, active_chips=chips, per_page=per_page,
-               view_mode=request.GET.get('view', 'grid'), page_title='All Products',
+    products, total, next_offset = _batch(qs, {})       # a full page load always starts at the top
+    ctx.update(products=products, sort=sort, q=request.GET.get('q', ''),
+               total_count=total, next_offset=next_offset, next_batch=NEXT_BATCH, active_chips=chips,
+               page_title='All Products',
                filter_config=config, clear_url=config['clear_url'],
                meta_description=f'Browse premium electronics at {get_site_name()}.')
     return render(request, 'products/list.html', ctx)
@@ -199,13 +208,18 @@ def ajax_filter(request):
     The panel sends `scope_cat` when the page is pinned to a category, so no
     per-route endpoint is needed: _apply_filters resolves the scope, and the
     chips / "Clear all" link follow the same scope.
+
+    offset=0 (a filter change) returns the whole grid plus chips; offset>0
+    (infinite scroll) returns only the next batch of cards, to be appended.
     """
-    per_page = _per_page(request.GET)
     base_qs  = Product.objects.filter(is_active=True).select_related('category', 'brand').prefetch_related('images', 'reviews')
     qs, _    = _apply_filters(base_qs, request.GET)
-    paginator = Paginator(qs, per_page)
-    page_obj  = paginator.get_page(request.GET.get('page', 1))
-    view_mode = request.GET.get('view', 'grid')
+    products, total, next_offset = _batch(qs, request.GET)
+
+    if request.GET.get('offset', '0') not in ('', '0'):
+        cards_html = ''.join(render_to_string('products/partials/product_card.html', {'product': p}, request=request)
+                             for p in products)
+        return JsonResponse({'html': cards_html, 'append': True, 'count': total, 'next_offset': next_offset})
 
     scope_slug = request.GET.get('scope_cat', '').strip()
     scope_cat  = Category.objects.filter(slug=scope_slug, is_active=True).first() if scope_slug else None
@@ -214,13 +228,13 @@ def ajax_filter(request):
     chips = _active_chips(request.GET, Brand.objects.filter(is_active=True))
 
     grid_html  = render_to_string('products/partials/product_grid.html',
-                                  {'products': page_obj, 'view_mode': view_mode, 'clear_url': clear_url}, request=request)
-    pag_html   = render_to_string('products/partials/pagination.html',
-                                  {'products': page_obj, 'request': request}, request=request)
+                                  {'products': products, 'clear_url': clear_url}, request=request)
+    more_html  = render_to_string('products/partials/load_more.html',
+                                  {'next_offset': next_offset, 'next_batch': NEXT_BATCH, 'total_count': total}, request=request)
     chips_html = render_to_string('products/partials/filter_chips.html',
                                  {'active_chips': chips, 'clear_url': clear_url}, request=request)
-    return JsonResponse({'html': grid_html, 'pagination': pag_html, 'chips': chips_html,
-                         'count': paginator.count, 'num_pages': paginator.num_pages, 'page': page_obj.number})
+    return JsonResponse({'html': grid_html, 'load_more': more_html, 'chips': chips_html,
+                         'count': total, 'next_offset': next_offset})
 
 
 # ─── quick view ───────────────────────────────────────────────────────────────
@@ -318,7 +332,6 @@ def compare_products(request):
 def category_detail(request, slug):
     category  = get_object_or_404(Category, slug=slug, is_active=True)
     all_ids   = [category.pk] + [c.pk for c in category.get_all_descendants()]
-    per_page  = _per_page(request.GET)
     base_qs   = (Product.objects.filter(category_id__in=all_ids, is_active=True)
                  .select_related('category', 'brand').prefetch_related('images', 'reviews'))
     qs, sort  = _apply_filters(base_qs, request.GET)
@@ -326,21 +339,20 @@ def category_detail(request, slug):
 
     ctx    = _sidebar_context(base_qs, request.GET, brands_qs=brands)
     config = _filter_config(request.GET, category=category)
-    paginator = Paginator(qs, per_page)
-    page_obj  = paginator.get_page(request.GET.get('page', 1))
+    products, total, next_offset = _batch(qs, {})
 
     ctx.update({
         'category': category,
-        'products': page_obj,
+        'products': products,
         'subcategories': category.children.filter(is_active=True),
         'siblings': category.get_siblings(),
         'breadcrumbs': category.get_breadcrumbs(),
         'brands': brands,
         'sort': sort,
-        'total_count': paginator.count,
+        'total_count': total,
+        'next_offset': next_offset,
+        'next_batch': NEXT_BATCH,
         'active_chips': _active_chips(request.GET, brands),
-        'per_page': per_page,
-        'view_mode': request.GET.get('view', 'grid'),
         'filter_config': config,
         'clear_url': config['clear_url'],
         'page_title': category.name,

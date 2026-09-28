@@ -5,7 +5,7 @@ module.exports = {
     './templates/**/*.html',
     './*/templates/**/*.html',
     // Behaviour was extracted out of the templates into these files, and some of
-    // it builds class strings at runtime (setView, updateCompareUI, …). Without
+    // it builds class strings at runtime (updateCompareUI, …). Without
     // this glob those utilities are purged from the bundle and the styles break.
     './static/js/**/*.js',
   ],

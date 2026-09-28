@@ -18,10 +18,30 @@
   @media (max-width:640px){.site-logo-img{max-width:68px;max-height:30px;}}
   .site-logo-mark{background:linear-gradient(135deg,var(--brand-500),var(--brand-700));color:var(--color-on-primary);border-radius:var(--radius-md);box-shadow:var(--shadow-xs);transition:box-shadow var(--duration) var(--ease);}
   .group:hover .site-logo-mark{box-shadow:0 6px 16px -4px var(--color-focus-ring);}
-  .hdr-search .input{border-radius:var(--radius-full);background:var(--color-bg-subtle);}
-  .hdr-search .input:focus{background:var(--color-bg);}
-  .hdr-msearch .input{padding-right:48px;}
-  .hdr-msearch .btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:var(--color-primary-text);}
+  /* Search: a muted pill that turns into a regular field on focus, with the
+     submit button inside on the right. Same height as the action buttons. */
+  .hdr-search .input{height:var(--hdr-search-h);min-height:0;padding:0 44px 0 36px;font-size:var(--text-sm);border-radius:var(--radius-full);
+    background:var(--color-bg-muted);border-color:transparent;-webkit-appearance:none;appearance:none;
+    transition:background var(--duration) var(--ease),border-color var(--duration) var(--ease),box-shadow var(--duration) var(--ease);}
+  .hdr-search .input:hover{border-color:var(--color-border-strong);}
+  .hdr-search .input:focus{background:var(--color-bg);border-color:var(--color-primary);box-shadow:var(--shadow-focus);}
+  .hdr-search .input::-webkit-search-cancel-button{-webkit-appearance:none;}
+  .hdr-search .input-group > i{left:13px;font-size:16px;color:var(--color-text-muted);}
+  .hdr-search .input-group:focus-within > i{color:var(--color-primary-text);}
+  .btn.hdr-search-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;}
+  .btn.hdr-search-btn i{font-size:15px;}
+  .hdr-search-btn:active{transform:translateY(-50%) scale(.96);}
+  .hdr-msearch .input{padding-left:16px;height:var(--hdr-h);}
+
+  /* Right-side actions: one outlined, round style for every button */
+  .site-header,#mobile-menu{--hdr-h:42px;--hdr-search-h:36px;}
+  .hdr-action{height:var(--hdr-h);min-width:var(--hdr-h);padding:0 12px;gap:8px;border-radius:var(--radius-full);
+    background:var(--color-bg);border:1.5px solid var(--color-border);color:var(--color-text-soft);font-size:var(--text-sm);}
+  .hdr-action.btn-icon{width:var(--hdr-h);padding:0;}
+  .hdr-action:hover{background:var(--color-primary-soft);border-color:var(--color-primary);color:var(--color-primary-text);}
+  .hdr-action:focus-visible{outline:none;box-shadow:var(--shadow-focus);border-color:var(--color-primary);}
+  .hdr-action i{font-size:19px;}
+  @media (min-width:1024px){.hdr-action.hdr-wish{padding:0 16px;}}
 
   /* Desktop nav */
   .nav-bar{border-top:1px solid var(--color-border-subtle);}
@@ -87,33 +107,27 @@
       </a>
 
       <!-- Search -->
-      <form action="{% url 'products:list' %}" method="get" class="hdr-search flex-1 max-w-xl hidden md:flex" role="search">
+      <form action="{% url 'products:list' %}" method="get" class="hdr-search flex-1 max-w-md hidden md:flex" role="search">
         <div class="input-group w-full">
           <i class="ti ti-search" aria-hidden="true"></i>
           <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search products, brands, categories..."
-            aria-label="Search products" class="input">
+            aria-label="Search products" class="input" autocomplete="off">
+          <button type="submit" class="btn btn-primary btn-icon btn-sm btn-round hdr-search-btn" aria-label="Search">
+            <i class="ti ti-arrow-right" aria-hidden="true"></i>
+          </button>
         </div>
       </form>
 
       <!-- Right actions -->
       <div class="flex items-center gap-1 md:gap-2 ml-auto">
         <button type="button" onclick="toggleDark()" aria-label="Toggle dark mode"
-          class="btn btn-ghost btn-icon btn-round" title="Toggle theme">
+          class="btn btn-icon hdr-action" title="Toggle theme">
           <i class="ti ti-sun dark:hidden" aria-hidden="true"></i>
           <i class="ti ti-moon hidden dark:block" aria-hidden="true"></i>
         </button>
-        {% if site_settings.whatsapp %}
-        <div class="hidden md:block">
-          <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener"
-            class="btn btn-sm btn-round btn-whatsapp" aria-label="Chat on WhatsApp">
-            <i class="ti ti-brand-whatsapp"></i>
-            <span class="hidden lg:inline">WhatsApp</span>
-          </a>
-        </div>
-        {% endif %}
         {% comment %}Wishlist lives in the visitor's browser (no account needed); product-card.js
            fills the badge and appends the saved ids to the link. Staff use /admin/ directly.{% endcomment %}
-        <a href="{% url 'products:wishlist' %}" class="btn btn-ghost btn-round hdr-wish" data-wishlist-link
+        <a href="{% url 'products:wishlist' %}" class="btn hdr-action hdr-wish" data-wishlist-link
            aria-label="Wishlist">
           <i class="ti ti-heart" aria-hidden="true"></i>
           <span class="hidden lg:inline">Wishlist</span>
@@ -121,7 +135,7 @@
         </a>
         <div class="lg:hidden">
           <button type="button" onclick="toggleMobileMenu()" aria-label="Open menu" aria-controls="mobile-menu" aria-expanded="false"
-            id="mobile-menu-toggle" class="btn btn-ghost btn-icon btn-round">
+            id="mobile-menu-toggle" class="btn btn-icon hdr-action">
             <i class="ti ti-menu-2" aria-hidden="true"></i>
           </button>
         </div>
@@ -255,8 +269,8 @@
     </div>
     <form action="{% url 'products:list' %}" method="get" class="hdr-search hdr-msearch p-4 border-b m-rule" role="search">
       <div class="relative">
-        <input type="search" name="q" placeholder="Search products..." aria-label="Search products" class="input">
-        <button type="submit" class="btn btn-ghost btn-icon btn-sm btn-round" aria-label="Search"><i class="ti ti-search"></i></button>
+        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search products..." aria-label="Search products" class="input" autocomplete="off">
+        <button type="submit" class="btn btn-primary btn-icon btn-sm btn-round hdr-search-btn" aria-label="Search"><i class="ti ti-search" aria-hidden="true"></i></button>
       </div>
     </form>
     <nav class="flex-1 py-2" aria-label="Mobile">

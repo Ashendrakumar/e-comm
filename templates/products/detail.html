@@ -51,13 +51,13 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-14">
 
     <!-- ── LEFT: Image Gallery ── -->
-    <div>
+    <div class="pd-gallery w-full max-w-xl mx-auto lg:mx-0 lg:max-w-none">
       <!-- Main Swiper -->
       {% if product.images.count > 0 %}
       <div class="swiper main-gallery-swiper card mb-3 overflow-hidden">
         <div class="swiper-wrapper">
           {% for img in product.images.all %}
-          <div class="swiper-slide flex items-center justify-center p-4" style="height:420px;">
+          <div class="swiper-slide pd-slide">
             <img src="{{ img.image.url }}"
                  alt="{{ img.alt_text|default:product.name }}"
                  class="max-w-full max-h-full object-contain cursor-zoom-in select-none"
@@ -72,22 +72,21 @@
         <div class="swiper-button-next"></div>
         <div class="swiper-pagination"></div>
       </div>
-      <!-- Thumbnail Swiper -->
+      <!-- Thumbnails: click one to show it in the main viewer (product-detail.js) -->
       {% if product.images.count > 1 %}
-      <div class="swiper gallery-thumb-swiper px-1">
-        <div class="swiper-wrapper">
-          {% for img in product.images.all %}
-          <div class="swiper-slide pd-card overflow-hidden p-1.5" style="width:72px;height:72px;">
-            <img src="{{ img.image.url }}" alt="" class="w-full h-full object-contain" loading="lazy" decoding="async">
-          </div>
-          {% endfor %}
-        </div>
+      <div class="pd-thumbs" role="group" aria-label="Product images">
+        {% for img in product.images.all %}
+        <button type="button" class="pd-thumb{% if forloop.first %} is-active{% endif %}" data-index="{{ forloop.counter0 }}"
+                aria-label="Show image {{ forloop.counter }}"{% if forloop.first %} aria-current="true"{% endif %}>
+          <img src="{{ img.image.url }}" alt="" loading="lazy" decoding="async">
+        </button>
+        {% endfor %}
       </div>
       {% endif %}
 
       {% else %}
       <!-- No images placeholder -->
-      <div class="card flex items-center justify-center" style="height:420px;">
+      <div class="card flex items-center justify-center pd-slide">
         <div class="text-center pd-faint">
           <i class="ti ti-photo-off text-7xl block mb-3"></i>
           <p class="text-sm">No images available</p>
@@ -250,13 +249,13 @@
 
       <!-- CTA Buttons -->
       <div class="pd-ctas pt-1">
-        <button type="button" onclick="openInquiryModal()" class="btn btn-primary btn-lg">
+        <button type="button" onclick="openInquiryModal()" class="btn btn-primary">
           <i class="ti ti-message-2"></i> Send Enquiry
         </button>
         {% if site_settings.whatsapp %}
         <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi!%20I'm%20interested%20in%20*{{ product.name|urlencode }}*%20priced%20at%20₹{{ product.effective_price|floatformat:0 }}.%20Please%20provide%20more%20details."
            target="_blank" rel="noopener"
-           class="btn btn-lg btn-whatsapp">
+           class="btn btn-whatsapp">
           <i class="ti ti-brand-whatsapp"></i> WhatsApp Us
         </a>
         {% endif %}
@@ -269,7 +268,7 @@
           </button>
           <button type="button" onclick="toggleCompare('{{ product.pk }}','{{ product.name|escapejs }}')"
                   class="compare-btn btn btn-secondary btn-icon pd-icon-btn"
-                  data-id="{{ product.pk }}" title="Compare">
+                  data-id="{{ product.pk }}" title="Compare" aria-label="Add to compare">
             <i class="ti ti-arrows-diff"></i>
           </button>
         </div>

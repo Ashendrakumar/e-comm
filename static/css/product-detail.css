@@ -1,9 +1,23 @@
 /* Product detail: gallery, sticky buy box, tabs, review bars and rails.
    Colours come from tokens.css only — tokens flip for .dark, so no dark overrides. */
 
-/* ── Gallery Swiper ── */
-.gallery-thumb-swiper .swiper-slide{opacity:.55;cursor:pointer;transition:opacity .2s;}
-.gallery-thumb-swiper .swiper-slide-thumb-active{opacity:1;border:2px solid var(--color-primary);border-radius:var(--radius-md);}
+/* ── Gallery ── */
+/* Swiper's own CSS sets .swiper-slide{display:block}; re-centre the image in every slide. */
+.main-gallery-swiper .swiper-slide.pd-slide,.pd-slide{display:flex;align-items:center;justify-content:center;height:420px;padding:16px;}
+.pd-slide img{max-width:100%;max-height:100%;margin:auto;object-fit:contain;}
+@media (max-width:640px){.main-gallery-swiper .swiper-slide.pd-slide,.pd-slide{height:320px;}}
+
+/* Thumbnail strip — centred under the main image, scrolls sideways when it overflows */
+.pd-thumbs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:thin;}
+.pd-thumbs::before,.pd-thumbs::after{content:'';margin:auto;}   /* centres the row, still scrolls from the first thumb */
+.pd-thumb{flex:0 0 72px;width:72px;height:72px;padding:6px;cursor:pointer;
+  background:var(--color-bg);border:2px solid var(--color-border);border-radius:var(--radius-md);opacity:.6;
+  transition:opacity var(--duration) var(--ease),border-color var(--duration) var(--ease);}
+.pd-thumb img{width:100%;height:100%;object-fit:contain;}
+.pd-thumb:hover{opacity:1;border-color:var(--color-border-strong);}
+.pd-thumb.is-active{opacity:1;border-color:var(--color-primary);}
+.pd-thumb:focus-visible{outline:none;box-shadow:var(--shadow-focus);}
+@media (max-width:640px){.pd-thumb{flex-basis:60px;width:60px;height:60px;}}
 .main-gallery-swiper .swiper-button-prev,
 .main-gallery-swiper .swiper-button-next{
   width:36px;height:36px;border-radius:var(--radius-full);
@@ -56,14 +70,15 @@
 .rv-scroll{overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
 .rv-scroll::-webkit-scrollbar{display:none;}
 
-/* ── Buy box: wishlist / compare square actions (btn btn-secondary btn-icon btn-lg) ── */
-/* CTA row: the two main buttons share the width and wrap (with the icon pair) when the column is narrow. */
-.pd-ctas{display:flex;flex-wrap:wrap;gap:12px;}
-.pd-ctas > .btn-lg{flex:1 1 170px;}
-.pd-ctas-icons{display:flex;gap:12px;flex:0 0 auto;}
+/* ── Buy box: wishlist / compare square actions (btn btn-secondary btn-icon) ── */
+/* CTA row: every button is the normal button height (--control-h) and radius. The two main
+   buttons share the width; the icon pair wraps below them when the column is narrow. */
+.pd-ctas{display:flex;flex-wrap:wrap;gap:10px;}
+.pd-ctas > .btn{flex:1 1 150px;}
+.pd-ctas-icons{display:flex;gap:10px;flex:0 0 auto;}
 @media (max-width:420px){.pd-ctas-icons{flex:1 1 100%;}.pd-ctas-icons .pd-icon-btn{flex:1;width:auto;}}
-.pd-icon-btn{width:56px;height:56px;flex-shrink:0;border-radius:var(--radius-lg);}
-.pd-icon-btn i{font-size:20px;}
+.pd-icon-btn{width:var(--control-h);height:var(--control-h);flex-shrink:0;}
+.pd-icon-btn i{font-size:18px;}
 .pd-wishlist:hover,.pd-wishlist.is-active{color:var(--color-danger);border-color:var(--color-danger);background:var(--color-danger-soft);}
 /* product-card.js updateCompareUI() toggles .is-active + aria-pressed on every .compare-btn */
 .pd-icon-btn.compare-btn:hover{color:var(--color-primary-text);border-color:var(--color-primary);background:var(--color-primary-soft);}
@@ -72,9 +87,10 @@
 /* WhatsApp CTA uses .btn-whatsapp, defined in components.css. */
 
 /* Share buttons (brand icons keep their network colour on hover only) */
-.share-btn{color:var(--color-text-muted);}
-.share-btn:hover{color:var(--color-primary-text);background:var(--color-primary-soft);}
-.share-btn.is-whatsapp:hover{color:var(--green-600);background:var(--color-success-soft);}
+.btn.share-btn{width:36px;height:36px;border-radius:var(--radius-full);border:1px solid var(--color-border);color:var(--color-text-muted);}
+.btn.share-btn i{font-size:17px;}
+.btn.share-btn:hover{color:var(--color-primary-text);background:var(--color-primary-soft);border-color:var(--color-primary);}
+.btn.share-btn.is-whatsapp:hover{color:var(--green-600);background:var(--color-success-soft);border-color:var(--green-500);}
 
 /* "Was this helpful?" — markHelpful() adds .is-voted */
 .helpful-btn.is-voted{background:var(--color-primary-soft);color:var(--color-primary-text);border-color:var(--color-primary);opacity:1;}
