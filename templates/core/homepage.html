@@ -550,33 +550,33 @@
           </div>
         </div>
         <form method="post" action="{% url 'core:contact_submit' %}" id="contact-form" class="space-y-4"
-              data-ajax-form data-msg-target="#home-contact-msg"
+              data-ajax-form data-validate data-msg-target="#home-contact-msg"
               data-msg-ok-class="text-sm text-center font-medium mt-2 text-green-600"
               data-msg-err-class="text-sm text-center font-medium mt-2 text-red-600"
-              data-error-text="Please fill all required fields."
+              data-error-text="Please fix the highlighted fields."
               data-loading-text="&lt;i class=&quot;ti ti-loader animate-spin&quot;&gt;&lt;/i&gt; Sending...">
-          {% csrf_token %}
+          {% csrf_token %}{% include "partials/honeypot.html" with hp_id="home-contact" %}
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="field">
               <label class="label" for="home-contact-name">Your Name <span class="req">*</span></label>
-              <input type="text" id="home-contact-name" name="name" required placeholder="John Doe" class="input">
+              <input type="text" id="home-contact-name" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="John Doe" class="input">
             </div>
             <div class="field">
               <label class="label" for="home-contact-phone">Phone</label>
-              <input type="tel" id="home-contact-phone" name="phone" placeholder="+91 98765 43210" class="input">
+              <input type="tel" id="home-contact-phone" name="phone" maxlength="20" autocomplete="tel" inputmode="tel" placeholder="+91 98765 43210" class="input">
             </div>
           </div>
           <div class="field">
             <label class="label" for="home-contact-email">Email Address <span class="req">*</span></label>
-            <input type="email" id="home-contact-email" name="email" required placeholder="you@example.com" class="input">
+            <input type="email" id="home-contact-email" name="email" required maxlength="254" autocomplete="email" placeholder="you@example.com" class="input">
           </div>
           <div class="field">
             <label class="label" for="home-contact-subject">Subject <span class="req">*</span></label>
-            <input type="text" id="home-contact-subject" name="subject" required placeholder="How can we help?" class="input">
+            <input type="text" id="home-contact-subject" name="subject" required minlength="2" maxlength="200" placeholder="How can we help?" class="input">
           </div>
           <div class="field">
             <label class="label" for="home-contact-message">Message <span class="req">*</span></label>
-            <textarea id="home-contact-message" name="message" required rows="4" placeholder="Tell us more about your requirements..." class="textarea"></textarea>
+            <textarea id="home-contact-message" name="message" required minlength="10" maxlength="2000" rows="4" placeholder="Tell us more about your requirements..." class="textarea"></textarea>
           </div>
           <input type="hidden" name="inquiry_type" value="general">
           <button type="submit" class="btn btn-primary btn-lg btn-block">
@@ -592,5 +592,4 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'js/ajax-form.js' %}"></script>
 {% endblock %}

@@ -16,4 +16,4 @@
 .mega-trigger:hover .mega-menu{display:block}
 .swiper-pagination-bullet-active{background:var(--color-primary)!important}
 .hero-swiper .swiper-button-next,.hero-swiper .swiper-button-prev{color:var(--white);background:rgba(0,0,0,.3);width:44px;height:44px;border-radius:50%;margin-top:-22px}
-.hero-swiper .swiper-button-next::after,.hero-swiper .swiper-button-prev::after{font-size:16px;font-weight:700}
+.hero-swiper .swiper-navigation-icon{width:auto;height:16px}   /* Swiper 12 arrows are an injected SVG */

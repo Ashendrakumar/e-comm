@@ -3,6 +3,7 @@ from django.urls import reverse
 from decimal import Decimal
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from core.admin_mixins import ExportCsvMixin
 from core.importer import (SpreadsheetImportMixin, parse_bool, parse_decimal,
                            parse_int, clean)
@@ -481,7 +482,7 @@ class ProductAdmin(SpreadsheetImportMixin, admin.ModelAdmin):
 
     def _stock(self, obj):
         if not obj.is_in_stock:
-            return format_html('<span style="color:#dc2626;font-weight:600;">Out of Stock</span>')
+            return mark_safe('<span style="color:#dc2626;font-weight:600;">Out of Stock</span>')
         if obj.is_low_stock:
             return format_html('<span style="color:#f59e0b;font-weight:600;">Low ({})</span>', obj.stock)
         return format_html('<span style="color:#16a34a;font-weight:600;">{}</span>', obj.stock)

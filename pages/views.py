@@ -7,6 +7,7 @@ from .models import Service, ServingArea, FlatPage, FAQCategory, GeneralFAQ
 from .forms import ServiceInquiryForm
 from core.branding import get_site_name
 from core.notifications import notify_staff
+from core.ratelimit import protect_form
 
 
 # ── Services ────────────────────────────────────────────────────────
@@ -34,6 +35,7 @@ def service_detail(request, slug):
 
 
 @require_POST
+@protect_form('service-inquiry')
 def service_inquiry(request, slug):
     service = get_object_or_404(Service, slug=slug, is_active=True)
     form    = ServiceInquiryForm(request.POST)

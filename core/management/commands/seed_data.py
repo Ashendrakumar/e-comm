@@ -12,7 +12,16 @@ from blog.models import BlogCategory, BlogPost
 class Command(BaseCommand):
     help = 'Seed TechZone with sample data'
 
-    def handle(self, *args, **kwargs):
+    def add_arguments(self, parser):
+        parser.add_argument('--force', action='store_true',
+                            help='Allow running with DEBUG off (e.g. to seed a staging server).')
+
+    def handle(self, *args, force=False, **kwargs):
+        from django.conf import settings
+        from django.core.management.base import CommandError
+        if not settings.DEBUG and not force:
+            raise CommandError('seed_data fills the database with sample content and an admin/admin123 '
+                               'login — it is for development. Pass --force to run it anyway.')
         self.stdout.write(self.style.HTTP_INFO('\n🌱  Seeding TechZone...\n'))
 
         # ── Site Settings ──────────────────────────────────────
@@ -587,7 +596,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('  ✓ Blog categories + posts'))
 
         # ── Admin User ──────────────────────────────────────────
-        if not User.objects.filter(username='admin').exists():
+        # The well-known dev login is never created on a non-DEBUG server, even with --force.
+        if not settings.DEBUG:
+            self.stdout.write('  ℹ  Skipped admin/admin123 (DEBUG is off) — use createsuperuser')
+        elif not User.objects.filter(username='admin').exists():
             User.objects.create_superuser('admin','admin@techzone.com','admin123')
             self.stdout.write(self.style.SUCCESS('  ✓ Admin user  →  admin / admin123'))
         else:

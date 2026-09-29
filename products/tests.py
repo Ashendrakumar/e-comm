@@ -86,6 +86,19 @@ class ProductViewTests(TestCase):
         self.assertContains(resp, 'data-index="2"')
         self.assertContains(resp, 'class="pd-thumb is-active" data-index="0"')
 
+    def test_empty_state_matches_the_situation(self):
+        resp = self.client.get(reverse('products:list'), {'q': 'nothing<b>'})
+        self.assertContains(resp, 'No results for &ldquo;nothing&lt;b&gt;&rdquo;')
+        resp = self.client.get(reverse('products:list'), {'min_price': '999999'})
+        self.assertContains(resp, 'No products match these filters')
+        empty = Category.objects.create(name='Drones')
+        resp = self.client.get(empty.get_absolute_url())
+        self.assertContains(resp, 'Nothing in Drones yet')
+        self.assertNotContains(resp, 'Clear all filters')
+        data = self.client.get(reverse('products:ajax_filter'), {'scope_cat': empty.slug, 'in_stock': '1'}).json()
+        self.assertIn('No products match these filters', data['html'])
+        self.assertIn("removeFilterChip('in_stock'", data['html'])
+
     def test_inactive_product_hidden(self):
         self.p.is_active = False
         self.p.save()

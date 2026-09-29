@@ -73,15 +73,16 @@
           <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Request This Service</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">Fill in your details and we'll get back within 24 hours.</p>
           <form id="service-inquiry-form" method="post" action="{% url 'pages:service_inquiry' service.slug %}" class="space-y-3"
-                data-ajax-form data-msg-target="#inquiry-msg"
+                data-ajax-form data-validate data-msg-target="#inquiry-msg"
                 data-msg-ok-class="text-sm text-center text-green-600"
                 data-error-text="Please check your details and try again.">
-            {% csrf_token %}
-            {{ inquiry_form.name }}
-            {{ inquiry_form.email }}
-            {{ inquiry_form.phone }}
-            {{ inquiry_form.city }}
-            {{ inquiry_form.message }}
+            {% csrf_token %}{% include "partials/honeypot.html" with hp_id="service" %}
+            {% for field in inquiry_form %}
+            <div class="field">
+              <label class="sr-only" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            </div>
+            {% endfor %}
             <button type="submit" class="btn btn-primary btn-block"><i class="ti ti-send"></i> Send Inquiry</button>
             <p id="inquiry-msg" class="hidden text-sm text-center"></p>
           </form>
@@ -124,5 +125,4 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'js/ajax-form.js' %}"></script>
 {% endblock %}

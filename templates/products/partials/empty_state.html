@@ -1,14 +1,69 @@
-<div class="text-center py-20 col-span-full" id="empty-state">
-  <div class="pc-empty-ico w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-5">
-    <i class="ti ti-search-off text-4xl" aria-hidden="true"></i>
+{% comment %}
+Empty product grid. Rendered on page load and by ajax_filter, so it only relies on
+`clear_url`, `q`, `active_chips` and `category` (all optional). Three cases:
+a search with no hits, filters with no hits, or a category/catalog with no products.
+Chips reuse removeFilterChip() from the filter panel. Styles: .es-* in product-card.css.
+{% endcomment %}
+{% firstof q request.GET.q as search %}
+<div class="es col-span-full" id="empty-state" role="status">
+  <div class="es-art" aria-hidden="true">
+    <span class="es-orbit"></span>
+    <span class="es-dot es-dot-a"></span><span class="es-dot es-dot-b"></span><span class="es-dot es-dot-c"></span>
+    <div class="es-ico">
+      <i class="ti {% if search %}ti-search-off{% elif active_chips %}ti-filter-off{% else %}ti-package-off{% endif %}"></i>
+    </div>
   </div>
-  <h3 class="qv-title text-xl font-bold mb-2">No Products Found</h3>
-  <p class="text-muted mb-6 max-w-sm mx-auto">
-    Try adjusting your filters or search terms to find what you're looking for.
-  </p>
-  <div class="flex items-center justify-center gap-3 flex-wrap">
-    <a href="{% if clear_url %}{{ clear_url }}{% else %}{% url 'products:list' %}{% endif %}"
-       class="btn btn-primary">Clear All Filters</a>
-    <a href="{% url 'products:categories' %}" class="btn btn-outline">Browse Categories</a>
+
+  {% if search %}
+    <h3 class="es-title">No results for &ldquo;{{ search }}&rdquo;</h3>
+    <p class="es-text">Check the spelling, try a shorter or more general term, or remove a filter below.</p>
+  {% elif active_chips %}
+    <h3 class="es-title">No products match these filters</h3>
+    <p class="es-text">Your combination is a little too specific. Remove a filter or two to see more products.</p>
+  {% elif category %}
+    <h3 class="es-title">Nothing in {{ category.name }} yet</h3>
+    <p class="es-text">We&rsquo;re stocking up this category. Check back soon, or ask us &mdash; we can often source it for you.</p>
+  {% else %}
+    <h3 class="es-title">No products yet</h3>
+    <p class="es-text">New stock is on its way. Check back soon, or ask us about the product you need.</p>
+  {% endif %}
+
+  {% if active_chips %}
+  <div class="es-chips">
+    <span class="es-chips-label">Active filters</span>
+    {% for chip in active_chips %}
+    <button type="button" class="pill active filter-chip"
+            onclick="removeFilterChip('{{ chip.key|escapejs }}','{{ chip.val|escapejs }}')"
+            aria-label="Remove filter: {{ chip.label }}">
+      {{ chip.label }} <i class="ti ti-x" aria-hidden="true"></i>
+    </button>
+    {% endfor %}
   </div>
+  {% endif %}
+
+  <div class="es-actions">
+    {% if search or active_chips %}
+      <a href="{% if clear_url %}{{ clear_url }}{% else %}{% url 'products:list' %}{% endif %}" class="btn btn-primary">
+        <i class="ti ti-filter-x" aria-hidden="true"></i> Clear all filters
+      </a>
+      <a href="{% url 'products:categories' %}" class="btn btn-secondary">
+        <i class="ti ti-category" aria-hidden="true"></i> Browse categories
+      </a>
+    {% else %}
+      <a href="{% if category %}{% url 'products:list' %}{% else %}{% url 'products:categories' %}{% endif %}" class="btn btn-primary">
+        <i class="ti ti-building-store" aria-hidden="true"></i> {% if category %}Browse all products{% else %}Browse categories{% endif %}
+      </a>
+      <a href="{% url 'core:contact' %}" class="btn btn-secondary">
+        <i class="ti ti-message-circle" aria-hidden="true"></i> Ask about a product
+      </a>
+    {% endif %}
+  </div>
+
+  {% if search or active_chips %}
+  <ul class="es-tips">
+    <li><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i><span><strong>Fewer filters</strong> Each filter narrows the results.</span></li>
+    <li><i class="ti ti-currency-rupee" aria-hidden="true"></i><span><strong>Wider price range</strong> Stretch the min or max a little.</span></li>
+    <li><i class="ti ti-keyboard" aria-hidden="true"></i><span><strong>Simpler words</strong> Try &ldquo;headphones&rdquo;, not a model number.</span></li>
+  </ul>
+  {% endif %}
 </div>

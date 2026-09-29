@@ -1,52 +1,82 @@
-services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: ${DB_NAME:-techzone}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+# Production stack: Caddy (HTTPS + media files) -> gunicorn/WhiteNoise -> Postgres + Redis.
+#   cp .env.example .env   # fill in DOMAIN, SECRET_KEY, DB_PASSWORD, ...
+#   docker compose up -d --build
+#   docker compose exec web python manage.py createsuperuser
+# Required values have no defaults on purpose: `docker compose` refuses to start without them.
 
-  redis:
-    image: redis:7-alpine
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env (e.g. shop.example.in, or localhost for testing)}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - media:/srv/media:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
 
   web:
     build: .
-    command: gunicorn techzone.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60
+    restart: unless-stopped
+    env_file: .env
     environment:
       DJANGO_SETTINGS_MODULE: techzone.settings.production
-      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      ALLOWED_HOSTS: ${DOMAIN},www.${DOMAIN}
+      CSRF_TRUSTED_ORIGINS: https://${DOMAIN},https://www.${DOMAIN}
+      SITE_DOMAIN: ${DOMAIN}
       DB_NAME: ${DB_NAME:-techzone}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_HOST: db
       DB_PORT: 5432
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       REDIS_URL: redis://redis:6379/0
-      SECURE_SSL_REDIRECT: "False"
+      TRUSTED_PROXY_COUNT: 1
     volumes:
       - media:/app/media
-      - static:/app/staticfiles
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
 
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-techzone}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-techzone}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 volumes:
   pgdata:
   media:
-  static:
+  caddy_data:
+  caddy_config:

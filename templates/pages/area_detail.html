@@ -84,16 +84,16 @@
           <h3 class="font-bold text-gray-900 dark:text-white mb-1">Enquire in {{ area.city }}</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Send us a message and our {{ area.city }} team will respond shortly.</p>
           <form id="area-form" method="post" action="{% url 'core:contact_submit' %}" class="space-y-3"
-                data-ajax-form data-msg-target="#area-form-msg"
+                data-ajax-form data-validate data-msg-target="#area-form-msg"
                 data-msg-ok-class="text-sm text-center text-green-600"
                 data-error-text="Please check your details and try again.">
-            {% csrf_token %}
+            {% csrf_token %}{% include "partials/honeypot.html" with hp_id="area" %}
             <input type="hidden" name="inquiry_type" value="general">
             <input type="hidden" name="subject" value="Service enquiry — {{ area.city }}">
-            <input type="text" name="name" required placeholder="Your Name" aria-label="Your Name" class="input">
-            <input type="email" name="email" required placeholder="Your Email" aria-label="Your Email" class="input">
-            <input type="tel" name="phone" placeholder="Phone Number" aria-label="Phone Number" class="input">
-            <textarea name="message" required rows="3" placeholder="How can we help in {{ area.city }}?" aria-label="Message" class="textarea"></textarea>
+            <input type="text" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Your Name" aria-label="Your Name" class="input">
+            <input type="email" name="email" required maxlength="254" autocomplete="email" placeholder="Your Email" aria-label="Your Email" class="input">
+            <input type="tel" name="phone" maxlength="20" autocomplete="tel" inputmode="tel" placeholder="Phone Number" aria-label="Phone Number" class="input">
+            <textarea name="message" required minlength="10" maxlength="2000" rows="3" placeholder="How can we help in {{ area.city }}?" aria-label="Message" class="textarea"></textarea>
             <button type="submit" class="btn btn-primary btn-block"><i class="ti ti-send"></i> Send Enquiry</button>
             <p id="area-form-msg" class="hidden text-sm text-center"></p>
           </form>
@@ -129,5 +129,4 @@
 
 {% block extra_scripts %}
 <script src="{% static 'js/service-availability.js' %}" defer></script>
-<script src="{% static 'js/ajax-form.js' %}"></script>
 {% endblock %}

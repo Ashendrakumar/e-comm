@@ -19,14 +19,15 @@ from .related import (
 from core.models import Brand
 from core.branding import get_site_name
 from core.notifications import notify_staff
+from core.ratelimit import protect_form
 
 
 # ─── filter helpers ───────────────────────────────────────────────────────────
 # Infinite scroll: the page opens with FIRST_BATCH products, and every time the
 # visitor scrolls to the end of the grid, product-filters.js asks ajax_filter for
 # the next NEXT_BATCH, starting at `offset`.
-FIRST_BATCH = 9
-NEXT_BATCH  = 6
+FIRST_BATCH = 12
+NEXT_BATCH  = 8
 
 
 def _batch(qs, params):
@@ -228,7 +229,8 @@ def ajax_filter(request):
     chips = _active_chips(request.GET, Brand.objects.filter(is_active=True))
 
     grid_html  = render_to_string('products/partials/product_grid.html',
-                                  {'products': products, 'clear_url': clear_url}, request=request)
+                                  {'products': products, 'clear_url': clear_url, 'active_chips': chips,
+                                   'category': scope_cat}, request=request)
     more_html  = render_to_string('products/partials/load_more.html',
                                   {'next_offset': next_offset, 'next_batch': NEXT_BATCH, 'total_count': total}, request=request)
     chips_html = render_to_string('products/partials/filter_chips.html',
@@ -429,6 +431,7 @@ def product_detail(request, slug):
 
 # ─── submit review ────────────────────────────────────────────────────────────
 @require_POST
+@protect_form('review')
 def submit_review(request, slug):
     product = get_object_or_404(Product, slug=slug, is_active=True)
     form    = ReviewForm(request.POST)
@@ -449,6 +452,7 @@ def submit_review(request, slug):
 
 # ─── submit inquiry ───────────────────────────────────────────────────────────
 @require_POST
+@protect_form('product-inquiry')
 def submit_inquiry(request, slug):
     product = get_object_or_404(Product, slug=slug, is_active=True)
     form    = ProductInquiryForm(request.POST)
@@ -466,13 +470,14 @@ def submit_inquiry(request, slug):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': 'Enquiry sent! We will respond within 24 hours.'})
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'success': False, 'message': 'Please fill all required fields.'})
+        return JsonResponse({'success': False, 'errors': form.errors, 'message': 'Please fix the errors below.'})
     from django.shortcuts import redirect
     return redirect(product.get_absolute_url())
 
 
 # ─── mark review helpful ──────────────────────────────────────────────────────
 @require_POST
+@protect_form('helpful', rate='30/10m')
 def mark_helpful(request, review_id):
     review = get_object_or_404(Review, pk=review_id, is_approved=True)
     key    = f'helpful_{review_id}'

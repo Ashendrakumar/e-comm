@@ -1,8 +1,9 @@
 from django import forms
+from core.forms import PublicFormRules
 from .models import BlogComment
 
 
-class BlogCommentForm(forms.ModelForm):
+class BlogCommentForm(PublicFormRules, forms.ModelForm):
     class Meta:
         model  = BlogComment
         fields = ['name', 'email', 'content']

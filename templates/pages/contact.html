@@ -57,11 +57,11 @@
     <p class="text-gray-500 dark:text-gray-400 mb-6">Fill out the form below and we'll respond as soon as possible.</p>
 
     <form id="contact-form" method="post" action="{% url 'core:contact' %}" class="space-y-4"
-          data-ajax-form data-ajax-url="{% url 'core:contact_submit' %}"
+          data-ajax-form data-validate data-ajax-url="{% url 'core:contact_submit' %}"
           data-msg-target="#contact-msg"
           data-msg-ok-class="text-sm text-center text-green-600 font-medium"
           data-error-text="Please check the form and try again.">
-      {% csrf_token %}
+      {% csrf_token %}{% include "partials/honeypot.html" with hp_id="contact" %}
       <div class="grid sm:grid-cols-2 gap-4">
         <div class="field">
           <label class="label" for="{{ form.name.id_for_label }}">Name <span class="req">*</span></label>
@@ -136,5 +136,4 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="{% static 'js/ajax-form.js' %}"></script>
 {% endblock %}

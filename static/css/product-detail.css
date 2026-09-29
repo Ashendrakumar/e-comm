@@ -24,8 +24,7 @@
   background:var(--color-bg);color:var(--color-text-soft);
   border:1px solid var(--color-border);box-shadow:var(--shadow-md);margin-top:-18px;
 }
-.main-gallery-swiper .swiper-button-prev::after,
-.main-gallery-swiper .swiper-button-next::after{font-size:14px;font-weight:900;}
+.main-gallery-swiper .swiper-navigation-icon{width:auto;height:13px;}   /* Swiper 12 arrows are an injected SVG */
 .main-gallery-swiper .swiper-pagination{bottom:12px;}
 
 /* ── Zoom overlay (always dark, independent of theme) ── */

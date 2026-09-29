@@ -69,22 +69,16 @@ if(window.location.hash === '#specs')   setTimeout(()=>switchTab('specs',null),2
 document.querySelectorAll('#star-picker input[type=radio]').forEach(input=>{
   input.addEventListener('change',()=>{
     document.getElementById('rating-input').value = input.value;
-    document.getElementById('rating-error').classList.add('hidden');
   });
 });
 
 // ── Review form submit ─────────────────────────────────────
+// Fields (incl. the star rating) are checked first by form-validate.js.
 document.getElementById('review-form')?.addEventListener('submit', async e=>{
   e.preventDefault();
   const form = e.target;
-  const rating = document.getElementById('rating-input').value;
   const msgEl  = document.getElementById('review-msg');
   const btn    = document.getElementById('review-submit-btn');
-
-  if(!rating){
-    document.getElementById('rating-error').classList.remove('hidden');
-    return;
-  }
   btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-loader animate-spin"></i> Submitting…';
 
@@ -102,7 +96,8 @@ document.getElementById('review-form')?.addEventListener('submit', async e=>{
       document.getElementById('rating-input').value = '';
     } else {
       msgEl.className = 'pd-msg is-error';
-      msgEl.textContent = data.message || 'Please fix the errors above.';
+      const extra = window.FormValidate ? FormValidate.showErrors(form, data.errors) : [];
+      msgEl.textContent = [data.message || 'Please fix the errors above.', ...extra].join(' ');
     }
   }catch{
     msgEl.className = 'pd-msg is-error';
@@ -156,7 +151,8 @@ document.getElementById('inquiry-form')?.addEventListener('submit', async e=>{
       setTimeout(()=>closeInquiryModal(), 3000);
     } else {
       msgEl.className = 'pd-msg is-error';
-      msgEl.textContent = data.message;
+      const extra = window.FormValidate ? FormValidate.showErrors(form, data.errors) : [];
+      msgEl.textContent = [data.message || 'Please fix the errors above.', ...extra].join(' ');
     }
   }catch{
     msgEl.className = 'pd-msg is-error';

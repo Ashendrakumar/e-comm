@@ -15,6 +15,8 @@
  * never has to be duplicated in JS.
  *
  * Delegated from document, so it also covers forms injected after page load.
+ * Add `data-validate` too and form-validate.js checks the fields first; field
+ * errors the server sends back (`errors`) are then shown under each field.
  */
 document.addEventListener('submit', async function (e) {
   const form = e.target.closest('form[data-ajax-form]');
@@ -52,7 +54,11 @@ document.addEventListener('submit', async function (e) {
       form.reset();
       show(okClass, data.message);
     } else {
-      show(errClass, d.errorText || 'Please check the form and try again.');
+      // Field errors go under their fields; any the form has no field for join the message.
+      const extra = (data.errors && window.FormValidate) ? window.FormValidate.showErrors(form, data.errors) : [];
+      // 429 = rate limited: the server's message says to wait; otherwise use the form's own text
+      const text = (res.status === 429 && data.message) || d.errorText || data.message || 'Please check the form and try again.';
+      show(errClass, [text, ...extra].join(' '));
     }
   } catch (err) {
     show(errClass, 'Something went wrong. Please try again.');

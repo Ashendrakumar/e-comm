@@ -1,8 +1,9 @@
 from django import forms
+from core.forms import PublicFormRules
 from .models import ServiceInquiry
 
 
-class ServiceInquiryForm(forms.ModelForm):
+class ServiceInquiryForm(PublicFormRules, forms.ModelForm):
     class Meta:
         model  = ServiceInquiry
         fields = ['name', 'email', 'phone', 'city', 'message']

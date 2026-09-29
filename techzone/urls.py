@@ -23,7 +23,7 @@ from core.sitemaps import SITEMAPS
 from core.views import robots_txt
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),         # ADMIN_URL env var, default "admin/"
     path('', include('core.urls')),
     path('products/', include('products.urls')),
     path('blog/', include('blog.urls')),

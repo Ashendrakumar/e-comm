@@ -87,7 +87,7 @@
 .hero-main .swiper-pagination-bullet-active{background:var(--white)!important;width:44px}
 .hero-main .swiper-button-next,.hero-main .swiper-button-prev{width:40px;height:40px;border-radius:var(--radius-md);margin-top:-20px;
   background:color-mix(in srgb,var(--white) 12%,transparent);border:1px solid color-mix(in srgb,var(--white) 20%,transparent);color:var(--white);backdrop-filter:blur(6px)}
-.hero-main .swiper-button-next::after,.hero-main .swiper-button-prev::after{font-size:14px}
+.hero-main .swiper-navigation-icon{width:auto;height:14px}
 .hero-main .swiper-button-next:hover,.hero-main .swiper-button-prev:hover{background:color-mix(in srgb,var(--white) 22%,transparent)}
 
 /* Right rail: quick-entry tiles beside the banner. */

@@ -7,6 +7,7 @@ from .forms import ContactForm, NewsletterForm
 from products.models import Category, Product
 from .branding import get_site_name
 from .notifications import notify_staff
+from .ratelimit import protect_form
 
 
 def homepage(request):
@@ -71,6 +72,7 @@ def _notify_inquiry(inquiry):
 
 
 @require_POST
+@protect_form('contact')
 def contact_submit(request):
     form = ContactForm(request.POST)
     if form.is_valid():
@@ -87,6 +89,7 @@ def contact_submit(request):
 
 
 @require_POST
+@protect_form('newsletter')
 def newsletter_subscribe(request):
     form = NewsletterForm(request.POST)
     if form.is_valid():
@@ -110,6 +113,7 @@ def newsletter_subscribe(request):
     return redirect('core:homepage')
 
 
+@protect_form('contact')
 def contact_page(request):
     form = ContactForm()
     if request.method == 'POST':
@@ -140,9 +144,11 @@ def about_page(request):
 
 def robots_txt(request):
     host  = request.get_host()
+    # The admin path is deliberately not listed: robots.txt is public, and
+    # naming a custom ADMIN_URL here would advertise it. The admin only shows a
+    # login page to crawlers, so there is nothing for them to index.
     lines = [
         'User-agent: *',
-        'Disallow: /admin/',
         'Disallow: /products/ajax/',
         'Disallow: /pages/services/*/inquiry/',
         'Allow: /',

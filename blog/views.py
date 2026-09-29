@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 from .models import BlogPost, BlogCategory
 from .forms import BlogCommentForm
 from core.branding import get_site_name
+from core.ratelimit import protect_form
 
 
 def _published():
@@ -101,6 +102,7 @@ def blog_detail(request, slug):
 
 
 @require_POST
+@protect_form('blog-comment')
 def post_comment(request, slug):
     post = get_object_or_404(_published(), slug=slug)
     if not post.allow_comments:

@@ -1,5 +1,6 @@
 """Reusable upload validators (Module 11 — media management)."""
 import os
+import re
 from django.core.exceptions import ValidationError
 
 MAX_IMAGE_SIZE_MB = 5
@@ -22,3 +23,13 @@ def validate_image_file(value):
             f'Unsupported file type "{ext}". '
             f'Allowed: {", ".join(sorted(ALLOWED_IMAGE_EXTENSIONS))}.'
         )
+
+
+def validate_phone(value):
+    """Optional phone numbers: digits with + ( ) - . spaces, 7-15 digits in total.
+    Mirrored client-side in static/js/form-validate.js."""
+    if not value:
+        return
+    digits = sum(c.isdigit() for c in value)
+    if not re.fullmatch(r'\+?[\d\s().-]+', value) or not 7 <= digits <= 15:
+        raise ValidationError('Enter a valid phone number, e.g. +91 98765 43210.')

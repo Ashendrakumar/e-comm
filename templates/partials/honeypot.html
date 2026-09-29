@@ -1,0 +1,9 @@
+{% comment %}
+  Spam trap (core.ratelimit.HONEYPOT_FIELD). Hidden from people and screen
+  readers; bots that fill in every field get a fake "thank you" and nothing is saved.
+  Include right after {% csrf_token %} in every public form.
+{% endcomment %}
+<div class="sr-only" aria-hidden="true">
+  <label for="hp-{{ hp_id|default:'f' }}">Leave this field empty</label>
+  <input type="text" id="hp-{{ hp_id|default:'f' }}" name="hp_website" tabindex="-1" autocomplete="off" value="">
+</div>

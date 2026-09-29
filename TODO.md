@@ -1,6 +1,6 @@
 # TechZone — Project Status & TODO
 
-Updated: 2026-06-10. Reflects the **actual** state of the codebase.
+Updated: 2026-09-28. Reflects the **actual** state of the codebase.
 
 Apps: `core`, `products`, `pages`, `blog` · Settings split: `base.py` /
 `development.py` / `production.py` · DB: SQLite (dev), PostgreSQL (prod-ready).
@@ -84,17 +84,41 @@ Legend: `[x]` done · `[~]` partial · `[ ]` not started
 - [x] SEO: sitemap, robots, breadcrumbs, meta, Product JSON-LD
 - [x] Performance: caching + `select_related`/`prefetch_related` + lazy-load + DB indexes
 - [x] **`check --deploy`** → clean (with a real `SECRET_KEY`); set `X_FRAME_OPTIONS=DENY` in prod
-- [x] **Tests written** — products (model/view/API), core (home/contact/validators), pages.
-      Logic tests (models/API/validators) pass; template view tests need Python ≤3.13
-      (Django 4.2 test-client × Python 3.14 instrumentation bug — app serves 200s normally)
+- [x] **Tests written** — products (model/view/API), core (home/contact/validators), pages,
+      plus the production hardening below. Full suite passes on Django 5.2 LTS / Python 3.14.
 - [ ] Lighthouse pass + image `width`/`height` for CLS — *manual*
 - [ ] Cross-browser / cross-device walkthrough — *manual*
 - [ ] Visual parity review vs Croma / Reliance Digital / Best Buy — *manual*
 
 ---
 
-## Remaining (all manual / environmental)
+## Production readiness (2026-09-28) `[x]`
 
+- [x] Django 4.2 (EOL April 2026) → **5.2 LTS**; `STATICFILES_STORAGE` → `STORAGES`; Python 3.14 shim removed
+- [x] **Fail-closed settings** — `base.py` has DEBUG off / no hosts / no key; `manage.py` → development,
+      `wsgi.py`/`asgi.py`/Docker → production; production refuses placeholder `SECRET_KEY` / empty `ALLOWED_HOSTS`
+- [x] **Docker** — Node stage builds CSS + vendor files, Python 3.14, non-root user, `HEALTHCHECK`,
+      no `collectstatic || true`; entrypoint runs `migrate`, `sync_site`, `check --deploy --fail-level WARNING`
+- [x] **Caddy** reverse proxy (`deploy/Caddyfile`) — automatic HTTPS, serves `/media/`; compose requires
+      `DOMAIN` / `SECRET_KEY` / `DB_PASSWORD`
+- [x] **Sites domain** from `SITE_DOMAIN` (`manage.py sync_site`) — sitemap no longer points at example.com
+- [x] **Abuse protection** — honeypot + per-IP rate limits on every public form; admin login lockout
+- [x] **Content-Security-Policy** header; Alpine + Swiper self-hosted and pinned (Swiper 11 → 12.2,
+      fixes GHSA-hmx5-qpq5-p643)
+- [x] Enquiry emails sent in a background thread with `EMAIL_TIMEOUT`
+- [x] Monitoring — `/healthz/`, `ADMINS` error mail, optional Sentry (`SENTRY_DSN`)
+- [x] Backups — `scripts/backup.sh` (Postgres dump + media archive, rotation, restore notes)
+- [x] Exact version pins (`requirements.txt`, `package.json`); Pillow 12.3 + DRF 3.17.2 security fixes
+- [x] CI — `.github/workflows/ci.yml` (assets, audits, migrations, tests, deploy check, Docker build)
+- [x] Configurable admin path (`ADMIN_URL`), removed from `robots.txt`
+- [x] `seed_data` refuses to run with DEBUG off (and never creates admin/admin123 there)
+
+---
+
+## Remaining (need a person / the live server)
+
+- Replace the placeholder Privacy Policy / Terms of Service text (Admin -> Pages) with real legal copy
+- Upload product photos (Admin -> Products -> Import images)
+- Two-factor login for staff accounts (e.g. django-otp) — not yet added
+- Off-site copy of the backup directory (rclone / S3) + a test restore
 - Mobile + cross-browser device testing, Lighthouse, visual parity (need a browser/human)
-- Run `npm install && npm run build` once to generate the compiled CSS, then set `TAILWIND_COMPILED=True`
-- Template view tests need Python ≤ 3.13 to run under Django 4.2's test client

@@ -24,7 +24,7 @@
 python -m venv .venv
 .venv\Scripts\Activate.ps1    # PowerShell (use `source .venv/bin/activate` on macOS/Linux)
 pip install -r requirements.txt
-cp .env.example .env          # then edit values
+cp .env.example .env          # optional locally — manage.py defaults to development settings
 python manage.py migrate
 python manage.py seed_data
 python manage.py setup_roles  # optional: create staff permission groups
@@ -33,7 +33,7 @@ python manage.py runserver
 ```
 
 **Site:** http://localhost:8000  
-**Admin:** http://localhost:8000/admin/ → `admin / admin123`  
+**Admin:** http://localhost:8000/admin/ → `admin / admin123` (created by `seed_data`, development only)  
 **REST API:** http://localhost:8000/api/v1/
 
 ---
@@ -53,12 +53,89 @@ Public, read-only catalog API under `/api/v1/` (DRF, paginated 24/page, 120 req/
 
 ---
 
-## Docker (Module 14)
+## Production deployment
+
+The stack in `docker-compose.yml`:
+
+| Service | Role |
+|---|---|
+| `caddy` | Public entry point on 80/443. Gets and renews the HTTPS certificate automatically, serves uploaded `/media/`, proxies everything else. Config: `deploy/Caddyfile`. |
+| `web` | gunicorn + Django (`techzone.settings.production`), non-root, WhiteNoise serves `/static/`. Health check: `GET /healthz/`. |
+| `db` | PostgreSQL 16 |
+| `redis` | Cache, sessions and the shared rate-limit counters |
+
+### First deploy
 
 ```bash
-docker compose up --build      # web (gunicorn) + postgres + redis
+# On a server whose DNS for $DOMAIN (and www.$DOMAIN) points at it, ports 80+443 open:
+cp .env.example .env
+#   set DOMAIN, SECRET_KEY, DB_PASSWORD, EMAIL_*, ADMINS, ADMIN_URL (and SENTRY_DSN if used)
+docker compose up -d --build
+docker compose exec web python manage.py createsuperuser
+docker compose exec web python manage.py setup_roles       # optional staff groups
 ```
-Migrations run automatically via `docker-entrypoint.sh`. Override secrets via env / a `.env` file (`SECRET_KEY`, `ALLOWED_HOSTS`, `DB_*`).
+
+On every start `docker-entrypoint.sh` waits for Postgres, runs `migrate`, points the Sites
+record at `$DOMAIN` (`manage.py sync_site`, so sitemap links are right) and runs
+`check --deploy --fail-level WARNING` — the container refuses to start with an insecure config.
+`docker compose` itself refuses to start while `DOMAIN`, `SECRET_KEY` or `DB_PASSWORD` is unset.
+
+To try the whole stack locally, set `DOMAIN=localhost` (Caddy issues a locally-trusted certificate).
+
+### Updating
+
+```bash
+git pull && docker compose up -d --build
+```
+
+### Backups
+
+`scripts/backup.sh [dir]` dumps Postgres and archives `media/` (keeps the newest 14 of each).
+Run it daily from cron and copy the directory **off the server**; the script header has the
+cron line and the restore commands.
+
+### Settings that fail closed
+
+- `manage.py` defaults to `techzone.settings.development`; `wsgi.py`, `asgi.py` and the Docker
+  image default to `techzone.settings.production`. `base.py` itself has `DEBUG` off and no hosts.
+- Production raises `ImproperlyConfigured` for a missing / placeholder `SECRET_KEY` or empty
+  `ALLOWED_HOSTS`.
+
+### Security in production
+
+- HTTPS only: SSL redirect, HSTS (1 year, preload), secure + HttpOnly cookies, `X-Frame-Options: DENY`.
+- **Content-Security-Policy** from `CSP_DIRECTIVES` in `settings/base.py`
+  (`core.middleware.ContentSecurityPolicyMiddleware`, off while `DEBUG` is on). Adding a new
+  external script, font, map or video host means adding it there. `CSP_REPORT_ONLY=True` tests a
+  change without blocking anything.
+- **Public forms** (contact, newsletter, reviews, enquiries, blog comments, "helpful" votes) have a
+  honeypot field and a per-IP rate limit (`core/ratelimit.py`, `RATELIMIT_FORMS`). The admin
+  login is rate-limited too (`RATELIMIT_LOGIN`). Include `partials/honeypot.html` after
+  `{% csrf_token %}` in any new public form and decorate its view with `@protect_form('name')`.
+- The admin lives at `/$ADMIN_URL` (default `admin/`) and is not listed in `robots.txt`.
+- Front-end libraries are self-hosted, version-pinned copies in `static/vendor/`
+  (`npm run vendor`), not CDN links.
+- Enquiry emails are sent from a background thread with `EMAIL_TIMEOUT`, so a slow SMTP server
+  never delays a visitor.
+
+### Monitoring
+
+- `GET /healthz/` → `{"status": "ok"}` (checks the database; answered before host validation so
+  Docker / load-balancer probes work).
+- Server errors email everyone in `ADMINS`; set `SENTRY_DSN` for Sentry error tracking.
+- All logs go to stdout: `docker compose logs -f web caddy`.
+
+### CI
+
+`.github/workflows/ci.yml` builds the front-end assets (and fails if the committed
+`static/css/app.css` / `static/vendor/` are stale), runs `npm audit` and `pip-audit`,
+`makemigrations --check`, the test suite, `check --deploy` under production settings,
+`collectstatic`, and a Docker image build.
+
+### Dependencies
+
+`requirements.txt` and `package.json` pin exact versions. To upgrade: bump the pin, run the
+tests (and `npm run build` for front-end packages), commit.
 
 ---
 
@@ -87,8 +164,9 @@ the first stylesheet — moving it out reintroduces a light→dark flash on refr
 ### Commands
 
 ```bash
-npm install                                  # once — installs the Tailwind CLI
-npm run build                                # -> static/css/app.css (minified)
+npm install                                  # once — installs the Tailwind CLI + Alpine + Swiper
+npm run build                                # -> static/vendor/* + static/css/app.css (minified)
+npm run vendor                               # only re-copy Alpine / Swiper into static/vendor/
 npm run dev                                  # same, in watch mode while developing
 python manage.py collectstatic --no-input    # production / Docker only
 ```
@@ -105,10 +183,11 @@ serves `static/` straight off disk.
 - **Run `npm run build` (or `npm run dev`) after adding Tailwind classes.** With a compiled
   bundle in place, a class that was never scanned simply will not exist.
 - **`tailwind.config.js` scans `static/js/**/*.js` as well as the templates**, because some
-  JS builds class strings at runtime (`setView`, `updateCompareUI`). Removing that glob purges
+  JS builds class strings at runtime (`updateCompareUI`, …). Removing that glob purges
   those utilities from the bundle.
-- **The Docker image does not build the CSS** — it only runs `collectstatic`. Either commit
-  `static/css/app.css` or add a node build stage before `docker compose up --build`.
+- **The Docker image builds the CSS itself** (a Node stage runs `npm ci && npm run build`), so a
+  deploy always ships a bundle that matches the templates. Still commit `static/css/app.css` and
+  `static/vendor/` — local runs and CI use them, and CI fails if they are out of date.
 - Icons are vendored from `@tabler/icons-webfont` (pinned 3.46.0). To upgrade, re-download the
   CSS + `woff2` at a pinned version and repoint the `@font-face` `src` at `../fonts/` — keep it
   query-free so whitenoise's manifest storage can rewrite it.
@@ -159,12 +238,12 @@ Full guide: [docs/PRODUCT_IMAGES.md](docs/PRODUCT_IMAGES.md).
 
 ```bash
 python manage.py test                      # full suite
-python manage.py check --deploy            # security audit (use real SECRET_KEY)
+DJANGO_SETTINGS_MODULE=techzone.settings.production SECRET_KEY=... ALLOWED_HOSTS=example.com \
+  python manage.py check --deploy          # security audit
 ```
-Logic-level tests (models, REST API, validators) cover pricing/discount/stock/rating
-properties and API filtering. Template-rendering view tests are included but require
-Python ≤ 3.13 with Django 4.2 (Django 4.2's test-client template instrumentation has a
-known incompatibility with Python 3.14; the views themselves serve 200s normally).
+Covers models, views, the REST API, validators, infinite scroll batches, the gallery, and the
+production hardening (rate limits, honeypot, client-IP parsing, admin lockout, CSP header,
+health check, `sync_site`). Runs on Django 5.2 LTS with Python 3.14.
 
 ---
 

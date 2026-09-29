@@ -62,7 +62,8 @@
   <link rel="preload" href="{% static 'fonts/tabler-icons.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'css/tabler-icons.css' %}">
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  {# Swiper + Alpine are self-hosted, version-pinned copies (package.json -> `npm run vendor`). #}
+  <link rel="stylesheet" href="{% static 'vendor/swiper-bundle.min.css' %}">
   {% if use_compiled_css %}
   {# Production: compiled Tailwind build (run `npm run build`). #}
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
@@ -136,9 +137,12 @@
 
 {% include "partials/footer.html" %}
 
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script defer src="{% static 'vendor/alpine.min.js' %}"></script>
+<script src="{% static 'vendor/swiper-bundle.min.js' %}"></script>
 <script src="{% static 'js/base.js' %}"></script>
+{# Form checks before submit + AJAX submit for [data-ajax-form] (footer newsletter is on every page) #}
+<script src="{% static 'js/form-validate.js' %}"></script>
+<script src="{% static 'js/ajax-form.js' %}"></script>
 
 {# Shared product-card behaviour (Quick View · Compare · Wishlist) — available on every page #}
 {% include "products/partials/product_card_scripts.html" %}

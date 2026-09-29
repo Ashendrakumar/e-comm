@@ -2,6 +2,7 @@
 {% load ui %}
 {% load static %}
 {% block title %}{{ page_title }} — {{ site_name }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/blog.css' %}">{% endblock %}
 {% block content %}
 
 <!-- Page header -->
@@ -37,27 +38,33 @@
 
   <!-- Featured post -->
   {% if featured_post %}
-  <a href="{{ featured_post.get_absolute_url }}"
-     class="group grid md:grid-cols-2 gap-0 mb-12 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-2xl transition-all">
-    <div class="relative aspect-[16/10] md:aspect-auto overflow-hidden bg-gray-100 dark:bg-gray-800">
+  <a href="{{ featured_post.get_absolute_url }}" class="bf"{% if featured_post.category.color %} style="--bc-accent:{{ featured_post.category.color }}"{% endif %}>
+    <div class="bf-media">
       {% if featured_post.featured_image %}
-        <img src="{{ featured_post.featured_image.url }}" alt="{{ featured_post.title }}"
-             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="eager" fetchpriority="high" decoding="async">
+        <img src="{{ featured_post.featured_image.url }}" alt="" loading="eager" fetchpriority="high" decoding="async">
       {% else %}
-        <div class="w-full h-full flex items-center justify-center text-primary-300"><i class="ti ti-news text-6xl"></i></div>
+        <div class="bc-placeholder" aria-hidden="true"><i class="ti ti-news"></i></div>
       {% endif %}
-      <span class="absolute top-4 left-4 badge badge-accent">Featured</span>
+      <span class="bf-flag"><i class="ti ti-star-filled" aria-hidden="true"></i> Featured</span>
     </div>
-    <div class="p-8 flex flex-col justify-center">
+    <div class="bf-body">
       {% if featured_post.category %}
-      <span class="badge text-white w-fit mb-3" style="background:{{ featured_post.category.color }};">{{ featured_post.category.name }}</span>
+      <span class="bf-cat"><span class="bc-chip-dot" aria-hidden="true"></span>{{ featured_post.category.name }}</span>
       {% endif %}
-      <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white mb-3 leading-tight group-hover:text-primary-600 transition-colors">{{ featured_post.title }}</h2>
-      <p class="text-gray-500 dark:text-gray-400 leading-relaxed mb-5 line-clamp-3">{{ featured_post.excerpt }}</p>
-      <div class="flex items-center gap-4 text-sm text-gray-400">
-        <span class="flex items-center gap-1.5"><i class="ti ti-user-circle"></i>{{ featured_post.display_author }}</span>
-        <span class="flex items-center gap-1.5"><i class="ti ti-calendar"></i>{{ featured_post.published_at|date:"M d, Y" }}</span>
-        <span class="flex items-center gap-1.5"><i class="ti ti-clock"></i>{{ featured_post.reading_minutes }} min</span>
+      <h2 class="bf-title">{{ featured_post.title }}</h2>
+      {% if featured_post.excerpt %}<p class="bf-excerpt">{{ featured_post.excerpt }}</p>{% endif %}
+      <div class="bf-foot">
+        <div class="bf-meta">
+          <span class="bc-author">
+            <span class="bc-avatar" aria-hidden="true">{{ featured_post.display_author|first|upper }}</span>
+            {{ featured_post.display_author }}
+          </span>
+          <span class="bc-sep" aria-hidden="true"></span>
+          <time datetime="{{ featured_post.published_at|date:'c' }}">{{ featured_post.published_at|date:"M d, Y" }}</time>
+          <span class="bc-sep" aria-hidden="true"></span>
+          <span>{{ featured_post.reading_minutes }} min read</span>
+        </div>
+        <span class="bf-cta" aria-hidden="true">Read article <i class="ti ti-arrow-right"></i></span>
       </div>
     </div>
   </a>

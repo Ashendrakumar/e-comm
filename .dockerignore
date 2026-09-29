@@ -18,5 +18,7 @@ node_modules/
 .idea/
 staticfiles/
 media/
+backups/
+.github/
 *.md
 !README.md

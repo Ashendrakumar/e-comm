@@ -162,3 +162,5 @@ public/static/
 *.temp
 
 .claude/settings.local.json
+# Database / media backups (scripts/backup.sh)
+backups/

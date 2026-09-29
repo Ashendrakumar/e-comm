@@ -1,8 +1,9 @@
 from django import forms
+from core.forms import PublicFormRules
 from .models import Review, ProductInquiry
 
 
-class ReviewForm(forms.ModelForm):
+class ReviewForm(PublicFormRules, forms.ModelForm):
     rating = forms.IntegerField(
         min_value=1, max_value=5,
         widget=forms.HiddenInput(attrs={'id': 'rating-input'})
@@ -36,7 +37,7 @@ class ReviewForm(forms.ModelForm):
         return r
 
 
-class ProductInquiryForm(forms.ModelForm):
+class ProductInquiryForm(PublicFormRules, forms.ModelForm):
     class Meta:
         model  = ProductInquiry
         fields = ['name', 'email', 'phone', 'message']

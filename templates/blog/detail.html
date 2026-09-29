@@ -5,6 +5,7 @@
 {% block meta_description %}{{ post.meta_description|default:post.excerpt }}{% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/blog.css' %}">
 <meta property="og:type" content="article">
 <meta property="og:title" content="{{ post.title }}">
 <meta property="og:description" content="{{ post.excerpt }}">
@@ -101,8 +102,10 @@
         {% if post.allow_comments %}
         <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 mt-8">
           <h4 class="font-bold text-gray-900 dark:text-white mb-4">Leave a Comment</h4>
-          <form method="post" action="{% url 'blog:comment' post.slug %}" class="space-y-4">
-            {% csrf_token %}
+          <form method="post" action="{% url 'blog:comment' post.slug %}" class="space-y-4" id="comment-form"
+                data-ajax-form data-validate data-msg-target="#comment-msg"
+                data-error-text="Please fix the highlighted fields.">
+            {% csrf_token %}{% include "partials/honeypot.html" with hp_id="comment" %}
             <div class="grid sm:grid-cols-2 gap-4">
               <div class="field">
                 <label class="label" for="{{ comment_form.name.id_for_label }}">Name <span class="req">*</span></label>
@@ -118,6 +121,7 @@
               {{ comment_form.content }}
             </div>
             <button type="submit" class="btn btn-primary"><i class="ti ti-send"></i> Post Comment</button>
+            <p id="comment-msg" class="hidden" role="status"></p>
           </form>
         </div>
         {% else %}

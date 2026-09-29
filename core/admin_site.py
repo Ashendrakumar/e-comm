@@ -23,6 +23,16 @@ class TechZoneAdminSite(admin.AdminSite):
     index_title    = 'Dashboard'
     index_template = 'admin/techzone_index.html'
 
+    def login(self, request, extra_context=None):
+        # Brute-force guard: count every POST to the login form per client IP.
+        from django.conf import settings
+        from django.template.response import TemplateResponse
+        from .ratelimit import hit
+        if request.method == 'POST' and hit(request, 'admin-login', settings.RATELIMIT_LOGIN):
+            return TemplateResponse(request, 'admin/login_locked.html',
+                                    {**self.each_context(request), 'title': 'Too many attempts'}, status=429)
+        return super().login(request, extra_context)
+
     def index(self, request, extra_context=None):
         extra_context = extra_context or {}
         try:

@@ -6,7 +6,6 @@
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
 <link rel="stylesheet" href="{% static 'css/product-detail.css' %}">
 
 {# ── Product structured data (schema.org/Product) for rich SEO results ── #}
@@ -484,46 +483,46 @@
           </h3>
           <p class="text-sm text-muted mb-6">Share your honest experience with this product.</p>
 
-          <form id="review-form" class="space-y-4" novalidate>
-            {% csrf_token %}
+          <form id="review-form" class="space-y-4" novalidate data-validate>
+            {% csrf_token %}{% include "partials/honeypot.html" with hp_id="review" %}
             <!-- Star picker -->
             <div class="field">
               <span class="label" id="star-picker-label">Your Rating <span class="req">*</span></span>
               <div class="star-input" id="star-picker" role="radiogroup" aria-labelledby="star-picker-label">
                 {% for i in "54321" %}
-                <input type="radio" name="rating_display" id="star-{{ i }}" value="{{ i }}">
+                <input type="radio" name="rating_display" id="star-{{ i }}" value="{{ i }}" required data-msg-required="Please select a star rating.">
                 <label for="star-{{ i }}" title="{{ i }} star{% if i != '1' %}s{% endif %}">★</label>
                 {% endfor %}
               </div>
               <input type="hidden" name="rating" id="rating-input" value="">
-              <p class="field-error hidden" id="rating-error">Please select a rating.</p>
+              <p class="field-error hidden" id="rating-error" data-error-for="rating_display rating"></p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="field">
                 <label class="label" for="rv-name">Name <span class="req">*</span></label>
-                <input type="text" id="rv-name" name="name" required placeholder="Your name" class="input">
+                <input type="text" id="rv-name" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Your name" class="input">
               </div>
               <div class="field">
                 <label class="label" for="rv-email">Email <span class="req">*</span></label>
-                <input type="email" id="rv-email" name="email" required placeholder="your@email.com" class="input">
+                <input type="email" id="rv-email" name="email" required maxlength="254" autocomplete="email" placeholder="your@email.com" class="input">
               </div>
             </div>
             <div class="field">
               <label class="label" for="rv-title">Review Title</label>
-              <input type="text" id="rv-title" name="title" placeholder="Summarise your experience" class="input">
+              <input type="text" id="rv-title" name="title" maxlength="200" placeholder="Summarise your experience" class="input">
             </div>
             <div class="field">
               <label class="label" for="rv-content">Your Review <span class="req">*</span></label>
-              <textarea id="rv-content" name="content" required rows="4" placeholder="Tell others what you think about this product…" class="textarea"></textarea>
+              <textarea id="rv-content" name="content" required minlength="10" maxlength="2000" rows="4" placeholder="Tell others what you think about this product…" class="textarea"></textarea>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="field">
                 <label class="label" for="rv-pros">Pros <span class="field-hint font-normal">(optional)</span></label>
-                <textarea id="rv-pros" name="pros" rows="2" placeholder="What did you love?" class="textarea"></textarea>
+                <textarea id="rv-pros" name="pros" maxlength="1000" rows="2" placeholder="What did you love?" class="textarea"></textarea>
               </div>
               <div class="field">
                 <label class="label" for="rv-cons">Cons <span class="field-hint font-normal">(optional)</span></label>
-                <textarea id="rv-cons" name="cons" rows="2" placeholder="Any downsides?" class="textarea"></textarea>
+                <textarea id="rv-cons" name="cons" maxlength="1000" rows="2" placeholder="Any downsides?" class="textarea"></textarea>
               </div>
             </div>
             <div class="flex items-center justify-between gap-4 flex-wrap pt-2">
@@ -617,25 +616,25 @@
         <p class="text-xs text-muted mt-0.5 line-clamp-1">{{ product.name }}</p>
       </div>
     </div>
-    <form id="inquiry-form" class="space-y-4" novalidate>
-      {% csrf_token %}
+    <form id="inquiry-form" class="space-y-4" novalidate data-validate>
+      {% csrf_token %}{% include "partials/honeypot.html" with hp_id="inquiry" %}
       <div class="grid grid-cols-2 gap-4">
         <div class="field">
           <label class="label" for="iq-name">Name <span class="req">*</span></label>
-          <input type="text" id="iq-name" name="name" required placeholder="Your name" class="input">
+          <input type="text" id="iq-name" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Your name" class="input">
         </div>
         <div class="field">
           <label class="label" for="iq-phone">Phone</label>
-          <input type="tel" id="iq-phone" name="phone" placeholder="+91 98765 43210" class="input">
+          <input type="tel" id="iq-phone" name="phone" maxlength="20" autocomplete="tel" inputmode="tel" placeholder="+91 98765 43210" class="input">
         </div>
       </div>
       <div class="field">
         <label class="label" for="iq-email">Email <span class="req">*</span></label>
-        <input type="email" id="iq-email" name="email" required placeholder="your@email.com" class="input">
+        <input type="email" id="iq-email" name="email" required maxlength="254" autocomplete="email" placeholder="your@email.com" class="input">
       </div>
       <div class="field">
         <label class="label" for="iq-message">Message <span class="req">*</span></label>
-        <textarea id="iq-message" name="message" required rows="4" placeholder="Ask about price, availability, bulk orders, specifications…" class="textarea"></textarea>
+        <textarea id="iq-message" name="message" required minlength="10" maxlength="2000" rows="4" placeholder="Ask about price, availability, bulk orders, specifications…" class="textarea"></textarea>
       </div>
       <div class="{% if site_settings.whatsapp %}btn-pair{% endif %}">
         <button type="submit" class="btn btn-primary btn-block" id="inquiry-submit-btn">
@@ -779,7 +778,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+{# Swiper is loaded once, by base.html #}
 <div id="pd-config" hidden
      data-review-url="{% url 'products:submit_review' product.slug %}"
      data-inquiry-url="{% url 'products:submit_inquiry' product.slug %}"

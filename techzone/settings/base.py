@@ -1,5 +1,9 @@
 """
 TechZone Electronics - Base Settings
+
+Shared by development.py and production.py. Defaults here are the *safe* ones
+(DEBUG off, no hosts allowed, no secret key), so a missing env var fails loudly
+instead of running a debug site. development.py relaxes them for local work.
 """
 import os
 import sys
@@ -12,11 +16,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
 environ.Env.read_env(BASE_DIR / '.env')
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production-xyz123')
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
+
+# Admin lives at /<ADMIN_URL>/ - change it in production to keep bots off the login page.
+ADMIN_URL = os.environ.get('ADMIN_URL', 'admin/').strip('/') + '/'
+
+TESTING = 'test' in sys.argv[1:2]
 
 # Application definition
 INSTALLED_APPS = [
@@ -44,7 +53,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'core.middleware.HealthCheckMiddleware',        # /healthz/ — answered before host checks / SSL redirect
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.ContentSecurityPolicyMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'core.middleware.FriendlyDebug404Middleware',   # dev: show templates/404.html instead of Django's debug 404
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -84,17 +95,7 @@ DATABASES = {
     }
 }
 
-# PostgreSQL config (uncomment and set env vars for production)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.environ.get('DB_NAME', 'techzone'),
-#         'USER': os.environ.get('DB_USER', 'postgres'),
-#         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-#         'HOST': os.environ.get('DB_HOST', 'localhost'),
-#         'PORT': os.environ.get('DB_PORT', '5432'),
-#     }
-# }
+# PostgreSQL: see production.py (DB_* env vars).
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -115,11 +116,14 @@ LANGUAGES = [
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATICFILES_STORAGE = 'techzone.storage.StaticStorage'   # WhiteNoise manifest + dev cache-busting
+STORAGES = {
+    'default':     {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'techzone.storage.StaticStorage'},   # WhiteNoise manifest + dev cache-busting
+}
 # Tests run with DEBUG=False, where the manifest storage demands a fresh
 # `collectstatic`; plain storage keeps the suite independent of that build step.
-if 'test' in sys.argv[1:2]:
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+if TESTING:
+    STORAGES['staticfiles'] = {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}
 
 # Product-image import (Admin -> Products -> "Import images from Drive", or
 # `manage.py import_product_images`). Point it at a Google Drive for desktop folder,
@@ -153,7 +157,30 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', 10))   # a hung SMTP server must not hang a worker
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@techzone.com')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
+# Enquiry notifications are sent from a background thread so the visitor never
+# waits on SMTP. Tests send inline so mail.outbox is filled deterministically.
+NOTIFY_ASYNC = not TESTING
+
+
+def _parse_admins(raw):
+    """"Jane Doe <jane@x.com>, ops@y.com" -> [('Jane Doe', 'jane@x.com'), ('ops@y.com', 'ops@y.com')]"""
+    out = []
+    for item in (i.strip() for i in raw.split(',')):
+        if not item:
+            continue
+        if '<' in item and item.endswith('>'):
+            name, email = item[:-1].split('<', 1)
+            out.append((name.strip() or email.strip(), email.strip()))
+        else:
+            out.append((item, item))
+    return out
+
+
+# People emailed on server errors (500s).
+ADMINS = _parse_admins(os.environ.get('ADMINS', ''))
 
 # Cache
 CACHES = {
@@ -185,22 +212,58 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
+# Content-Security-Policy (core.middleware.ContentSecurityPolicyMiddleware).
+# The templates use inline <script> blocks and onclick handlers, so scripts need
+# 'unsafe-inline'; the policy still pins *where* code, styles and frames load from.
+CSP_ENABLED     = os.environ.get('CSP_ENABLED', 'True') == 'True'
+CSP_REPORT_ONLY = os.environ.get('CSP_REPORT_ONLY', 'False') == 'True'
+CSP_DIRECTIVES = {
+    'default-src':     ["'self'"],
+    # unsafe-eval: Alpine.js evaluates x-* attribute expressions at runtime
+    'script-src':      ["'self'", "'unsafe-inline'", "'unsafe-eval'",
+                        'https://www.googletagmanager.com', 'https://www.google-analytics.com'],
+    'style-src':       ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    'font-src':        ["'self'", 'data:', 'https://fonts.gstatic.com'],
+    'img-src':         ["'self'", 'data:', 'blob:', 'https:'],
+    'connect-src':     ["'self'", 'https://www.google-analytics.com', 'https://*.google-analytics.com',
+                        'https://*.analytics.google.com', 'https://www.googletagmanager.com'],
+    'frame-src':       ['https://www.google.com', 'https://maps.google.com',
+                        'https://www.youtube.com', 'https://www.youtube-nocookie.com'],
+    'frame-ancestors': ["'self'"],
+    'form-action':     ["'self'"],
+    'base-uri':        ["'self'"],
+    'object-src':      ["'none'"],
+}
+
+# -- Abuse protection for public forms (core.ratelimit) ----------------
+# Per client IP and per form: at most N submissions per window ("5/10m").
+RATELIMIT_ENABLED = not TESTING
+RATELIMIT_FORMS   = os.environ.get('RATELIMIT_FORMS', '10/10m')
+RATELIMIT_LOGIN   = os.environ.get('RATELIMIT_LOGIN', '10/15m')
+# How many reverse proxies sit in front of Django (Caddy in docker-compose = 1).
+# The client IP is then read from X-Forwarded-For; 0 means use REMOTE_ADDR.
+TRUSTED_PROXY_COUNT = int(os.environ.get('TRUSTED_PROXY_COUNT', 0))
+
 # CSRF trusted origins (comma-separated env var, e.g. "https://techzone.in,https://www.techzone.in")
 CSRF_TRUSTED_ORIGINS = [
     o.strip() for o in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
 ]
 
-# Hardening applied automatically when DEBUG is off (production)
-if not DEBUG:
-    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+# HTTPS hardening (secure cookies, HSTS, SSL redirect) lives in production.py.
 
-# ── Caching (production overrides via env / production.py) ──────────
-CACHE_MIDDLEWARE_SECONDS = int(os.environ.get('CACHE_MIDDLEWARE_SECONDS', 300))
-CACHE_MIDDLEWARE_KEY_PREFIX = 'techzone'
+# -- Logging: everything to the console (Docker / systemd collect it) --
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {'plain': {'format': '%(asctime)s %(levelname)s %(name)s: %(message)s'}},
+    'filters': {'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'}},
+    'handlers': {
+        'console':     {'class': 'logging.StreamHandler', 'formatter': 'plain'},
+        'mail_admins': {'class': 'django.utils.log.AdminEmailHandler', 'level': 'ERROR',
+                        'filters': ['require_debug_false']},
+    },
+    'root': {'handlers': ['console'], 'level': os.environ.get('LOG_LEVEL', 'INFO')},
+    'loggers': {
+        'django.request': {'handlers': ['console', 'mail_admins'], 'level': 'ERROR', 'propagate': False},
+    },
+}
