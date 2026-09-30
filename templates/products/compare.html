@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+{% block title %}Compare Products — {{ site_name }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/compare.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4">
+    {% url 'products:list' as list_url %}{% breadcrumbs "Products" list_url "Compare" on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">Compare Products</h1>
+    <p class="text-primary-100 text-base max-w-xl mx-auto">
+      {% if products %}<b class="text-white">{{ products|length }} of 3</b> selected · see specs and prices side by side
+      {% else %}Pick up to 3 products and see their specs and prices side by side{% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="cmp-page">
+
+  <header class="cmp-top">
+    <div class="cmp-titlebar">
+      {% if products %}
+      <div class="cmp-tools">
+        {% if products|length > 1 %}
+        <label class="switch">
+          <input type="checkbox" id="cmp-highlight" checked>
+          <span class="switch-track" aria-hidden="true"></span>
+          Highlight differences
+        </label>
+        <label class="switch">
+          <input type="checkbox" id="cmp-only-diff">
+          <span class="switch-track" aria-hidden="true"></span>
+          Only differences
+        </label>
+        {% endif %}
+        {% if can_add_more %}
+        <a href="{% url 'products:list' %}" class="btn-link"><i class="ti ti-plus"></i> Add product</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if not products %}
+  <div class="cmp-empty-state">
+    <i class="ti ti-arrows-diff"></i>
+    <h2>Nothing to compare yet</h2>
+    <p>Pick up to 3 products from the catalogue to see them side by side.</p>
+    <a href="{% url 'products:list' %}" class="btn-primary px-6 py-3 rounded-xl">Browse products</a>
+  </div>
+  {% else %}
+
+  {% if products|length == 1 %}
+  <p class="cmp-notice"><i class="ti ti-info-circle"></i> Add at least one more product to compare side by side.</p>
+  {% endif %}
+
+  <div class="cmp" id="compare-table" style="--n: {{ products|length }}">
+
+    <div class="cmp-row cmp-head">
+      <div class="cmp-label"></div>
+      {% for product in products %}
+      <div class="cmp-cell cmp-product">
+        <button type="button" class="cmp-remove" data-remove="{{ product.pk }}"
+                title="Remove" aria-label="Remove {{ product.name }} from compare">
+          <i class="ti ti-x"></i>
+        </button>
+        <a href="{{ product.get_absolute_url }}" class="cmp-img">
+          {% if product.cover %}
+          <img src="{{ product.cover.image.url }}" alt="{{ product.cover.alt_text|default:product.name }}"
+               loading="lazy" decoding="async">
+          {% else %}
+          <i class="ti ti-photo-off"></i>
+          {% endif %}
+        </a>
+        {% if product.brand %}<p class="cmp-brand">{{ product.brand.name }}</p>{% endif %}
+        <a href="{{ product.get_absolute_url }}" class="cmp-name">{{ product.name }}<i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <h2 class="cmp-section">Overview</h2>
+
+    <div class="cmp-row{% if price_differs %} is-diff{% endif %}">
+      <div class="cmp-label">Price</div>
+      {% for product in products %}
+      <div class="cmp-cell">
+        <span class="cmp-price">₹{{ product.effective_price|floatformat:0 }}</span>
+        {% if product.sale_price %}
+        <span class="cmp-mrp">₹{{ product.price|floatformat:0 }}</span>
+        <span class="cmp-off">{{ product.discount_percent }}% off</span>
+        {% endif %}
+        {% if best_price is not None and price_differs and product.effective_price == best_price %}
+        <span class="cmp-best">Lowest price</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="cmp-row" data-diff-check>
+      <div class="cmp-label">Rating</div>
+      {% for product in products %}
+      <div class="cmp-cell" data-value="{{ product.avg_rating }}|{{ product.num_reviews }}">
+        {% if product.num_reviews %}
+        <span class="cmp-rating"><span class="cmp-star" aria-hidden="true">★</span> {{ product.avg_rating }}</span>
+        <span class="cmp-sub">{{ product.num_reviews }} review{{ product.num_reviews|pluralize }}</span>
+        {% else %}
+        <span class="cmp-na">No reviews</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="cmp-row" data-diff-check>
+      <div class="cmp-label">Availability</div>
+      {% for product in products %}
+      <div class="cmp-cell" data-value="{% if product.is_low_stock %}low{% elif product.is_in_stock %}in{% else %}out{% endif %}">
+        {% if product.is_low_stock %}
+        <span class="cmp-stock is-low">Only {{ product.stock }} left</span>
+        {% elif product.is_in_stock %}
+        <span class="cmp-stock is-in">In stock</span>
+        {% else %}
+        <span class="cmp-stock is-out">Out of stock</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    {% for row in general_rows %}
+    <div class="cmp-row{% if row.differs %} is-diff{% endif %}">
+      <div class="cmp-label">{{ row.label }}</div>
+      {% for value in row.values %}
+      <div class="cmp-cell{% if value == '—' %} cmp-na{% endif %}">{{ value }}</div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    {% if spec_rows %}
+    <h2 class="cmp-section">Specifications</h2>
+    {% for row in spec_rows %}
+    <div class="cmp-row{% if row.differs %} is-diff{% endif %}">
+      <div class="cmp-label">{{ row.label }}</div>
+      {% for value in row.values %}
+      <div class="cmp-cell{% if value == '—' %} cmp-na{% endif %}">{{ value }}</div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <p class="cmp-no-diff" hidden>These products match on every compared attribute.</p>
+  </div>
+
+  <div class="cmp-actions">
+    <a href="{% url 'products:list' %}" class="btn-link"><i class="ti ti-arrow-left"></i> Back to products</a>
+    <button type="button" id="cmp-clear" class="btn-link is-danger"><i class="ti ti-trash"></i> Clear list</button>
+  </div>
+  {% endif %}
+</div>
+
+<div id="cmp-config" hidden
+     data-list-url="{% url 'products:list' %}"
+     data-compare-url="{% url 'products:compare' %}"></div>
+{{ compare_items|json_script:"cmp-items" }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/compare.js' %}"></script>
+{% endblock %}

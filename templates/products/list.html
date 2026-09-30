@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+
+{% block title %}{{page_title}} — {{ site_name }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block extra_head %}
+{# Quick-view modal & compare-bar styles are shared — see products/partials/product_card_scripts.html #}
+{% include "products/partials/filter_panel_styles.html" %}
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══ PAGE HEADER ═══════════════════════════════════════════ -->
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4">
+    {% breadcrumbs page_title on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">
+      {% if q %}Results for &ldquo;{{ q }}&rdquo;{% else %}{{ page_title }}{% endif %}
+    </h1>
+    <p class="text-primary-100 text-base">
+      <span class="font-bold text-white" id="result-count">{{ total_count }}</span> products
+    </p>
+  </div>
+</div>
+
+<!-- ═══ MAIN LAYOUT ══════════════════════════════════════════ -->
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="flex gap-6">
+
+    <!-- ══ SIDEBAR ════════════════════════════════════════════ -->
+    <aside class="hidden lg:block w-64 flex-shrink-0">
+      <div class="lp-sticky space-y-4">
+
+        <form method="get" id="filter-form" data-ajax-url="{% url 'products:ajax_filter' %}" class="space-y-0">
+
+          <div class="card card-pad">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="lp-strong font-bold text-sm flex items-center gap-2">
+                <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters
+              </h3>
+              <a href="{{ clear_url }}" class="btn-link">Clear all</a>
+            </div>
+
+            {% include "products/partials/filter_panel.html" with filter_form_id="desktop" %}
+
+            <button type="submit" class="btn btn-primary btn-block mt-4">
+              <i class="ti ti-search"></i> Apply Filters
+            </button>
+          </div>
+        </form>
+      </div>
+    </aside>
+
+    <!-- ══ PRODUCT AREA ════════════════════════════════════════ -->
+    <div class="flex-1 min-w-0">
+
+      <!-- Mobile filter + sort drawer (wrapper carries lg:hidden — .btn's display would override it) -->
+      <div class="lg:hidden mb-4">
+        <button type="button" onclick="openMobileFilter()" class="btn btn-secondary btn-sm">
+          <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters &amp; Sort
+          {% if active_chips %}<span class="lp-badge">{{ active_chips|length }}</span>{% endif %}
+        </button>
+      </div>
+
+      <!-- Active filter chips (re-rendered by the AJAX filter) -->
+      <div class="flex flex-wrap gap-2 items-center mb-4" id="chip-wrap">
+        {% include "products/partials/filter_chips.html" %}
+      </div>
+
+      <!-- Products (AJAX target) -->
+      <div id="products-section">
+        {% include "products/partials/product_grid.html" %}
+        <div id="load-more-section">{% include "products/partials/load_more.html" %}</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOBILE FILTER DRAWER ════════════════════════════════ -->
+<div id="mob-filter" class="hidden fixed inset-0 z-50 flex">
+  <div class="lp-backdrop absolute inset-0" onclick="closeMobileFilter()"></div>
+  <div class="lp-drawer relative ml-auto w-80 max-w-full h-full overflow-y-auto flex flex-col translate-x-full transition-transform duration-300" id="mob-panel">
+    <div class="lp-drawer-head flex items-center justify-between px-5 py-4 sticky top-0 z-10">
+      <h3 class="lp-strong font-bold flex items-center gap-2">
+        <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters
+      </h3>
+      <button type="button" onclick="closeMobileFilter()" class="btn btn-ghost btn-icon btn-sm" aria-label="Close filters">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+    <div class="flex-1 p-5 overflow-y-auto">
+      <form method="get" class="space-y-0">
+        {% include "products/partials/filter_panel.html" with filter_form_id="mobile" %}
+        <button type="submit" class="btn btn-primary btn-block mt-5">
+          <i class="ti ti-search"></i> Apply Filters
+        </button>
+        <a href="{{ clear_url }}" class="btn btn-outline btn-block mt-2"><i class="ti ti-x"></i> Clear All</a>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# Quick View modal & Compare bar are provided globally by products/partials/product_card_scripts.html #}
+
+{% endblock %}
+
+{% block extra_scripts %}
+{# showToast() and CSRF are provided globally by products/partials/product_card_scripts.html #}
+{# All filter/sort/infinite-scroll behaviour is shared with the category route: #}
+{% include "products/partials/filter_scripts.html" %}
+{% endblock %}

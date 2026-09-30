@@ -1,0 +1,18 @@
+{
+  "name": "techzone-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TailwindCSS build pipeline for TechZone Electronics (Module 12).",
+  "scripts": {
+    "dev": "tailwindcss -i ./static_src/input.css -o ./static/css/app.css --watch",
+    "build": "npm run vendor && tailwindcss -i ./static_src/input.css -o ./static/css/app.css --minify",
+    "vendor": "node -e \"const f=require('fs');f.mkdirSync('static/vendor',{recursive:true});for(const s of ['alpinejs/dist/cdn.min.js','swiper/swiper-bundle.min.js','swiper/swiper-bundle.min.js.map','swiper/swiper-bundle.min.css'])f.copyFileSync('node_modules/'+s,'static/vendor/'+s.split('/').pop().replace('cdn.min.js','alpine.min.js'))\""
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  },
+  "dependencies": {
+    "alpinejs": "3.17.4",
+    "swiper": "12.2.0"
+  }
+}

@@ -1,0 +1,13 @@
+{% comment %}
+  Infinite-scroll trigger under the product grid. product-filters.js watches
+  #load-more and fetches the next batch when it scrolls into view, showing
+  skeleton cards at the end of the grid while it loads; the button is the
+  fallback for when that doesn't fire (and for keyboard users).
+{% endcomment %}
+{% if next_offset %}
+<div id="load-more" class="flex justify-center mt-10" data-next-offset="{{ next_offset }}" data-total="{{ total_count }}" data-batch="{{ next_batch }}">
+  <button type="button" id="load-more-btn" class="btn btn-secondary">
+    <i class="ti ti-chevron-down" aria-hidden="true"></i> Load more
+  </button>
+</div>
+{% endif %}

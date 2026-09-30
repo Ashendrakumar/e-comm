@@ -1,0 +1,203 @@
+/* Product detail: gallery, sticky buy box, tabs, review bars and rails.
+   Colours come from tokens.css only — tokens flip for .dark, so no dark overrides. */
+
+/* ── Gallery ── */
+/* Swiper's own CSS sets .swiper-slide{display:block}; re-centre the image in every slide. */
+.main-gallery-swiper .swiper-slide.pd-slide,.pd-slide{display:flex;align-items:center;justify-content:center;height:420px;padding:16px;}
+.pd-slide img{max-width:100%;max-height:100%;margin:auto;object-fit:contain;}
+@media (max-width:640px){.main-gallery-swiper .swiper-slide.pd-slide,.pd-slide{height:320px;}}
+
+/* Thumbnail strip — centred under the main image, scrolls sideways when it overflows */
+.pd-thumbs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:thin;}
+.pd-thumbs::before,.pd-thumbs::after{content:'';margin:auto;}   /* centres the row, still scrolls from the first thumb */
+.pd-thumb{flex:0 0 72px;width:72px;height:72px;padding:6px;cursor:pointer;
+  background:var(--color-bg);border:2px solid var(--color-border);border-radius:var(--radius-md);opacity:.6;
+  transition:opacity var(--duration) var(--ease),border-color var(--duration) var(--ease);}
+.pd-thumb img{width:100%;height:100%;object-fit:contain;}
+.pd-thumb:hover{opacity:1;border-color:var(--color-border-strong);}
+.pd-thumb.is-active{opacity:1;border-color:var(--color-primary);}
+.pd-thumb:focus-visible{outline:none;box-shadow:var(--shadow-focus);}
+@media (max-width:640px){.pd-thumb{flex-basis:60px;width:60px;height:60px;}}
+.main-gallery-swiper .swiper-button-prev,
+.main-gallery-swiper .swiper-button-next{
+  width:36px;height:36px;border-radius:var(--radius-full);
+  background:var(--color-bg);color:var(--color-text-soft);
+  border:1px solid var(--color-border);box-shadow:var(--shadow-md);margin-top:-18px;
+}
+.main-gallery-swiper .swiper-navigation-icon{width:auto;height:13px;}   /* Swiper 12 arrows are an injected SVG */
+.main-gallery-swiper .swiper-pagination{bottom:12px;}
+
+/* ── Zoom overlay (always dark, independent of theme) ── */
+#zoom-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out;}
+#zoom-overlay.open{display:flex;}
+#zoom-img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:var(--radius-lg);}
+.zoom-close{position:absolute;top:16px;right:16px;color:var(--white);background:rgba(255,255,255,.2);}
+.zoom-close:hover{background:rgba(255,255,255,.3);color:var(--white);}
+
+/* ── Star rating input ── */
+.star-input{display:flex;gap:4px;flex-direction:row-reverse;justify-content:flex-end;}
+.star-input input{position:absolute;opacity:0;width:1px;height:1px;}
+.star-input label{font-size:28px;line-height:1;color:var(--color-star-empty);cursor:pointer;transition:color .15s;}
+.star-input label:hover,.star-input label:hover~label,.star-input input:checked~label{color:var(--color-star);}
+.star-input input:focus-visible+label{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:var(--radius-xs);}
+
+/* ── Tab system ── */
+.tab-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:13px 22px;
+  border:0;border-bottom:2.5px solid transparent;background:none;
+  font:500 var(--text-base)/1.2 var(--font-sans);color:var(--color-text-muted);
+  cursor:pointer;white-space:nowrap;transition:color var(--duration) var(--ease),border-color var(--duration) var(--ease);
+}
+.tab-btn:hover{color:var(--color-text);}
+.tab-btn.active{border-bottom-color:var(--color-primary);color:var(--color-primary-text);font-weight:700;}
+
+/* ── Rating bar ── */
+.rating-bar{height:7px;border-radius:var(--radius-xs);background:var(--color-bg-muted);overflow:hidden;}
+.rating-bar-fill{height:100%;border-radius:var(--radius-xs);background:var(--color-star);transition:width .8s var(--ease);}
+
+/* ── Sticky sidebar ── */
+@media(min-width:1024px){.detail-sticky{position:sticky;top:88px;}}
+
+/* ── Breadcrumb scroll ── */
+
+/* ── Spec table rows ── */
+.spec-table thead tr{background:var(--color-primary);color:var(--color-on-primary);}
+.spec-row{border-top:1px solid var(--color-border-subtle);}
+.spec-row:nth-child(even){background:var(--color-bg-subtle);}
+
+/* ── Recently viewed scroll ── */
+.rv-scroll{overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+.rv-scroll::-webkit-scrollbar{display:none;}
+
+/* ── Buy box: wishlist / compare square actions (btn btn-secondary btn-icon) ── */
+/* CTA row: every button is the normal button height (--control-h) and radius. The two main
+   buttons share the width; the icon pair wraps below them when the column is narrow. */
+.pd-ctas{display:flex;flex-wrap:wrap;gap:10px;}
+.pd-ctas > .btn{flex:1 1 150px;}
+.pd-ctas-icons{display:flex;gap:10px;flex:0 0 auto;}
+@media (max-width:420px){.pd-ctas-icons{flex:1 1 100%;}.pd-ctas-icons .pd-icon-btn{flex:1;width:auto;}}
+.pd-icon-btn{width:var(--control-h);height:var(--control-h);flex-shrink:0;}
+.pd-icon-btn i{font-size:18px;}
+.pd-wishlist:hover,.pd-wishlist.is-active{color:var(--color-danger);border-color:var(--color-danger);background:var(--color-danger-soft);}
+/* product-card.js updateCompareUI() toggles .is-active + aria-pressed on every .compare-btn */
+.pd-icon-btn.compare-btn:hover{color:var(--color-primary-text);border-color:var(--color-primary);background:var(--color-primary-soft);}
+.pd-icon-btn.compare-btn.is-active{color:var(--color-on-primary);border-color:var(--color-primary);background:var(--color-primary);}
+
+/* WhatsApp CTA uses .btn-whatsapp, defined in components.css. */
+
+/* ── Share button + menu (CTA row; behaviour in product-detail.js) ──
+   Network colours (--net) only tint each option's icon tile. */
+.pd-share{position:relative;display:flex;}
+.pd-icon-btn.pd-share-btn:hover,.pd-icon-btn.pd-share-btn.is-active{color:var(--color-primary-text);border-color:var(--color-primary);background:var(--color-primary-soft);}
+.pd-share-menu{position:absolute;right:0;top:calc(100% + 10px);z-index:45;width:312px;max-width:calc(100vw - 32px);
+  padding:14px;background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-lg);animation:pd-share-in .16s var(--ease);}
+.pd-share-menu[hidden]{display:none;}
+.pd-share-menu::before{content:"";position:absolute;top:-7px;right:14px;width:12px;height:12px;transform:rotate(45deg);
+  background:var(--color-bg);border-left:1px solid var(--color-border);border-top:1px solid var(--color-border);}
+@keyframes pd-share-in{from{opacity:0;transform:translateY(-6px) scale(.98);}}
+.pd-share-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+  font-size:var(--text-sm);font-weight:700;color:var(--color-text);}
+.pd-share-close{width:28px;height:28px;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;
+  color:var(--color-text-muted);transition:background var(--duration) var(--ease);}
+.pd-share-close:hover{background:var(--color-bg-muted);color:var(--color-text);}
+.pd-share-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+.pd-share-opt{--net:var(--color-text);display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;
+  border-radius:var(--radius-lg);font-size:var(--text-xs);font-weight:600;color:var(--color-text-soft);
+  transition:background var(--duration) var(--ease),color var(--duration) var(--ease);}
+.pd-share-opt:hover,.pd-share-opt:focus-visible{background:var(--color-bg-subtle);color:var(--color-text);}
+.pd-share-opt:focus-visible{outline:2px solid var(--color-primary);outline-offset:-2px;}
+.pd-share-ico{width:40px;height:40px;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;font-size:20px;
+  color:var(--net);background:color-mix(in srgb,var(--net) 12%,transparent);transition:transform .2s var(--ease),background .2s var(--ease),color .2s var(--ease);}
+.pd-share-opt:hover .pd-share-ico{transform:translateY(-2px);background:var(--net);color:var(--white);}
+.pd-share-opt.is-x:hover .pd-share-ico{color:var(--color-bg);}
+.pd-share-copy{display:flex;gap:6px;margin-top:12px;padding:4px;border:1px solid var(--color-border);border-radius:var(--radius-md);
+  background:var(--color-bg-subtle);}
+.pd-share-copy input{flex:1;min-width:0;padding:0 8px;border:0;background:transparent;font-size:var(--text-sm);color:var(--color-text-muted);outline:none;}
+.pd-share-copy .btn{flex-shrink:0;}
+.pd-share-copy .btn.is-copied{background:var(--color-success);}
+.pd-share-native{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;padding:8px;
+  border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:600;color:var(--color-primary-text);}
+.pd-share-native[hidden]{display:none;}
+.pd-share-native:hover{background:var(--color-primary-soft);}
+@media (max-width:420px){.pd-share{flex:1;}.pd-share .pd-icon-btn{flex:1;width:auto;}}
+@media (prefers-reduced-motion:reduce){.pd-share-menu{animation:none;}.pd-share-ico{transition:none;}}
+
+/* "Was this helpful?" — markHelpful() adds .is-voted */
+.helpful-btn.is-voted{background:var(--color-primary-soft);color:var(--color-primary-text);border-color:var(--color-primary);opacity:1;}
+
+/* Form result messages — product-detail.js sets .pd-msg + .is-success / .is-error */
+.pd-msg{padding:12px;border-radius:var(--radius-md);border:1px solid transparent;text-align:center;font-size:var(--text-sm);font-weight:600;}
+.pd-msg.is-success{background:var(--color-success-soft);color:var(--color-success);border-color:var(--color-success);}
+.pd-msg.is-error{background:var(--color-danger-soft);color:var(--color-danger);border-color:var(--color-danger);}
+
+/* Soft intent panels (price, trust badges, pros/cons, rating summary) */
+.pd-panel{background:var(--color-bg-subtle);border:1px solid var(--color-border);border-radius:var(--radius-xl);}
+.pd-chip{padding:4px 10px;border-radius:var(--radius-sm);background:var(--color-bg-muted);color:var(--color-text-soft);font-weight:500;}
+.pd-trust{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px;border-radius:var(--radius-xl);border:1px solid transparent;}
+.pd-trust span{font-size:var(--text-xs);font-weight:600;line-height:1.2;}
+.pd-trust i{font-size:20px;margin-bottom:4px;}
+.pd-trust.is-success{background:var(--color-success-soft);color:var(--color-success);}
+.pd-trust.is-primary{background:var(--color-primary-soft);color:var(--color-primary-text);}
+.pd-trust.is-accent{background:var(--color-warning-soft);color:var(--color-accent);}
+
+/* ── Under the gallery (desktop): assurances + help card ──
+   The gallery column sticks below the sticky header while the taller info column scrolls. */
+.pd-aside{display:none;}
+@media (min-width:1024px){
+  .pd-gallery{position:sticky;top:132px;align-self:start;}
+  .pd-aside{display:grid;gap:16px;margin-top:16px;}
+  .pd-trust-row.grid{display:none;}
+}
+.pd-assure{padding:16px 18px;}
+.pd-assure ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px;}
+.pd-assure li{display:flex;flex-direction:column;gap:8px;font-size:var(--text-xs);line-height:1.4;color:var(--color-text-muted);}
+.pd-assure li strong{display:block;font-size:var(--text-sm);font-weight:700;color:var(--color-text);margin-bottom:1px;}
+.pd-assure-ico{width:38px;height:38px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:19px;}
+.pd-assure-ico.is-success{background:var(--color-success-soft);color:var(--color-success);}
+.pd-assure-ico.is-primary{background:var(--color-primary-soft);color:var(--color-primary-text);}
+.pd-assure-ico.is-accent{background:var(--color-warning-soft);color:var(--color-accent);}
+
+.pd-help{display:flex;gap:14px;padding:18px;
+  background:radial-gradient(ellipse 70% 90% at 100% 0,var(--color-primary-soft),transparent 70%),var(--color-bg);}
+.pd-help-ico{flex-shrink:0;width:44px;height:44px;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;
+  font-size:22px;background:var(--color-primary);color:var(--color-on-primary);box-shadow:var(--shadow-md);}
+.pd-help-body{min-width:0;}
+.pd-help-title{font-size:var(--text-md);font-weight:700;color:var(--color-text);}
+.pd-help-text{font-size:var(--text-sm);line-height:1.5;color:var(--color-text-muted);margin:2px 0 12px;}
+.pd-help-actions{display:flex;flex-wrap:wrap;gap:8px;}
+.pd-help-wa:hover{color:var(--green-600);border-color:var(--green-500);background:var(--color-success-soft);}
+.pd-pros{background:var(--color-success-soft);color:var(--color-success);border-radius:var(--radius-md);padding:14px;}
+.pd-cons{background:var(--color-danger-soft);color:var(--color-danger);border-radius:var(--radius-md);padding:14px;}
+.pd-avatar{width:44px;height:44px;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:var(--color-primary-soft-2);color:var(--color-primary-text);font-weight:800;font-size:var(--text-md);}
+.pd-section-icon{width:40px;height:40px;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:var(--color-primary-soft);color:var(--color-primary-text);font-size:18px;}
+.pd-ask{background:var(--color-primary-soft);border:1px solid var(--color-primary-soft-2);border-radius:var(--radius-xl);}
+
+/* Stock dot */
+.pd-dot{width:12px;height:12px;border-radius:var(--radius-full);flex-shrink:0;}
+.pd-dot.is-in{background:var(--color-success);}
+.pd-dot.is-out{background:var(--color-danger);}
+
+/* Inquiry modal */
+.pd-modal-backdrop{position:absolute;inset:0;background:var(--color-overlay);backdrop-filter:blur(4px);}
+.pd-modal{position:relative;background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);}
+
+/* Text & surface roles used by products/detail.html */
+.pd-strong{color:var(--color-text);}
+.pd-soft{color:var(--color-text-soft);}
+.pd-faint{color:var(--color-text-faint);}
+.pd-success{color:var(--color-success);}
+.pd-danger{color:var(--color-danger);}
+.pd-warning{color:var(--color-accent);}
+.pd-primary{color:var(--color-primary-text);}
+.pd-eyebrow{font-size:var(--text-xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-faint);}
+.pd-card{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl);}
+.pd-rule{border-color:var(--color-border-subtle);}
+.pd-lede{color:var(--color-text-soft);border-left:4px solid var(--color-primary-soft-2);}
+.pd-specs-grid > div{border-color:var(--color-border-subtle);}
+.pd-faq-q:hover{background:var(--color-bg-subtle);}
+.pd-review{transition:box-shadow var(--duration) var(--ease);}
+.pd-review:hover{box-shadow:var(--shadow-md);}
+.pd-card-head{background:var(--color-bg-subtle);}

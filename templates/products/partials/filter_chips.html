@@ -1,0 +1,17 @@
+{% comment %}
+Active filter chips. Rendered on page load and re-rendered by ajax_filter, so it
+must stay self-contained: it may only use `active_chips` and `clear_url`.
+Each chip is an active button.pill; clicking anywhere on it removes that filter.
+{% endcomment %}
+{% if active_chips %}
+{% for chip in active_chips %}
+<button type="button" class="pill active filter-chip"
+        onclick="removeFilterChip('{{ chip.key|escapejs }}','{{ chip.val|escapejs }}')"
+        aria-label="Remove filter: {{ chip.label }}">
+  {{ chip.label }} <i class="ti ti-x" aria-hidden="true"></i>
+</button>
+{% endfor %}
+<a href="{{ clear_url }}" class="btn btn-ghost btn-sm">
+  <i class="ti ti-x"></i> Clear all
+</a>
+{% endif %}

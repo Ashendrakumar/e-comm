@@ -1,0 +1,237 @@
+/* Homepage sections. Layout comes from Tailwind; this file carries the parts
+   Tailwind can't express — colour-mixed accents driven by a per-item --c,
+   the hover wipes and washes shared with the category cards,
+   the coverage map and the entry stagger.
+   Colours come from tokens.css; --c (per-section/per-item accent, set inline
+   in the template) falls back to --color-primary. Surfaces use semantic tokens
+   so they flip with .dark on their own — only genuinely different dark
+   treatments (stronger tints, lightened accents) are overridden below. */
+
+/* ---------- Shared section furniture ---------- */
+.sec{position:relative;padding:72px 0}
+.sec-tight{padding:44px 0}
+/* Clears the trust strip that overlaps in from the hero. */
+.sec-under-strip{padding-top:104px}
+/* Soft tinted ground for alternating sections, tinted by the section accent. */
+.sec-wash{--wash:5%;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c,var(--color-primary)) var(--wash),var(--color-page)) 0%,var(--color-page) 55%,var(--color-page) 100%)}
+.dark .sec-wash{--wash:12%}
+
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;margin-bottom:34px}
+.sec-head-center{flex-direction:column;align-items:center;text-align:center;gap:0}
+/* Eyebrow: a short accent rule then the label, both in the section colour. */
+.sec-eyebrow{display:inline-flex;align-items:center;gap:9px;margin-bottom:10px;
+  font-size:var(--text-xs);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--c,var(--color-primary))}
+.sec-eyebrow::before{content:'';width:22px;height:2px;border-radius:2px;background:currentColor;flex-shrink:0}
+.sec-head-center .sec-eyebrow::after{content:'';width:22px;height:2px;border-radius:2px;background:currentColor;flex-shrink:0}
+.sec-eyebrow .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* Accent-tinted pill link, mirroring the category rail's "View All". A standalone
+   homepage component (not .btn) because it is coloured by the section's --c and is
+   toggled with Tailwind's `hidden md:inline-flex`, which .btn's display would beat. */
+.sec-link{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;
+  font-size:var(--text-sm);font-weight:700;padding:9px 18px;border-radius:var(--radius-full);color:var(--c,var(--color-primary));
+  border:1.5px solid color-mix(in srgb,var(--c,var(--color-primary)) 25%,transparent);
+  transition:background .3s ease,border-color .3s ease,transform .3s cubic-bezier(.2,.8,.2,1)}
+.sec-link:hover{background:color-mix(in srgb,var(--c,var(--color-primary)) 8%,var(--color-bg));
+  border-color:color-mix(in srgb,var(--c,var(--color-primary)) 45%,transparent)}
+.dark .sec-link:hover{background:color-mix(in srgb,var(--c,var(--color-primary)) 18%,var(--color-bg))}
+.sec-link i{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.sec-link:hover i{transform:translateX(3px)}
+
+/* .rise, .tile and .chip moved to components.css — shared with the CMS pages. */
+
+/* ---------- Hero ---------- */
+/* A soft mesh behind the inset hero panel, so the page doesn't start on a hard edge. */
+.home-mesh{--mesh-a:14%;--mesh-b:10%;position:relative;background:var(--color-page)}
+.home-mesh::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(60% 55% at 12% 0%,color-mix(in srgb,var(--color-primary) var(--mesh-a),transparent) 0%,transparent 60%),
+    radial-gradient(50% 50% at 92% 8%,color-mix(in srgb,var(--color-accent) var(--mesh-b),transparent) 0%,transparent 60%)}
+.dark .home-mesh{--mesh-a:22%;--mesh-b:12%}
+
+/* Main panel: the banner carousel, inset and rounded rather than full-bleed.
+   Always a dark surface (both themes), so it reads the raw palette, not semantic tokens. */
+.hero-main{position:relative;border-radius:28px;overflow:hidden;min-height:460px;
+  background:linear-gradient(135deg,var(--brand-900) 0%,var(--brand-700) 45%,var(--gray-950) 100%);
+  box-shadow:var(--shadow-lg)}
+.hero-main .swiper,.hero-main .swiper-wrapper,.hero-main .swiper-slide{height:100%}
+.hero-main .swiper-slide{display:flex;align-items:center;min-height:460px;position:relative;overflow:hidden}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.42}
+.hero-scrim{position:absolute;inset:0;
+  background:linear-gradient(100deg,color-mix(in srgb,var(--gray-950) 92%,transparent) 0%,color-mix(in srgb,var(--gray-950) 62%,transparent) 45%,color-mix(in srgb,var(--gray-950) 15%,transparent) 100%)}
+/* Fine grid texture so the flat gradient reads as a surface. */
+.hero-grid-tex{position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(color-mix(in srgb,var(--white) 5%,transparent) 1px,transparent 1px),
+    linear-gradient(90deg,color-mix(in srgb,var(--white) 5%,transparent) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(75% 75% at 30% 40%,#000 0%,transparent 75%)}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;font-size:var(--text-xs);font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;padding:7px 14px;border-radius:var(--radius-full);color:var(--orange-400);
+  background:color-mix(in srgb,var(--color-accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--color-accent) 35%,transparent)}
+/* On-dark CTA. Used as `btn btn-lg hero-cta` — .btn supplies size/shape; this is a
+   light button for the always-dark hero/services panels (no theme flip on purpose). */
+.hero-cta{font-weight:700;background:var(--white);color:var(--brand-700);border-color:transparent;
+  box-shadow:0 14px 28px -12px color-mix(in srgb,var(--black) 50%,transparent);
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,background .3s ease}
+.hero-cta:hover{background:var(--white);color:var(--brand-700);transform:translateY(-3px);
+  box-shadow:0 20px 34px -14px color-mix(in srgb,var(--black) 55%,transparent)}
+.hero-cta i{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.hero-cta:hover i{transform:translateX(4px)}
+.hero-cta-ghost,.hero-cta-ghost:hover{color:var(--white);box-shadow:none;
+  background:color-mix(in srgb,var(--white) 10%,transparent);border-color:color-mix(in srgb,var(--white) 24%,transparent)}
+.hero-cta-ghost:hover{background:color-mix(in srgb,var(--white) 18%,transparent)}
+/* Carousel chrome, scoped so it doesn't inherit the global round-button look. */
+.hero-main .swiper-pagination{bottom:20px!important;text-align:left;padding-left:44px}
+.hero-main .swiper-pagination-bullet{width:26px;height:4px;border-radius:2px;background:color-mix(in srgb,var(--white) 40%,transparent);opacity:1;transition:background .3s ease,width .3s ease}
+.hero-main .swiper-pagination-bullet-active{background:var(--white)!important;width:44px}
+.hero-main .swiper-button-next,.hero-main .swiper-button-prev{width:40px;height:40px;border-radius:var(--radius-md);margin-top:-20px;
+  background:color-mix(in srgb,var(--white) 12%,transparent);border:1px solid color-mix(in srgb,var(--white) 20%,transparent);color:var(--white);backdrop-filter:blur(6px)}
+.hero-main .swiper-navigation-icon{width:auto;height:14px}
+.hero-main .swiper-button-next:hover,.hero-main .swiper-button-prev:hover{background:color-mix(in srgb,var(--white) 22%,transparent)}
+
+/* Right rail: quick-entry tiles beside the banner. */
+.hero-rail-tile{position:relative;display:flex;flex-direction:column;border-radius:22px;overflow:hidden;padding:22px;
+  background:var(--color-bg);border:1.5px solid var(--color-border-subtle);box-shadow:var(--shadow-xs);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease,border-color .35s ease}
+.hero-rail-tile:hover{transform:translateY(var(--lift-hover));border-color:color-mix(in srgb,var(--c,var(--color-primary)) 38%,transparent);
+  box-shadow:var(--shadow-hover)}
+.hero-rail-tile--dark{background:linear-gradient(140deg,var(--brand-700) 0%,var(--brand-900) 100%);border-color:transparent;color:var(--white)}
+/* Dark theme: fade into the page surface rather than deep blue. */
+.dark .hero-rail-tile--dark{background:linear-gradient(140deg,var(--brand-700) 0%,var(--gray-900) 100%)}
+.hero-rail-tile--dark:hover{box-shadow:var(--shadow-hover)}
+/* Compact category links inside the rail */
+.rail-link{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:var(--radius-md);
+  transition:background .25s ease,transform .25s cubic-bezier(.2,.8,.2,1)}
+.rail-link:hover{background:color-mix(in srgb,var(--c,var(--color-primary)) 9%,var(--color-bg));transform:translateX(3px)}
+.dark .rail-link:hover{background:color-mix(in srgb,var(--c,var(--color-primary)) 20%,var(--color-bg))}
+.rail-ico{display:grid;place-items:center;width:32px;height:32px;border-radius:var(--radius-md);flex-shrink:0;font-size:17px;
+  background:color-mix(in srgb,var(--c,var(--color-primary)) 12%,var(--color-bg));color:var(--c,var(--color-primary))}
+.dark .rail-ico{background:color-mix(in srgb,var(--c,var(--color-primary)) 24%,var(--color-bg));color:color-mix(in srgb,var(--c,var(--color-primary)) 72%,var(--white))}
+
+/* ---------- USP strip: floats over the seam below the hero ---------- */
+.usp-strip{position:relative;display:grid;gap:2px;border-radius:22px;overflow:hidden;
+  background:var(--color-bg);border:1.5px solid var(--color-border-subtle);box-shadow:var(--shadow-md)}
+.usp-item{position:relative;display:flex;align-items:center;gap:13px;padding:18px 20px;overflow:hidden;isolation:isolate;
+  transition:background .3s ease}
+.usp-item::before{content:'';position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .3s ease;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) 12%,transparent),transparent)}
+.usp-item::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2.5px;background:var(--c);
+  transform:scaleX(0);transform-origin:left;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.usp-item:hover::before{opacity:1}
+.usp-item:hover::after{transform:scaleX(1)}
+.usp-item + .usp-item{box-shadow:-1px 0 0 var(--color-border-subtle)}
+/* Phones (2x2): stack icon over text and let it wrap instead of truncating to "Free Deliv...". */
+@media (max-width:767px){.usp-item{flex-direction:column;align-items:flex-start;gap:10px;padding:14px}.usp-item .truncate{white-space:normal;overflow:visible;text-overflow:clip}}
+
+/* ---------- Promo bento ---------- */
+.promo{position:relative;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;
+  border-radius:22px;min-height:170px;isolation:isolate;color:var(--white);
+  background:linear-gradient(140deg,color-mix(in srgb,var(--c) 78%,var(--white)) 0%,var(--c) 45%,color-mix(in srgb,var(--c) 55%,var(--black)) 100%);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+.promo-lead{min-height:280px}
+.promo:hover{transform:translateY(var(--lift-hover));box-shadow:var(--shadow-hover)}
+.promo-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;
+  transition:opacity .5s ease,transform .5s cubic-bezier(.2,.8,.2,1)}
+.promo:hover .promo-img{opacity:.5;transform:scale(1.06)}
+.promo-scrim{position:absolute;inset:0;background:linear-gradient(to top,color-mix(in srgb,var(--gray-950) 70%,transparent) 0%,color-mix(in srgb,var(--gray-950) 15%,transparent) 55%,transparent 100%)}
+.promo-sheen{position:absolute;inset:0;opacity:0;transition:opacity .35s ease;
+  background:radial-gradient(110% 80% at 50% 0%,color-mix(in srgb,var(--white) 26%,transparent) 0%,transparent 65%)}
+.promo:hover .promo-sheen{opacity:1}
+.promo-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;padding:5px 11px;border-radius:var(--radius-full);
+  background:color-mix(in srgb,var(--white) 18%,transparent);border:1px solid color-mix(in srgb,var(--white) 28%,transparent)}
+
+/* ---------- Why choose us: numbered feature cards ---------- */
+.feat{--num:10%;--num-hover:18%;position:relative;padding:28px 24px 26px;overflow:hidden}
+/* Oversized ghost numeral, bled off the top-right corner. */
+.feat-num{position:absolute;top:-14px;right:10px;font-size:88px;font-weight:800;line-height:1;letter-spacing:-.06em;
+  color:color-mix(in srgb,var(--c) var(--num),transparent);transition:color .35s ease,transform .35s cubic-bezier(.2,.8,.2,1);
+  pointer-events:none;user-select:none}
+.feat:hover .feat-num{color:color-mix(in srgb,var(--c) var(--num-hover),transparent);transform:translateY(4px) scale(1.04)}
+.dark .feat{--num:22%;--num-hover:32%}
+
+/* ---------- Services: one dark inset panel (always dark, raw palette) ---------- */
+.svc-panel{position:relative;overflow:hidden;border-radius:32px;isolation:isolate;
+  background:linear-gradient(140deg,var(--gray-900) 0%,var(--brand-900) 55%,var(--gray-950) 100%)}
+.svc-panel::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(50% 60% at 85% 10%,color-mix(in srgb,var(--brand-500) 35%,transparent) 0%,transparent 65%),
+    radial-gradient(45% 55% at 8% 95%,color-mix(in srgb,var(--color-accent) 22%,transparent) 0%,transparent 65%)}
+.svc-panel::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(color-mix(in srgb,var(--white) 5%,transparent) 1px,transparent 1px),
+    linear-gradient(90deg,color-mix(in srgb,var(--white) 5%,transparent) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(70% 70% at 50% 0%,#000,transparent 75%)}
+.svc-tile{position:relative;display:flex;align-items:center;gap:13px;padding:15px 17px;border-radius:var(--radius-lg);overflow:hidden;
+  background:color-mix(in srgb,var(--white) 6%,transparent);border:1px solid color-mix(in srgb,var(--white) 10%,transparent);
+  transition:background .3s ease,border-color .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+.svc-tile:hover{background:color-mix(in srgb,var(--white) 12%,transparent);border-color:color-mix(in srgb,var(--white) 24%,transparent);transform:translateY(var(--lift-hover))}
+.svc-ico{display:grid;place-items:center;width:42px;height:42px;border-radius:var(--radius-md);flex-shrink:0;font-size:20px;color:var(--white);
+  background:color-mix(in srgb,var(--white) 10%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--white) 14%,transparent);
+  transition:background .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+.svc-tile:hover .svc-ico{background:var(--color-primary);transform:scale(1.08) rotate(-4deg)}
+.svc-arrow{margin-left:auto;opacity:0;transform:translateX(-6px);transition:opacity .3s ease,transform .3s ease;color:var(--white)}
+.svc-tile:hover .svc-arrow{opacity:.85;transform:translateX(0)}
+
+/* ---------- Testimonials ---------- */
+.quote{--glyph:10%;position:relative;padding:28px 26px 24px;overflow:hidden}
+.dark .quote{--glyph:20%}
+/* Decorative quote glyph behind the text. */
+.quote::before{content:'\201C';position:absolute;top:-34px;right:14px;font-size:150px;line-height:1;font-weight:700;
+  font-family:Georgia,'Times New Roman',serif;color:color-mix(in srgb,var(--c) var(--glyph),transparent);pointer-events:none;user-select:none;
+  transition:color .35s ease}
+.quote:hover::before{color:color-mix(in srgb,var(--c) 18%,transparent)}
+.quote-stars{display:inline-flex;gap:2px;font-size:15px;color:var(--color-star)}
+.quote-avatar{position:relative;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;
+  background:color-mix(in srgb,var(--c) 14%,var(--color-bg));color:var(--c);font-weight:800;font-size:15px;
+  box-shadow:0 0 0 2px var(--color-bg),0 0 0 3.5px color-mix(in srgb,var(--c) 30%,transparent)}
+.dark .quote-avatar{background:color-mix(in srgb,var(--c) 26%,var(--color-bg));color:color-mix(in srgb,var(--c) 70%,var(--white));
+  box-shadow:0 0 0 2px var(--color-bg),0 0 0 3.5px color-mix(in srgb,var(--c) 40%,transparent)}
+.quote-avatar img{width:100%;height:100%;object-fit:cover}
+
+/* ---------- Coverage map ---------- */
+.map-panel{position:relative;aspect-ratio:1;width:100%;max-width:400px;border-radius:28px;overflow:hidden;
+  background:linear-gradient(160deg,var(--color-primary-soft) 0%,var(--color-bg-subtle) 100%);border:1.5px solid var(--color-primary-soft-2)}
+/* Dot grid standing in for the map surface. */
+.map-dots{position:absolute;inset:0;
+  background-image:radial-gradient(color-mix(in srgb,var(--color-primary-text) 25%,transparent) 1.5px,transparent 1.5px);background-size:22px 22px;
+  mask-image:radial-gradient(70% 70% at 50% 50%,#000 30%,transparent 78%)}
+/* Concentric reach rings pulsing out from the centre. */
+.map-ring{position:absolute;top:50%;left:50%;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--color-primary-text) 25%,transparent);
+  transform:translate(-50%,-50%);animation:mapPulse 4s ease-out infinite}
+@keyframes mapPulse{0%{width:72px;height:72px;opacity:.9}100%{width:340px;height:340px;opacity:0}}
+.map-pin{position:absolute;width:11px;height:11px;border-radius:50%;background:var(--color-primary);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--color-primary) 18%,transparent);animation:pinIn .6s cubic-bezier(.2,.8,.2,1) both}
+.map-pin-lead{width:16px;height:16px;background:var(--color-accent);box-shadow:0 0 0 6px color-mix(in srgb,var(--color-accent) 20%,transparent)}
+@keyframes pinIn{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:none}}
+/* City chips */
+.area-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-full);font-size:var(--text-sm);font-weight:600;
+  background:var(--color-bg);color:var(--color-text-soft);border:1.5px solid var(--color-border-subtle);
+  transition:border-color .25s ease,color .25s ease,transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease}
+.area-chip i{color:var(--color-primary-text);font-size:13px}
+.area-chip:hover{transform:translateY(var(--lift-hover));border-color:color-mix(in srgb,var(--color-primary) 45%,transparent);color:var(--color-primary-text);
+  box-shadow:var(--shadow-hover)}
+
+/* ---------- Contact ---------- */
+.chan{display:flex;align-items:center;gap:14px;padding:15px 17px;border-radius:var(--radius-lg);overflow:hidden;position:relative;
+  background:var(--color-bg);border:1.5px solid var(--color-border-subtle);isolation:isolate;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .3s ease}
+.chan::before{content:'';position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .3s ease;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--c) 12%,transparent),transparent 70%)}
+.chan:hover{transform:translateX(2px);border-color:color-mix(in srgb,var(--c) 40%,transparent);
+  box-shadow:var(--shadow-hover)}
+.chan:hover::before{opacity:1}
+.chan-arrow{margin-left:auto;color:var(--c);opacity:0;transform:translateX(-6px);transition:opacity .3s ease,transform .3s ease}
+.chan:hover .chan-arrow{opacity:1;transform:translateX(0)}
+.form-panel{border-radius:24px;border:1.5px solid var(--color-border-subtle);background:var(--color-bg);box-shadow:var(--shadow-md)}
+
+/* ---------- Motion opt-out ---------- */
+@media (prefers-reduced-motion:reduce){
+  .rise,.map-ring,.map-pin{animation:none!important}
+  .tile,.tile::after,.chip,.chip i,.promo,.promo-img,.hero-rail-tile,.svc-tile,.svc-ico,.chan,.area-chip,.feat-num{
+    transition:none!important}
+  .tile:hover,.promo:hover,.hero-rail-tile:hover,.svc-tile:hover,.area-chip:hover,.hero-cta:hover{transform:none}
+  .chan:hover,.rail-link:hover{transform:none}
+  .tile:hover .chip,.svc-tile:hover .svc-ico,.promo:hover .promo-img,.feat:hover .feat-num{transform:none}
+  .map-ring{display:none}
+}

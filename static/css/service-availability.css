@@ -1,0 +1,30 @@
+/* Service availability strip (partials/service_availability.html). Tokens only. */
+.avail-heading{font-size:var(--text-xl);font-weight:700;color:var(--color-text);margin-bottom:16px;}
+.avail-list{display:grid;gap:12px;}
+
+.avail-item{display:flex;align-items:center;gap:12px;padding:16px;
+  background:var(--color-bg);border:1px solid var(--color-border-subtle);border-radius:var(--radius-xl);box-shadow:var(--shadow-xs);
+  transition:border-color var(--duration) var(--ease),transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease;}
+.avail-item:not(.is-loading):hover{border-color:var(--color-primary);transform:translateY(var(--lift-hover));box-shadow:var(--shadow-hover);}
+.avail-ico{display:grid;place-items:center;flex-shrink:0;width:44px;height:44px;border-radius:var(--radius-lg);
+  background:var(--color-primary-soft);color:var(--color-primary-text);font-size:22px;}
+.avail-body{min-width:0;}
+.avail-title{font-size:var(--text-sm);font-weight:700;color:var(--color-text);line-height:1.35;}
+.avail-desc{margin-top:2px;font-size:var(--text-xs);color:var(--color-text-muted);line-height:1.45;}
+
+/* Tiles (serving-areas page): centred icon over text, fills the row whatever the item count. */
+.avail--tiles .avail-list{grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:16px;}
+.avail--tiles .avail-item{flex-direction:column;text-align:center;padding:24px 16px;}
+.avail--tiles .avail-ico{width:52px;height:52px;font-size:26px;}
+
+/* List (city page): two columns of rows from 640px. */
+@media (min-width:640px){.avail--list .avail-list{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+/* Loading placeholders */
+.avail-item.is-loading .avail-ico,.avail-item.is-loading .avail-title{
+  background:linear-gradient(90deg,var(--color-bg-muted) 25%,var(--color-border) 50%,var(--color-bg-muted) 75%);
+  background-size:200% 100%;animation:availShimmer 1.3s linear infinite;color:transparent;}
+.avail-item.is-loading .avail-title{width:70%;min-width:80px;border-radius:var(--radius-xs);}
+.avail--tiles .avail-item.is-loading .avail-title{margin-inline:auto;}
+@keyframes availShimmer{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.avail-item,.avail-item.is-loading .avail-ico,.avail-item.is-loading .avail-title{animation:none;transition:none;}}

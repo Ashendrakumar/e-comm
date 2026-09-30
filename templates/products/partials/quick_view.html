@@ -1,0 +1,99 @@
+{% load static %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- Image -->
+  <div class="qv-media p-4 flex items-center justify-center min-h-[240px]">
+    {% if product.primary_image %}
+    <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}"
+         class="max-h-64 w-full object-contain" id="qv-main-img" loading="lazy" decoding="async">
+    {% else %}
+    <i class="ti ti-photo-off text-5xl"></i>
+    {% endif %}
+  </div>
+  <!-- Thumbnails row -->
+  {% if product.images.count > 1 %}
+  <div class="col-span-full md:col-span-1 md:col-start-1 flex gap-2 flex-wrap md:-mt-2">
+    {% for img in product.images.all %}
+    <button type="button" onclick="document.getElementById('qv-main-img').src='{{ img.image.url }}'"
+            class="qv-thumb" aria-label="Show image {{ forloop.counter }}">
+      <img src="{{ img.image.url }}" alt="" class="w-full h-full object-contain" loading="lazy" decoding="async">
+    </button>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <!-- Info -->
+  <div class="flex flex-col gap-3">
+    {% if product.brand %}
+    <p class="qv-brand text-xs font-bold uppercase tracking-wider">{{ product.brand.name }}</p>
+    {% endif %}
+    <h2 class="qv-title text-lg font-extrabold leading-snug">{{ product.name }}</h2>
+
+    <!-- Rating -->
+    {% if product.review_count %}
+    <div class="flex items-center gap-2">
+      <div class="flex">
+        {% for i in "12345" %}
+          {% if forloop.counter <= product.average_rating %}
+          <i class="ti ti-star-filled star-filled text-sm"></i>
+          {% else %}
+          <i class="ti ti-star star-empty text-sm"></i>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <span class="text-xs text-muted">({{ product.review_count }} reviews)</span>
+    </div>
+    {% endif %}
+
+    <!-- Price -->
+    <div class="flex items-center gap-3">
+      {% if product.sale_price %}
+      <span class="qv-title text-2xl font-extrabold">₹{{ product.sale_price|floatformat:0 }}</span>
+      <span class="qv-faint text-base line-through">₹{{ product.price|floatformat:0 }}</span>
+      <span class="badge badge-danger">{{ product.discount_percent }}% OFF</span>
+      {% else %}
+      <span class="qv-title text-2xl font-extrabold">₹{{ product.price|floatformat:0 }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Stock -->
+    <div class="flex items-center gap-2">
+      {% if product.is_in_stock %}
+      <span class="badge badge-success"><i class="ti ti-circle-check" aria-hidden="true"></i> In Stock{% if product.is_low_stock %} — Only {{ product.stock }} left{% endif %}</span>
+      {% else %}
+      <span class="badge badge-danger"><i class="ti ti-circle-x" aria-hidden="true"></i> Out of Stock</span>
+      {% endif %}
+    </div>
+
+    {% if product.short_description %}
+    <p class="text-sm text-muted leading-relaxed">{{ product.short_description }}</p>
+    {% endif %}
+
+    <!-- Key specs preview -->
+    {% with attrs=product.attributes.all|slice:":4" %}
+    {% if attrs %}
+    <div class="qv-specs grid grid-cols-2 gap-2 p-3">
+      {% for av in attrs %}
+      <div>
+        <p class="qv-faint text-[11px] uppercase">{{ av.attribute.name }}</p>
+        <p class="qv-soft text-xs font-semibold">{{ av.value }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- CTAs -->
+    <div class="flex gap-3 mt-auto pt-2">
+      <a href="{{ product.get_absolute_url }}"
+         class="btn btn-primary btn-lg flex-1">
+        View Full Details <i class="ti ti-arrow-right" aria-hidden="true"></i>
+      </a>
+      {% if site_settings.whatsapp %}
+      <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi, I'm interested in {{ product.name|urlencode }}"
+         target="_blank" rel="noopener" aria-label="Ask on WhatsApp"
+         class="btn btn-icon btn-lg qv-wa">
+        <i class="ti ti-brand-whatsapp" aria-hidden="true"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>

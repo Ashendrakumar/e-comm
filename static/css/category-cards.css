@@ -1,0 +1,147 @@
+/* Category cards — shared by the homepage "Shop by Category" rail and the
+   all-categories page. Colour is driven by Category.color via --cat (falls
+   back to the brand primary); every neutral comes from tokens.css.
+
+   Tints are mixed from --cat into the theme surface/ink, so the only thing
+   that differs between light and dark is *how much* colour goes in — those
+   strengths are the --cat-mix-* knobs below, flipped on .dark. */
+:root{
+  --cat-mix-soft:11%;      /* logo-tile / row-icon fill             */
+  --cat-mix-ring:16%;      /* inset ring around the tile            */
+  --cat-mix-fg:100%;       /* icon glyph colour                     */
+  --cat-mix-ink:85%;       /* name colour on hover                  */
+  --cat-mix-count:14%;     /* count pill fill on hover              */
+  --cat-mix-count-fg:80%;  /* count pill text on hover              */
+}
+.dark{
+  --cat-mix-soft:22%;
+  --cat-mix-ring:30%;
+  --cat-mix-fg:72%;
+  --cat-mix-ink:70%;
+  --cat-mix-count:26%;
+  --cat-mix-count-fg:65%;
+}
+.cat-card,.cat-hero,.cat-group-ico,.cat-group-link{--cat-c:var(--cat,var(--color-primary));}
+
+/* ---------- Base tile ---------- */
+.cat-card{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:24px 14px 18px;border-radius:var(--radius-xl);background:var(--color-bg);border:1.5px solid var(--color-border-subtle);isolation:isolate;overflow:hidden;
+  box-shadow:var(--shadow-xs);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease,border-color .35s ease;
+  animation:catIn .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i,0) * 45ms)}
+@keyframes catIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* soft colour wash that fades in behind the content */
+.cat-card::before{content:'';position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .35s ease;
+  background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--cat-c) 16%,transparent) 0%,transparent 70%)}
+/* accent bar that wipes across the top edge */
+.cat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cat-c);
+  transform:scaleX(0);transform-origin:left;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.cat-card:hover,.cat-card:focus-visible{transform:translateY(var(--lift-hover));border-color:color-mix(in srgb,var(--cat-c) 38%,transparent);
+  box-shadow:var(--shadow-hover)}
+.cat-card:hover::before,.cat-card:focus-visible::before{opacity:1}
+.cat-card:hover::after,.cat-card:focus-visible::after{transform:scaleX(1)}
+.cat-card:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--cat-c) 35%,transparent),var(--shadow-hover)}
+
+/* logo tile */
+.cat-ico{position:relative;width:64px;height:64px;border-radius:var(--radius-xl);display:grid;place-items:center;
+  background:color-mix(in srgb,var(--cat-c) var(--cat-mix-soft),var(--color-bg));
+  color:color-mix(in srgb,var(--cat-c) var(--cat-mix-fg),var(--color-text));
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--cat-c) var(--cat-mix-ring),transparent);
+  transition:background .3s ease,color .3s ease,transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+.cat-ico i{font-size:28px;line-height:1;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.cat-ico img{width:34px;height:34px;object-fit:contain}
+/* Solid --cat fill on hover: the glyph is white in both themes. */
+.cat-card:hover .cat-ico{background:var(--cat-c);color:var(--white);transform:translateY(-3px) scale(1.07);
+  box-shadow:var(--shadow-sm)}
+.cat-card:hover .cat-ico i{transform:scale(1.06) rotate(-4deg)}
+
+.cat-name{margin-top:14px;font-size:14px;font-weight:700;color:var(--color-text);letter-spacing:-.2px;line-height:1.3;
+  transition:color .3s ease}
+.cat-card:hover .cat-name{color:color-mix(in srgb,var(--cat-c) var(--cat-mix-ink),var(--color-text))}
+
+.cat-count{margin-top:7px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;
+  padding:3px 10px;border-radius:var(--radius-full);background:var(--color-bg-muted);color:var(--color-text-muted);transition:background .3s ease,color .3s ease}
+.cat-card:hover .cat-count{background:color-mix(in srgb,var(--cat-c) var(--cat-mix-count),var(--color-bg));
+  color:color-mix(in srgb,var(--cat-c) var(--cat-mix-count-fg),var(--color-text))}
+
+/* ---------- Compact variant: sub-category tiles on the all-categories page ---------- */
+.cat-card--sm{padding:16px 12px 14px;border-radius:var(--radius-xl);min-height:128px;justify-content:center}
+.cat-card--sm::after{height:2.5px}
+.cat-card--sm .cat-ico{width:48px;height:48px;border-radius:var(--radius-lg)}
+.cat-card--sm .cat-ico i{font-size:22px}
+.cat-card--sm .cat-ico img{width:26px;height:26px}
+.cat-card--sm .cat-name{margin-top:11px;font-size:12.5px}
+.cat-card--sm .cat-count{margin-top:6px;font-size:10.5px;padding:2px 9px}
+.cat-card--sm:hover,.cat-card--sm:focus-visible{transform:translateY(var(--lift-hover))}
+.cat-card--sm:hover .cat-ico{transform:translateY(-2px) scale(1.08)}
+
+/* ---------- Brand variant: homepage "Brands We Carry" marquee ----------
+   Logo-only tiles that reuse the category-card hover (wash, accent bar, lift).
+   Logos sit on a white plate in both themes (raw --white on purpose) so their
+   own colours read; brands without a logo show their name as a wordmark. */
+.brand-marquee{overflow:hidden;padding:14px 0 22px;   /* room for the hover lift + shadow */
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+          mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.brand-track{display:flex;gap:16px;width:max-content;padding-right:16px;animation:brandScroll 40s linear infinite}
+.brand-marquee:hover .brand-track,.brand-marquee:focus-within .brand-track{animation-play-state:paused}
+@keyframes brandScroll{to{transform:translateX(-50%)}}
+
+.cat-card--brand.brand-logo{flex-shrink:0;width:172px;height:92px;padding:0 20px;justify-content:center;animation:none}
+.dark .cat-card--brand.brand-logo:has(img){background:var(--white)}
+.brand-logo img{max-width:100%;max-height:44px;width:auto;object-fit:contain;
+  transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.cat-card--brand:hover img{transform:scale(1.06)}
+.brand-wordmark{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--color-text-soft);white-space:nowrap;
+  transition:color .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+.cat-card--brand:hover .brand-wordmark{color:var(--cat-c);transform:scale(1.06)}
+
+/* ---------- Parent banner tile that leads each sub-category row ----------
+   Always a saturated --cat panel, so its white/black mixes are theme-independent. */
+.cat-hero{position:relative;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;
+  min-height:200px;border-radius:var(--radius-xl);isolation:isolate;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--cat-c) 82%,var(--white)) 0%,var(--cat-c) 42%,color-mix(in srgb,var(--cat-c) 62%,var(--black)) 100%);
+  box-shadow:var(--shadow-xs);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease;
+  animation:catIn .5s cubic-bezier(.2,.8,.2,1) backwards}
+.cat-hero:hover,.cat-hero:focus-visible{transform:translateY(var(--lift-hover));
+  box-shadow:var(--shadow-hover)}
+.cat-hero:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--cat-c) 45%,var(--white)),var(--shadow-hover)}
+/* scrim so the white title stays legible over any banner photo */
+.cat-hero-scrim{position:absolute;inset:0;
+  background:linear-gradient(to top,color-mix(in srgb,var(--black) 60%,transparent),color-mix(in srgb,var(--black) 10%,transparent) 50%,transparent)}
+/* sheen that lifts on hover, matching the wash on the light tiles */
+.cat-hero-sheen{position:absolute;inset:0;opacity:0;transition:opacity .35s ease;
+  background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--white) 28%,transparent) 0%,transparent 65%)}
+.cat-hero:hover .cat-hero-sheen{opacity:1}
+.cat-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.3;
+  transition:opacity .5s ease,transform .5s cubic-bezier(.2,.8,.2,1)}
+.cat-hero:hover .cat-hero-img{opacity:.42;transform:scale(1.06)}
+.cat-hero-ico{width:44px;height:44px;border-radius:var(--radius-lg);display:grid;place-items:center;color:var(--white);
+  background:color-mix(in srgb,var(--white) 20%,transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--white) 25%,transparent);
+  transition:background .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+.cat-hero-ico i{font-size:22px;line-height:1;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.cat-hero:hover .cat-hero-ico{background:color-mix(in srgb,var(--white) 30%,transparent);transform:translateY(-3px) scale(1.07)}
+.cat-hero:hover .cat-hero-ico i{transform:scale(1.06) rotate(-4deg)}
+
+/* ---------- Row header (icon + title + count) ---------- */
+.cat-group-ico{width:48px;height:48px;border-radius:var(--radius-lg);display:grid;place-items:center;flex-shrink:0;
+  background:color-mix(in srgb,var(--cat-c) var(--cat-mix-soft),var(--color-bg));
+  color:color-mix(in srgb,var(--cat-c) var(--cat-mix-fg),var(--color-text));
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--cat-c) var(--cat-mix-ring),transparent)}
+.cat-group-ico i{font-size:24px;line-height:1}
+.cat-group-link{color:color-mix(in srgb,var(--cat-c) var(--cat-mix-fg),var(--color-text));transition:gap .3s ease,opacity .3s ease}
+.cat-group-link:hover{opacity:.8}
+
+/* ---------- All-categories page chrome ---------- */
+.cat-heading{color:var(--color-text)}
+.cat-cta{background:var(--color-primary-soft);border:1px solid var(--color-primary-soft-2);border-radius:var(--radius-xl)}
+.cat-cta-ico{color:var(--color-primary-text)}
+
+@media (prefers-reduced-motion:reduce){
+  .cat-card,.cat-card::after,.cat-ico,.cat-ico i,.brand-track,
+  .cat-hero,.cat-hero-img,.cat-hero-ico,.cat-hero-ico i{animation:none!important;transition:none!important}
+  .cat-card:hover,.cat-hero:hover{transform:none}
+  .brand-marquee{overflow-x:auto;-webkit-mask-image:none;mask-image:none}   /* no auto-scroll: let people scroll it */
+  .cat-card:hover .cat-ico,.cat-hero:hover .cat-hero-ico,.cat-hero:hover .cat-hero-img{transform:none}
+}

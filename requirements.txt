@@ -1,0 +1,14 @@
+# Exact pins so every build installs the same code. To upgrade: bump a version,
+# run `python manage.py test`, commit. Django 5.2 is the LTS line (security fixes to April 2028).
+Django==5.2.17
+djangorestframework==3.17.2
+django-cors-headers==4.9.0   # CORS for /api/ (Expo web / browser clients)
+whitenoise==6.12.0
+Pillow==12.3.0
+psycopg2-binary==2.9.12
+django-taggit==6.1.0
+django-environ==0.13.0
+gunicorn==26.0.0
+openpyxl==3.1.5        # Excel (.xlsx) support for admin spreadsheet import (CSV works without it)
+redis==8.0.0           # production cache, sessions and shared rate-limit counters
+sentry-sdk==2.70.0     # error tracking — only active when SENTRY_DSN is set

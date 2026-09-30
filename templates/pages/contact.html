@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+{% block title %}Contact Us — {{ site_name }}{% endblock %}
+{% block content %}
+
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 pt-6 pb-12 md:pt-8 md:pb-14 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative">
+    {% breadcrumbs "Contact" on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">Get in Touch</h1>
+    <p class="text-primary-100 text-base max-w-xl mx-auto">We'd love to hear from you. Our team responds within 24 hours.</p>
+  </div>
+</div>
+
+<!-- Quick contact cards -->
+<div class="max-w-7xl mx-auto px-4 -mt-8 relative z-10">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    {% if site_settings.phone %}
+    <a href="tel:{{ site_settings.phone }}" class="tile rise block p-5 text-center" style="--c: #0f766e; --i: 0">
+      <span class="chip mx-auto mb-3"><i class="ti ti-phone" aria-hidden="true"></i></span>
+      <p class="text-xs text-gray-400 mb-0.5">Call Us</p>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">{{ site_settings.phone }}</p>
+    </a>
+    {% endif %}
+    {% if site_settings.whatsapp %}
+    <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" class="tile rise block p-5 text-center" style="--c: #16a34a; --i: 1">
+      <span class="chip mx-auto mb-3"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i></span>
+      <p class="text-xs text-gray-400 mb-0.5">WhatsApp</p>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">Chat Now</p>
+    </a>
+    {% endif %}
+    {% if site_settings.email %}
+    <a href="mailto:{{ site_settings.email }}" class="tile rise block p-5 text-center" style="--c: #7c3aed; --i: 2">
+      <span class="chip mx-auto mb-3"><i class="ti ti-mail" aria-hidden="true"></i></span>
+      <p class="text-xs text-gray-400 mb-0.5">Email</p>
+      <p class="font-bold text-gray-900 dark:text-white text-sm truncate">{{ site_settings.email }}</p>
+    </a>
+    {% endif %}
+    {% if site_settings.working_hours %}
+    <div class="tile rise p-5 text-center" style="--c: #f97316; --i: 3">
+      <span class="chip mx-auto mb-3"><i class="ti ti-clock" aria-hidden="true"></i></span>
+      <p class="text-xs text-gray-400 mb-0.5">Working Hours</p>
+      <p class="font-bold text-gray-900 dark:text-white text-sm">{{ site_settings.working_hours }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-14 grid grid-cols-1 lg:grid-cols-5 gap-10">
+
+  <!-- Form -->
+  <div class="lg:col-span-3 card p-6 sm:p-8">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Send Us a Message</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-6">Fill out the form below and we'll respond as soon as possible.</p>
+
+    <form id="contact-form" method="post" action="{% url 'core:contact' %}" class="space-y-4"
+          data-ajax-form data-validate data-ajax-url="{% url 'core:contact_submit' %}"
+          data-msg-target="#contact-msg"
+          data-msg-ok-class="text-sm text-center text-green-600 font-medium"
+          data-error-text="Please check the form and try again.">
+      {% csrf_token %}{% include "partials/honeypot.html" with hp_id="contact" %}
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="field">
+          <label class="label" for="{{ form.name.id_for_label }}">Name <span class="req">*</span></label>
+          {{ form.name }}
+        </div>
+        <div class="field">
+          <label class="label" for="{{ form.phone.id_for_label }}">Phone</label>
+          {{ form.phone }}
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="field">
+          <label class="label" for="{{ form.email.id_for_label }}">Email <span class="req">*</span></label>
+          {{ form.email }}
+        </div>
+        <div class="field">
+          <label class="label" for="{{ form.inquiry_type.id_for_label }}">Inquiry Type</label>
+          {{ form.inquiry_type }}
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="{{ form.subject.id_for_label }}">Subject <span class="req">*</span></label>
+        {{ form.subject }}
+      </div>
+      <div class="field">
+        <label class="label" for="{{ form.message.id_for_label }}">Message <span class="req">*</span></label>
+        {{ form.message }}
+      </div>
+      <div class="{% if site_settings.whatsapp %}btn-pair{% endif %}">
+        <button type="submit" class="btn btn-primary btn-block"><i class="ti ti-send"></i> Send Message</button>
+        {% if site_settings.whatsapp %}
+        <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi%20{{ site_name|urlencode }}!%20I%20have%20a%20question."
+           target="_blank" rel="noopener" class="btn btn-success btn-block">
+          <i class="ti ti-brand-whatsapp"></i> Chat on WhatsApp
+        </a>
+        {% endif %}
+      </div>
+      <p id="contact-msg" class="hidden text-sm text-center"></p>
+    </form>
+  </div>
+
+  <!-- Details + map -->
+  <div class="lg:col-span-2 space-y-5">
+    <div class="card p-6">
+      <h3 class="font-bold text-gray-900 dark:text-white mb-4">Visit Our Store</h3>
+      {% if site_settings.address %}
+      <p class="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <i class="ti ti-map-pin text-primary-500 text-lg flex-shrink-0 mt-0.5"></i>
+        <span class="leading-relaxed">{{ site_settings.address }}</span>
+      </p>
+      {% endif %}
+      <div class="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+        {% for sl in social_links %}
+        <a href="{{ sl.url }}" target="_blank" rel="noopener" class="btn btn-secondary btn-icon" aria-label="{{ sl.get_platform_display|default:sl.url }}">
+          <i class="ti {{ sl.get_icon_class }}"></i>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Google Map -->
+    <div class="card overflow-hidden h-72">
+      {% if site_settings.google_maps_embed %}
+        {{ site_settings.google_maps_embed|safe }}
+      {% else %}
+        <iframe class="w-full h-full" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q={{ site_settings.address|default:'Surat, Gujarat'|urlencode }}&output=embed"></iframe>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

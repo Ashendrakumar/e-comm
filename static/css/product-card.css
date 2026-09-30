@@ -1,0 +1,357 @@
+/* Product card: fixed geometry, hover treatment, action buttons, shelf/rail
+   layouts, plus the Quick View modal, Compare bar and toast chrome.
+   Loaded on every page (from base.html) because cards appear on the
+   homepage, category pages, search results and product detail.
+   Colours come only from tokens.css, so light/dark flip automatically. */
+
+/* ── Quick View modal ── */
+#qv-modal{display:none;position:fixed;inset:0;z-index:9999;background:var(--color-overlay);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+#qv-modal.open{display:flex;}
+.qv-panel{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);}
+.qv-media{background:var(--color-bg-subtle);border-radius:var(--radius-lg);color:var(--color-border-strong);}
+.qv-thumb{width:56px;height:56px;padding:4px;overflow:hidden;cursor:pointer;
+  background:var(--color-bg);border:2px solid var(--color-border);border-radius:var(--radius-md);
+  transition:border-color var(--duration) var(--ease);}
+.qv-thumb:hover{border-color:var(--color-primary);}
+.qv-specs{background:var(--color-bg-subtle);border-radius:var(--radius-md);}
+.qv-brand{color:var(--color-primary-text);}
+.qv-title{color:var(--color-text);}
+.qv-soft{color:var(--color-text-soft);}
+.qv-faint{color:var(--color-text-faint);}
+/* Empty-state icon disc (partials/empty_state.html). */
+.pc-empty-ico{background:var(--color-bg-muted);color:var(--color-text-faint);}
+
+/* Empty product grid (partials/empty_state.html). */
+.es{display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:48px 24px 40px;background:var(--color-bg);border:1px solid var(--color-border-subtle);
+  border-radius:var(--radius-2xl);box-shadow:var(--shadow-xs);
+  background-image:radial-gradient(ellipse 60% 45% at 50% 0,var(--color-primary-soft),transparent 70%);}
+.es-art{position:relative;width:132px;height:132px;margin-bottom:22px;}
+.es-orbit{position:absolute;inset:0;border-radius:50%;border:1.5px dashed var(--color-border-strong);
+  animation:es-spin 28s linear infinite;}
+.es-ico{position:absolute;inset:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--color-bg);border:1px solid var(--color-border);box-shadow:var(--shadow-md);color:var(--color-primary-text);}
+.es-ico i{font-size:42px;}
+.es-dot{position:absolute;border-radius:50%;background:var(--color-primary);animation:es-float 4s var(--ease) infinite;}
+.es-dot-a{width:10px;height:10px;top:8px;right:14px;}
+.es-dot-b{width:7px;height:7px;bottom:14px;left:6px;background:var(--color-accent);animation-delay:-1.3s;}
+.es-dot-c{width:5px;height:5px;top:50%;left:-6px;opacity:.6;animation-delay:-2.6s;}
+.es-title{font-size:var(--text-xl);font-weight:800;letter-spacing:-.01em;color:var(--color-text);margin:0 0 8px;
+  max-width:36ch;overflow-wrap:anywhere;}
+.es-text{font-size:var(--text-md);line-height:1.6;color:var(--color-text-muted);max-width:44ch;margin:0 0 20px;}
+.es-chips{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;max-width:560px;margin-bottom:22px;}
+.es-chips-label{width:100%;font-size:var(--text-xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--color-text-faint);}
+.es-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;}
+.es-tips{list-style:none;padding:24px 0 0;margin:32px 0 0;border-top:1px solid var(--color-border);width:100%;max-width:720px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;text-align:left;}
+.es-tips li{display:flex;gap:10px;align-items:flex-start;font-size:var(--text-sm);line-height:1.45;color:var(--color-text-muted);}
+.es-tips i{flex-shrink:0;width:32px;height:32px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;
+  background:var(--color-primary-soft);color:var(--color-primary-text);font-size:17px;}
+.es-tips strong{display:block;color:var(--color-text);font-weight:600;}
+@media (max-width:640px){
+  .es{padding:36px 16px 28px;}
+  .es-tips{grid-template-columns:1fr;gap:12px;}
+  .es-actions .btn{flex:1 1 100%;}
+}
+@keyframes es-spin{to{transform:rotate(360deg);}}
+@keyframes es-float{50%{transform:translateY(-6px);}}
+@media (prefers-reduced-motion:reduce){.es-orbit,.es-dot{animation:none;}}
+/* WhatsApp CTA keeps the WhatsApp brand green — not a theme colour. */
+.qv-wa{background:var(--green-500);color:var(--white);}
+.qv-wa:hover{background:var(--green-600);color:var(--white);}
+/* Loading spinner (also injected by product-card.js). */
+.pc-spinner{width:40px;height:40px;border-radius:50%;border:4px solid var(--color-primary);border-top-color:transparent;animation:pcSpin .8s linear infinite;}
+@keyframes pcSpin{to{transform:rotate(360deg)}}
+
+/* ── Compare bar (markup in product_card_scripts.html) ── */
+#compare-bar{transform:translateY(100%);transition:transform .3s ease;z-index:40;
+  background:var(--color-bg);border-top:2px solid var(--color-primary);box-shadow:var(--shadow-lg);}
+#compare-bar.show{transform:translateY(0);}
+/* Selected count, shown as a badge inside Compare Now (product-card.js fills #cmp-count). */
+#compare-bar .cmp-count{display:inline-flex;align-items:center;height:20px;padding:0 7px;margin-left:2px;border-radius:var(--radius-full);
+  font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;background:color-mix(in srgb,var(--color-on-primary) 22%,transparent);color:var(--color-on-primary);}
+/* Slots — product-card.js only toggles .is-filled; styling lives here. */
+#compare-bar .cmp-slot{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  flex:1 1 0;min-width:0;max-width:220px;height:40px;padding:0 12px;border-radius:var(--radius-md);
+  background:var(--color-bg-subtle);border:2px dashed var(--color-border);color:var(--color-text-faint);}
+/* Phones: slots share the row instead of forcing 3 x 120px (was widening the page). */
+@media (max-width:480px){#compare-bar .cmp-slot{padding:0 8px;gap:4px;}}
+#compare-bar .cmp-slot.is-filled{background:var(--color-primary-soft);border-style:solid;border-color:var(--color-primary);}
+#compare-bar .cmp-name{display:block;flex:1;min-width:0;font-size:var(--text-xs);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#compare-bar .cmp-slot.is-filled .cmp-name{font-weight:600;color:var(--color-primary-text);}
+#compare-bar .cmp-rm{flex-shrink:0;width:20px;height:20px;display:grid;place-items:center;border:0;cursor:pointer;
+  border-radius:var(--radius-full);background:var(--color-primary-soft-2);color:var(--color-primary-text);
+  transition:background var(--duration) var(--ease),color var(--duration) var(--ease);}
+#compare-bar .cmp-rm i{font-size:10px;}
+#compare-bar .cmp-rm:hover{background:var(--color-danger-soft);color:var(--color-danger);}
+/* Actions: both buttons share one height (= the 40px slots) and one width. */
+#compare-bar .cmp-bar-actions{display:flex;gap:8px;flex-shrink:0;}
+#compare-bar .cmp-bar-btn{height:40px;min-width:136px;padding:0 16px;font-size:var(--text-sm);border-radius:var(--radius-md);}
+@media (max-width:640px){
+  #compare-bar #cmp-slots{flex:1 1 100%;order:2;}   /* own row: names stay readable */
+  #compare-bar .cmp-bar-actions{flex:1 1 100%;order:3;}
+  #compare-bar .cmp-bar-btn{flex:1 1 0;min-width:0;}
+}
+
+/* ── Toast (showToast() in product-card.js) ── */
+.pc-toast{position:fixed;top:80px;right:16px;z-index:9999;max-width:20rem;
+  display:flex;align-items:center;gap:8px;padding:12px 20px;
+  font-size:var(--text-sm);font-weight:600;color:var(--white);
+  background:var(--color-primary);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);}
+.pc-toast i{font-size:16px;flex-shrink:0;}
+/* Solid fills need the same strength in both themes, so these use the raw
+   palette rather than the (theme-lightened) semantic intent colours. */
+.pc-toast--success{background:var(--green-600);}
+.pc-toast--error{background:var(--red-600);}
+.pc-toast--warning{background:var(--color-accent);}
+
+.pc-fade-in{animation:pcFadeIn .3s ease;}
+@keyframes pcFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PRODUCT CARD — fixed size at every viewport.
+
+   The card never resizes: width is a constant, the media box is a constant,
+   and the info block is a fixed height built from fixed-height rows. Total
+   height is therefore identical for every product regardless of whether it has
+   a brand, a rating, a sale price or a stock warning — only the number of
+   columns changes with the viewport.
+
+   Widths are chosen so the column count does NOT change:
+     homepage / full-width grid   1248px content → 4 × 296 + 3 × 18 = 1238  ✓
+     listing page (w-64 sidebar)   968px content → 3 × 296 + 2 × 18 =  924  ✓
+   Going past ~300px costs a column on the homepage, so 296 is the widest the
+   card can be without reflowing the grid.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root{
+  --pc-w:296px;                                        /* card width  — constant */
+  /* The media box is 6:5 rather than 1:1. At 296px a square image made the card
+     450px tall, which read as a column of stripes in a 4-up grid; 6:5 keeps the
+     card wide-and-calm at 408px while still giving a contained product shot
+     more pixels than the old 280px square did. */
+  --pc-media:248px;
+  --pc-info:158px;                                     /* info block  — constant */
+  --pc-h:calc(var(--pc-media) + var(--pc-info) + 2px); /* + 1px border each side */
+  --pc-gap:18px;
+  --pc-accent:var(--color-primary);                    /* drives hover glow + CTA */
+  --pc-glass:color-mix(in srgb,var(--color-bg) 94%,transparent);  /* frosted controls */
+  --pc-sheen:color-mix(in srgb,var(--white) 55%,transparent);     /* hover sweep      */
+}
+.dark{--pc-sheen:color-mix(in srgb,var(--white) 16%,transparent);}
+
+.product-card{
+  width:var(--pc-w);flex:0 0 var(--pc-w);height:var(--pc-h);
+  display:flex;flex-direction:column;position:relative;overflow:hidden;
+  background:var(--color-bg);border:1px solid var(--color-border-subtle);border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-xs);
+  transition:transform .42s cubic-bezier(.2,.8,.2,1),
+             box-shadow .42s ease,
+             border-color .42s ease;
+}
+
+/* Accent bar that wipes across the top edge — the same hover signature the
+   category tiles and feature cards use, so the card reads as the same family. */
+.product-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;z-index:20;
+  background:linear-gradient(90deg,var(--pc-accent),var(--brand-400));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .5s cubic-bezier(.2,.8,.2,1);
+}
+
+.product-card:hover,
+.product-card:focus-within{
+  transform:translateY(var(--lift-hover));
+  border-color:color-mix(in srgb,var(--pc-accent) 34%,transparent);
+  /* Two layers: a wide accent-tinted glow for depth, and a tight neutral
+     shadow (theme-aware token) so the card keeps a crisp contact edge. */
+  box-shadow:var(--shadow-hover);
+}
+.product-card:hover::after,
+.product-card:focus-within::after{transform:scaleX(1);}
+
+.product-card.is-out{opacity:.9;}
+/* Out of stock never gets the full lift — it should not compete for attention. */
+.product-card.is-out:hover{transform:translateY(var(--lift-hover));}
+
+/* ── Media: constant pixels on every screen ── */
+.product-card .card-media{
+  position:relative;width:var(--pc-w);height:var(--pc-media);
+  flex:0 0 var(--pc-media);overflow:hidden;isolation:isolate;
+  background:linear-gradient(140deg,var(--color-bg-subtle),var(--color-bg-muted));
+}
+
+/* Accent wash that fades in behind the product shot. isolation on .card-media
+   keeps this negative layer above the media background but under the image. */
+.product-card .card-media::before{
+  content:'';position:absolute;inset:0;z-index:-1;opacity:0;pointer-events:none;
+  transition:opacity .42s ease;
+  background:radial-gradient(115% 90% at 50% 12%,
+             color-mix(in srgb,var(--pc-accent) 18%,transparent) 0%,transparent 70%);
+}
+.product-card:hover .card-media::before,
+.product-card:focus-within .card-media::before{opacity:1;}
+
+/* Diagonal sheen that sweeps across the media once on hover. */
+.product-card .card-media::after{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(105deg,transparent 32%,var(--pc-sheen) 48%,transparent 64%);
+  transform:translateX(-115%);
+  transition:transform .9s cubic-bezier(.25,.7,.2,1);
+}
+.product-card:hover .card-media::after{transform:translateX(115%);}
+
+.product-card .card-img{display:block;width:100%;height:100%;}
+.product-card .card-img img{width:100%;height:100%;object-fit:contain;padding:16px;
+  transition:transform .55s cubic-bezier(.2,.8,.2,1);}
+.product-card:hover .card-img img,
+.product-card:focus-within .card-img img{transform:scale(1.04);}
+.product-card.is-out .card-img img{filter:grayscale(1);}
+.product-card .card-img .pc-noimg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--color-border-strong);}
+
+/* ── Badges (.badge .badge-* from components.css): lift slightly with the card ── */
+.pc-badges{position:absolute;top:11px;left:11px;z-index:10;
+  display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+  transition:transform .42s cubic-bezier(.2,.8,.2,1);}
+.product-card:hover .pc-badges{transform:translateY(-2px);}
+.pc-badges .badge{box-shadow:var(--shadow-sm);backdrop-filter:blur(6px);}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   QUICK ACTIONS — a column of icon buttons down the media's right edge:
+   Wishlist · Quick view · Compare.
+
+   They slide in from the right one after another on :hover / :focus-within
+   (so they're keyboard reachable) and are always shown on touch screens.
+   Labels are small tooltips to the left, read from aria-label — no native
+   `title` box. A saved heart or a selected Compare stays visible at rest.
+   Colours are solid so the hover fill can fade slowly (gradients can't).
+   ══════════════════════════════════════════════════════════════════════════ */
+.pc-rail{position:absolute;top:10px;right:10px;z-index:10;display:flex;flex-direction:column;gap:8px;}
+.pc-act{
+  position:relative;display:grid;place-items:center;width:36px;height:36px;padding:0;
+  border-radius:var(--radius-md);border:1px solid var(--color-border-subtle);cursor:pointer;
+  color:var(--color-text-soft);background-color:var(--color-bg);box-shadow:var(--shadow-sm);
+  opacity:0;transform:translateX(14px);
+  transition:opacity .3s ease,transform .4s cubic-bezier(.22,.8,.3,1),
+             background-color .45s var(--ease),color .45s var(--ease),
+             border-color .45s var(--ease),box-shadow .45s ease;
+}
+.pc-act i{font-size:17px;line-height:1;}
+/* Stagger the entrance only (opacity + transform), never the colour fade. */
+.pc-rail .pc-act:nth-child(2){transition-delay:.05s,.05s,0s,0s,0s,0s;}
+.pc-rail .pc-act:nth-child(3){transition-delay:.1s,.1s,0s,0s,0s,0s;}
+.product-card:hover .pc-act,
+.product-card:focus-within .pc-act{opacity:1;transform:none;}
+
+.pc-act:hover{color:var(--color-on-primary);border-color:var(--color-primary);background-color:var(--color-primary);box-shadow:var(--shadow-md);}
+.pc-act:active{transform:scale(.95);}
+.pc-act:focus-visible{outline:2px solid var(--pc-accent);outline-offset:2px;}
+
+/* Wishlist: red on hover; product-card.js swaps the glyph to ti-heart-filled once saved. */
+.pc-wish:hover{color:var(--color-danger);border-color:transparent;background-color:var(--color-danger-soft);}
+.pc-wish:has(.ti-heart-filled){opacity:1;transform:none;color:var(--color-danger);}
+.pc-wish .ti-heart-filled{color:var(--color-danger);}
+
+/* Compare selected (product-card.js toggles .is-active + aria-pressed). */
+.pc-act-cmp.is-active{opacity:1;transform:none;color:var(--color-on-primary);border-color:var(--color-primary);background-color:var(--color-primary);}
+.pc-act-cmp.is-active:hover{border-color:var(--color-primary-hover);background-color:var(--color-primary-hover);}
+
+/* Tooltip label */
+.pc-act::after{
+  content:attr(aria-label);position:absolute;right:calc(100% + 8px);top:50%;
+  transform:translate(4px,-50%);white-space:nowrap;pointer-events:none;
+  padding:4px 8px;border-radius:var(--radius-sm);
+  background:var(--color-bg-inverse);color:var(--color-text-inverse);
+  font:600 11px/1.3 var(--font-sans);box-shadow:var(--shadow-md);
+  opacity:0;transition:opacity .2s ease,transform .2s ease;
+}
+.pc-act:hover::after,.pc-act:focus-visible::after{opacity:1;transform:translate(0,-50%);}
+
+/* Touch: no hover exists, so the icons are always there (and tooltips never are). */
+@media (hover:none){
+  .pc-act{opacity:1;transform:none;}
+  .pc-act::after{display:none;}
+}
+
+/* ── Info: fixed height, fixed rows ── */
+.product-card .card-info{height:var(--pc-info);padding:15px 16px;display:flex;flex-direction:column;overflow:hidden;}
+.pc-brand{height:14px;line-height:14px;margin-bottom:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+          text-transform:uppercase;color:var(--color-primary-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pc-brand a:hover{text-decoration:underline;}
+.pc-title{height:42px;margin-bottom:7px;font-size:14.5px;line-height:21px;font-weight:600;
+          letter-spacing:-.01em;color:var(--color-text);
+          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+          transition:color .22s ease;}
+a:hover>.pc-title{color:var(--color-primary-text);}
+.pc-rating{height:16px;margin-bottom:7px;display:flex;align-items:center;gap:5px;overflow:hidden;}
+.pc-rating i{font-size:12px;}
+.pc-rating.is-empty i{opacity:.6;}
+.pc-rating .pc-note{font-size:10.5px;color:var(--color-text-muted);white-space:nowrap;}
+.pc-price{height:28px;margin-top:auto;display:flex;align-items:baseline;gap:7px;overflow:hidden;}
+.pc-price .pc-now{font-size:19px;line-height:28px;font-weight:800;letter-spacing:-.02em;color:var(--color-text);white-space:nowrap;}
+.pc-price .pc-was{font-size:11.5px;color:var(--color-text-faint);text-decoration:line-through;white-space:nowrap;}
+.pc-stock{height:14px;line-height:14px;display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;overflow:hidden;}
+.pc-stock i{font-size:11px;}
+.pc-stock.is-low{color:var(--color-accent);}
+.pc-stock.is-none{color:var(--color-text-faint);}
+.pc-stock.is-ok{color:var(--color-success);}
+
+/* ── Layouts built from fixed-size cards ── */
+/* Wrapping shelf: column count reflows, card size never does. */
+.product-shelf{display:grid;grid-template-columns:repeat(auto-fill,var(--pc-w));gap:var(--pc-gap);justify-content:center;}
+/* Single-row scroller for "related" / "recently viewed" strips.
+   `overflow-x:auto` forces overflow-y to auto as well, so the rail needs its own
+   vertical padding or the card's hover lift (and its glow) gets clipped. */
+.product-rail{display:flex;gap:var(--pc-gap);overflow-x:auto;scrollbar-width:none;
+  padding:14px 0 16px;}
+.product-rail::-webkit-scrollbar{display:none;}
+
+/* ── Responsive shelf ──
+   In a wrapping grid the cards stretch to fill the row (no dead gutters at
+   768/1024px) and the media keeps the 296:248 proportion instead of a fixed
+   pixel height. Scrolling rails (.product-rail) keep the fixed --pc-w card. */
+.product-shelf{grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));justify-content:stretch;}
+.product-shelf > .product-card,.product-shelf > .skeleton-card{width:auto;flex:none;height:auto;min-width:0;}
+.product-shelf .card-media{width:100%;height:auto;flex:none;aspect-ratio:296 / 248;}
+.product-shelf .skeleton-card{aspect-ratio:296 / 408;}
+
+/* Phones: two compact cards per row, like every shop app. */
+@media (max-width:639px){
+  .product-shelf{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .product-shelf .card-media{aspect-ratio:1;}
+  .product-shelf .card-img img{padding:10px;}
+  .product-shelf .card-info{height:auto;min-height:132px;padding:10px 10px 12px;}
+  .product-shelf .pc-title{height:36px;font-size:12.5px;line-height:18px;margin-bottom:5px;}
+  .product-shelf .pc-brand{font-size:9.5px;margin-bottom:3px;}
+  .product-shelf .pc-rating{margin-bottom:5px;}
+  .product-shelf .pc-rating i{font-size:10px;}
+  .product-shelf .pc-price{height:auto;flex-wrap:wrap;column-gap:5px;row-gap:0;}
+  .product-shelf .pc-price .pc-now{font-size:15px;line-height:22px;}
+  .product-shelf .pc-price .pc-was{font-size:10.5px;}
+  .product-shelf .pc-badges{top:8px;left:8px;gap:4px;}
+  .product-shelf .pc-badges .badge{font-size:9px;padding:1px 6px;}
+  .product-shelf .pc-rail{top:8px;right:8px;gap:6px;}
+  .product-shelf .pc-act{width:32px;height:32px;}
+  .product-shelf .pc-act i{font-size:15px;}
+  .product-shelf .product-card:hover,.product-shelf .product-card:focus-within{transform:translateY(var(--lift-hover));}
+}
+
+/* ── Motion opt-out ── */
+@media (prefers-reduced-motion:reduce){
+  .product-card,.product-card::after,.product-card .card-media::before,
+  .product-card .card-media::after,.product-card .card-img img,
+  .pc-act,
+  .pc-badges{transition:none!important;}
+  .product-card:hover,.product-card:focus-within{transform:none;}
+  .product-card:hover .card-img img,.product-card:focus-within .card-img img{transform:none;}
+  .product-card:hover .pc-badges{transform:none;}
+  .product-card .card-media::after{display:none;}   /* the sheen sweep */
+  .pc-act,.pc-act:active{transform:none;}
+  .pc-fade-in{animation:none;}
+  .pc-spinner{animation-duration:2s;}
+}
+
+/* Lift the floating WhatsApp button above the compare bar while the bar is open. */
+.wa-fab{transition:bottom .3s ease;}
+body:has(#compare-bar.show) .wa-fab{bottom:calc(var(--cmp-bar-h,72px) + 16px);}

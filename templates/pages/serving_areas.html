@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+{% block title %}Serving Areas — {{ site_name }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/service-availability.css' %}">{% endblock %}
+{% block meta_description %}{{ site_name }} delivers electronics, installation and repair services across {{ areas.count }}+ cities in Gujarat. Find service availability in your city.{% endblock %}
+{% block content %}
+<style>
+  /* Featured-area cards keep their gradient; lift + shadow use the standard hover tokens.
+     `translate` (not `transform`) so the hover composes with the .rise entrance animation. */
+  .area-feat{transition:translate .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+  .area-feat:hover,.area-feat:focus-visible{translate:0 var(--lift-hover);box-shadow:var(--shadow-hover)}
+  @media (prefers-reduced-motion:reduce){.area-feat{transition:none}.area-feat:hover{translate:none}}
+</style>
+
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative">
+    {% breadcrumbs "Serving Areas" on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">Serving Areas</h1>
+    <p class="text-primary-100 text-base max-w-xl mx-auto">Delivering electronics and services across Gujarat and beyond</p>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-14">
+  <div class="text-center mb-10">
+    <div class="inline-flex items-center gap-2 bg-primary-50 dark:bg-primary-950 border border-primary-100 dark:border-primary-900 text-primary-700 dark:text-primary-300 px-5 py-3 rounded-full text-sm font-semibold mb-4">
+      <i class="ti ti-map-pin"></i> 100+ Cities Covered
+    </div>
+    <p class="text-gray-500 dark:text-gray-400 max-w-lg mx-auto">We provide doorstep delivery, installation and service support across all major cities in Gujarat. Click a city to see local service details.</p>
+  </div>
+
+  {% if areas %}
+  <!-- Featured cities -->
+  {% if featured_areas %}
+  <div class="mb-12">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+      <i class="ti ti-star-filled text-accent-500"></i> Featured Cities
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {% for area in featured_areas %}
+      <a href="{{ area.get_absolute_url }}"
+         class="area-feat rise group relative bg-gradient-to-br from-primary-600 to-primary-800 text-white rounded-2xl p-6 overflow-hidden" style="--i: {{ forloop.counter0 }}">
+        <div class="absolute -right-6 -bottom-6 opacity-15"><i class="ti ti-map-2 text-8xl"></i></div>
+        <div class="relative">
+          <div class="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center mb-4 backdrop-blur">
+            <i class="ti ti-map-pin text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-1">{{ area.city }}</h3>
+          <p class="text-primary-100 text-sm mb-4">{{ area.state }}</p>
+          {% if area.contact_phone %}
+          <p class="text-xs text-primary-50 flex items-center gap-1.5 mb-3"><i class="ti ti-phone"></i>{{ area.contact_phone }}</p>
+          {% endif %}
+          <span class="inline-flex items-center gap-1.5 text-sm font-semibold group-hover:gap-2.5 transition-all">
+            View Details <i class="ti ti-arrow-right text-xs"></i>
+          </span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- All cities -->
+  <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+    <i class="ti ti-map-pins text-primary-600"></i> All Cities We Serve
+  </h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-12">
+    {% for area in areas %}
+    <a href="{{ area.get_absolute_url }}"
+       class="tile rise group flex items-center gap-2.5 p-4" style="--i: {% if forloop.counter0 < 20 %}{{ forloop.counter0 }}{% else %}20{% endif %}">
+      <span class="chip chip-sm"><i class="ti ti-map-pin" aria-hidden="true"></i></span>
+      <div>
+        <span class="font-semibold text-sm text-gray-800 dark:text-gray-200 group-hover:text-primary-600 transition-colors">{{ area.city }}</span>
+        <p class="text-xs text-gray-400">{{ area.state }}</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-12">
+    {% for city in default_cities %}
+    <div class="card rise flex items-center gap-2.5 p-4" style="--i: {% if forloop.counter0 < 20 %}{{ forloop.counter0 }}{% else %}20{% endif %}">
+      <span class="chip chip-sm"><i class="ti ti-map-pin" aria-hidden="true"></i></span>
+      <span class="font-semibold text-sm text-gray-800 dark:text-gray-200">{{ city }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Service availability strip (from /api/v1/service-availability/) -->
+  <div class="mb-12">
+    {% include "partials/service_availability.html" with layout="tiles" %}
+  </div>
+
+  <div class="bg-primary-600 rounded-3xl p-10 text-white text-center">
+    <h2 class="text-2xl font-bold mb-3">Don't See Your City?</h2>
+    <p class="text-primary-100 mb-6 max-w-md mx-auto">We're constantly expanding. Contact us and we'll check if we can serve your location.</p>
+    <a href="{% url 'core:contact' %}" class="btn btn-inverse btn-lg">
+      Contact Us <i class="ti ti-arrow-right"></i>
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/service-availability.js' %}" defer></script>
+{% endblock %}

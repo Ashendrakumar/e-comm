@@ -1,0 +1,152 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en" class="scroll-smooth" id="html-root">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+
+  {% comment %}
+    Theme MUST be resolved here — synchronously, inline, before a single
+    stylesheet is requested. This script used to sit at the end of <body>, so the
+    browser painted the whole page in light mode and only then had `.dark` added,
+    which is exactly the light→dark flash on every refresh. Blocking is the point:
+    it is a handful of bytes and it runs before first paint.
+
+    `color-scheme` is set alongside the class so native UI (scrollbars, form
+    controls, canvas background) is dark from the very first frame too — without
+    it you still get a white scrollbar flash even once the class is early.
+  {% endcomment %}
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var dark = stored ? stored === 'dark'
+                          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var root = document.documentElement;
+        if (dark) root.classList.add('dark');
+        root.style.colorScheme = dark ? 'dark' : 'light';
+      } catch (e) { /* localStorage blocked (private mode) — fall back to light */ }
+    })();
+  </script>
+  <title>{% block title %}{% if page_title %}{{ page_title }}{% else %}{{ site_name }} — Premium Electronics{% endif %}{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}{{ meta_description|default:site_settings.meta_description }}{% endblock %}">
+  {% if meta_keywords or site_settings.meta_keywords %}<meta name="keywords" content="{{ meta_keywords|default:site_settings.meta_keywords }}">{% endif %}
+  <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:site_name" content="{{ site_name }}">
+  <meta property="og:title" content="{% block og_title %}{% if page_title %}{{ page_title }}{% else %}{{ site_name }} — Premium Electronics{% endif %}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ meta_description|default:site_settings.meta_description }}{% endblock %}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+  {% block og_image %}{% if site_settings.logo %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}">{% endif %}{% endblock %}
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  {% comment %}
+    Icons are self-hosted (static/css/tabler-icons.css + static/fonts/*.woff2).
+    They used to come from cdn.jsdelivr.net/@tabler/icons-webfont@latest, which
+    meant: an extra DNS+TLS handshake, an @latest redirect that defeats immutable
+    caching, and — the actual cause of icons appearing late — the font file only
+    being *discovered* after that remote CSS had downloaded and parsed.
+
+    Preloading is what removes the remaining delay: the font now downloads in
+    parallel with the stylesheet instead of after it. `crossorigin` is required on
+    font preloads even same-origin, or the browser fetches the file twice.
+  {% endcomment %}
+  <link rel="preload" href="{% static 'fonts/tabler-icons.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/tabler-icons.css' %}">
+
+  {# Swiper + Alpine are self-hosted, version-pinned copies (package.json -> `npm run vendor`). #}
+  <link rel="stylesheet" href="{% static 'vendor/swiper-bundle.min.css' %}">
+  {% if use_compiled_css %}
+  {# Production: compiled Tailwind build (run `npm run build`). #}
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% else %}
+  {# Dev default: Tailwind via CDN (zero-build). #}
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#0d9488',600:'#0f766e',700:'#115e59',800:'#134e4a',900:'#0b3b38',950:'#042f2e' },
+            accent: { 400:'#fb923c',500:'#f97316',600:'#ea580c' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+  {% endif %}
+  {# Design system: tokens (colours, radius, shadow…) then shared components. #}
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/product-card.css' %}">
+  {% block extra_head %}{% endblock %}
+
+  {% if site_settings.google_analytics_id %}
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_settings.google_analytics_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ site_settings.google_analytics_id }}');
+  </script>
+  {% endif %}
+</head>
+<body class="font-sans antialiased" id="body">{# background + text colour come from tokens (components.css: body) #}
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+{% include "partials/header.html" %}
+
+<main id="main-content" tabindex="-1">
+  {% if messages %}
+  <style>
+    .toast-msg{box-shadow:var(--shadow-lg);border-radius:var(--radius-lg);}
+    .toast-msg .toast-text{font-size:var(--text-sm);color:var(--color-text-soft);}
+    .toast-msg .toast-icon{font-size:20px;flex-shrink:0;color:var(--color-primary);}
+    .toast-msg.is-success .toast-icon{color:var(--color-success);}
+    .toast-msg.is-error .toast-icon{color:var(--color-danger);}
+    .toast-msg.is-warning .toast-icon{color:var(--color-warning);}
+  </style>
+  <div class="fixed top-20 right-4 z-50 space-y-2" id="toast-container" role="status" aria-live="polite">
+    {% for message in messages %}
+    <div class="toast-msg card is-{{ message.tags|default:'info' }} flex items-center gap-3 px-4 py-3 max-w-sm animate-fade-in">
+      {% if message.tags == 'success' %}<i class="ti ti-circle-check toast-icon"></i>
+      {% elif message.tags == 'error' %}<i class="ti ti-circle-x toast-icon"></i>
+      {% elif message.tags == 'warning' %}<i class="ti ti-alert-triangle toast-icon"></i>
+      {% else %}<i class="ti ti-info-circle toast-icon"></i>{% endif %}
+      <span class="toast-text">{{ message }}</span>
+      <button type="button" onclick="this.closest('.toast-msg').remove()" class="btn btn-ghost btn-icon btn-sm btn-round ml-auto flex-shrink-0" aria-label="Dismiss"><i class="ti ti-x"></i></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+{% include "partials/footer.html" %}
+
+<script defer src="{% static 'vendor/alpine.min.js' %}"></script>
+<script src="{% static 'vendor/swiper-bundle.min.js' %}"></script>
+<script src="{% static 'js/base.js' %}"></script>
+{# Form checks before submit + AJAX submit for [data-ajax-form] (footer newsletter is on every page) #}
+<script src="{% static 'js/form-validate.js' %}"></script>
+<script src="{% static 'js/ajax-form.js' %}"></script>
+
+{# Shared product-card behaviour (Quick View · Compare · Wishlist) — available on every page #}
+{% include "products/partials/product_card_scripts.html" %}
+
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

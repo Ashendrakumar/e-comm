@@ -1,0 +1,71 @@
+/* Generic AJAX form submit.
+ *
+ * Replaces four near-identical inline handlers (homepage contact, contact page,
+ * service enquiry, area enquiry). Opt a form in with `data-ajax-form`:
+ *
+ *   <form action="..." data-ajax-form
+ *         data-msg-target="#contact-msg"        (element to write the result into)
+ *         data-ajax-url="..."                   (optional; defaults to form.action)
+ *         data-error-text="..."                 (optional validation-failure text)
+ *         data-msg-ok-class="..."               (optional success classes)
+ *         data-msg-err-class="..."              (optional failure classes)
+ *         data-loading-text="...">              (optional button HTML while sending)
+ *
+ * The submit button's original innerHTML is captured and restored, so the label
+ * never has to be duplicated in JS.
+ *
+ * Delegated from document, so it also covers forms injected after page load.
+ * Add `data-validate` too and form-validate.js checks the fields first; field
+ * errors the server sends back (`errors`) are then shown under each field.
+ */
+document.addEventListener('submit', async function (e) {
+  const form = e.target.closest('form[data-ajax-form]');
+  if (!form) return;
+  e.preventDefault();
+
+  const d       = form.dataset;
+  const btn     = form.querySelector('[type=submit]');
+  const msg     = d.msgTarget ? document.querySelector(d.msgTarget) : null;
+  // Defaults read the design tokens (tokens.css) so they flip with .dark.
+  const okClass  = d.msgOkClass  || 'text-sm text-center font-medium text-[color:var(--color-success)]';
+  const errClass = d.msgErrClass || 'text-sm text-center font-medium text-[color:var(--color-danger)]';
+  const restore = btn ? btn.innerHTML : '';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = d.loadingText || '<i class="ti ti-loader-2 animate-spin"></i> Sending...';
+  }
+
+  const show = (cls, text) => {
+    if (!msg) return;
+    msg.classList.remove('hidden');
+    msg.className = cls;
+    msg.textContent = text;
+  };
+
+  try {
+    const res = await fetch(d.ajaxUrl || form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': window.csrfToken },
+    });
+    const data = await res.json();
+    if (data.success) {
+      form.reset();
+      show(okClass, data.message);
+    } else {
+      // Field errors go under their fields; any the form has no field for join the message.
+      const extra = (data.errors && window.FormValidate) ? window.FormValidate.showErrors(form, data.errors) : [];
+      // 429 = rate limited: the server's message says to wait; otherwise use the form's own text
+      const text = (res.status === 429 && data.message) || d.errorText || data.message || 'Please check the form and try again.';
+      show(errClass, [text, ...extra].join(' '));
+    }
+  } catch (err) {
+    show(errClass, 'Something went wrong. Please try again.');
+  }
+
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = restore;
+  }
+});

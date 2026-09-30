@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Component classes (buttons, fields, badges …) are NOT defined here any more:
+   they live in static/css/components.css on top of static/css/tokens.css, which
+   base.html loads for both the compiled and CDN builds. */
+@layer components {
+  .line-clamp-2 { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+  .line-clamp-1 { display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden; }
+}
+
+/* Accessibility: skip-to-content link */
+.skip-link {
+  position:absolute;left:-9999px;top:auto;z-index:100;
+  background:#2563eb;color:#fff;padding:10px 16px;border-radius:0 0 8px 0;font-weight:600;
+}
+.skip-link:focus { left:0;top:0; }

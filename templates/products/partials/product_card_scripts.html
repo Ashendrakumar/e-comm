@@ -1,0 +1,60 @@
+{% load static %}
+{% comment %}
+  Shared infrastructure for the product card (templates/products/partials/product_card.html).
+  Provides Quick View, Compare and Wishlist behaviour so the card works identically on
+  EVERY page. Included once from base.html — do not duplicate these functions per page.
+
+  This file holds only markup now:
+    styles     -> static/css/product-card.css   (linked from base.html <head>)
+    behaviour  -> static/js/product-card.js     (loaded at the bottom of this file)
+{% endcomment %}
+
+{% comment %}
+  URL bridge for static/js/product-card.js. The JS used to hardcode
+  /products/ajax/... paths; these placeholders are reversed by Django and
+  substituted at runtime, so the endpoints follow products/urls.py.
+{% endcomment %}
+<div id="pc-config" hidden
+     data-quick-view-url="{% url 'products:quick_view' '__SLUG__' %}"
+     data-wishlist-page-url="{% url 'products:wishlist' %}"
+     data-compare-url="{% url 'products:compare' %}"></div>
+
+<!-- ═══ QUICK VIEW MODAL ════════════════════════════════════ -->
+<div id="qv-modal" onclick="if(event.target===this)closeQV()">
+  <div class="qv-panel relative w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto pc-fade-in">
+    <button type="button" onclick="closeQV()" aria-label="Close quick view"
+            class="btn btn-secondary btn-icon btn-sm btn-round absolute top-4 right-4 z-10">
+      <i class="ti ti-x" aria-hidden="true"></i>
+    </button>
+    <div id="qv-content" class="p-6 md:p-8">
+      <div class="flex items-center justify-center h-48">
+        <div class="pc-spinner" role="status" aria-label="Loading"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ COMPARE BAR ═════════════════════════════════════════ -->
+<div id="compare-bar" class="fixed bottom-0 left-0 right-0 py-3 px-4">
+  <div class="max-w-7xl mx-auto flex items-center gap-4 flex-wrap">
+    <div class="flex gap-3 flex-1 min-w-0" id="cmp-slots">
+      {% for i in "123" %}
+      <div class="cmp-slot">
+        <span class="cmp-name">Empty slot</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="cmp-bar-actions">
+      <button type="button" onclick="clearCompare()" class="btn btn-secondary cmp-bar-btn">
+        <i class="ti ti-trash" aria-hidden="true"></i> Clear
+      </button>
+      <button type="button" onclick="goCompare()" id="cmp-go-btn" disabled
+              class="btn btn-primary cmp-bar-btn">
+        <i class="ti ti-arrows-diff" aria-hidden="true"></i> Compare Now
+        <span id="cmp-count" class="cmp-count" aria-label="products selected">0/3</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/product-card.js' %}"></script>

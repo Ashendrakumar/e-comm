@@ -1,0 +1,10 @@
+{% load static %}
+{% if products %}
+<div id="product-grid" class="product-shelf">
+  {% for product in products %}
+    {% include "products/partials/product_card.html" %}
+  {% endfor %}
+</div>
+{% else %}
+{% include "products/partials/empty_state.html" %}
+{% endif %}

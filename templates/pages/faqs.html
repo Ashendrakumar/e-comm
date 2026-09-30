@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+{% block title %}FAQs — {{ site_name }}{% endblock %}
+{% block content %}
+
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative">
+    {% breadcrumbs "FAQs" on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">Frequently Asked Questions</h1>
+    <p class="text-primary-100 text-base max-w-xl mx-auto">Everything you need to know about shopping with {{ site_name }}</p>
+  </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 py-12" x-data="{ open: null }">
+
+  {% if not categories and not uncategorised %}
+  <div class="text-center py-16">
+    <i class="ti ti-help-circle text-6xl text-gray-300 dark:text-gray-700 mb-4 block"></i>
+    <p class="text-gray-500 dark:text-gray-400">No FAQs published yet. Please check back soon.</p>
+  </div>
+  {% endif %}
+
+  {% for cat in categories %}
+  {% if cat.faqs.all %}
+  <section class="mb-10">
+    <h2 class="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white mb-5">
+      <i class="ti {{ cat.icon|default:'ti-help-circle' }} text-primary-600"></i> {{ cat.name }}
+    </h2>
+    <div class="space-y-3">
+      {% for faq in cat.faqs.all %}
+      {% if faq.is_active %}
+      <div class="card overflow-hidden">
+        <button type="button" @click="open === '{{ cat.id }}-{{ faq.id }}' ? open = null : open = '{{ cat.id }}-{{ faq.id }}'"
+                :aria-expanded="(open === '{{ cat.id }}-{{ faq.id }}').toString()" aria-expanded="false" aria-controls="faq-{{ cat.id }}-{{ faq.id }}"
+                class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left">
+          <span class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ faq.question }}</span>
+          <i class="ti ti-chevron-down text-gray-400 acc-chev flex-shrink-0"
+             :class="{ 'rotate-180': open === '{{ cat.id }}-{{ faq.id }}' }"></i>
+        </button>
+        <div id="faq-{{ cat.id }}-{{ faq.id }}" class="acc-panel" :class="{ 'is-open': open === '{{ cat.id }}-{{ faq.id }}' }">
+          <div><div class="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            {{ faq.answer|safe|linebreaks }}
+          </div></div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% endfor %}
+
+  {% if uncategorised %}
+  <section class="mb-10">
+    <h2 class="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white mb-5">
+      <i class="ti ti-help-circle text-primary-600"></i> General
+    </h2>
+    <div class="space-y-3">
+      {% for faq in uncategorised %}
+      <div class="card overflow-hidden">
+        <button type="button" @click="open === 'g-{{ faq.id }}' ? open = null : open = 'g-{{ faq.id }}'"
+                :aria-expanded="(open === 'g-{{ faq.id }}').toString()" aria-expanded="false" aria-controls="faq-g-{{ faq.id }}"
+                class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left">
+          <span class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ faq.question }}</span>
+          <i class="ti ti-chevron-down text-gray-400 acc-chev flex-shrink-0" :class="{ 'rotate-180': open === 'g-{{ faq.id }}' }"></i>
+        </button>
+        <div id="faq-g-{{ faq.id }}" class="acc-panel" :class="{ 'is-open': open === 'g-{{ faq.id }}' }">
+          <div><div class="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            {{ faq.answer|safe|linebreaks }}
+          </div></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Still have questions -->
+  <div class="card mt-12 text-center p-10" style="background:color-mix(in srgb,var(--color-primary) 7%,var(--color-bg))">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Still have questions?</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-6">Our support team is happy to help you out.</p>
+    <a href="{% url 'core:contact' %}" class="btn btn-primary btn-lg">Contact Support <i class="ti ti-arrow-right"></i></a>
+  </div>
+</div>
+{% endblock %}

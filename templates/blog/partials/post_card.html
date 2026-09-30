@@ -1,0 +1,34 @@
+{% comment %}
+Blog post card (list + related posts). The title link is stretched over the whole
+card, so the card is a single link and tab stop. --bc-accent is the category colour;
+it only tints the top bar, the chip dot and the hover border. Styles: css/blog.css.
+{% endcomment %}
+<article class="bc"{% if post.category.color %} style="--bc-accent:{{ post.category.color }}"{% endif %}>
+  <div class="bc-media">
+    {% if post.featured_image %}
+      <img src="{{ post.featured_image.url }}" alt="" loading="lazy" decoding="async" class="bc-img">
+    {% else %}
+      <div class="bc-placeholder" aria-hidden="true"><i class="ti ti-news"></i></div>
+    {% endif %}
+    <span class="bc-shade" aria-hidden="true"></span>
+    {% if post.category %}<span class="bc-chip"><span class="bc-chip-dot"></span>{{ post.category.name }}</span>{% endif %}
+    <span class="bc-go" aria-hidden="true"><i class="ti ti-arrow-up-right"></i></span>
+  </div>
+
+  <div class="bc-body">
+    <div class="bc-meta">
+      <time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:"M d, Y" }}</time>
+      <span class="bc-sep" aria-hidden="true"></span>
+      <span>{{ post.reading_minutes }} min read</span>
+    </div>
+    <h3 class="bc-title"><a href="{{ post.get_absolute_url }}" class="bc-link">{{ post.title }}</a></h3>
+    {% if post.excerpt %}<p class="bc-excerpt">{{ post.excerpt }}</p>{% endif %}
+    <div class="bc-foot">
+      <span class="bc-author">
+        <span class="bc-avatar" aria-hidden="true">{{ post.display_author|first|upper }}</span>
+        {{ post.display_author }}
+      </span>
+      <span class="bc-read" aria-hidden="true">Read <i class="ti ti-arrow-right"></i></span>
+    </div>
+  </div>
+</article>

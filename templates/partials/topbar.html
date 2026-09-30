@@ -1,0 +1,39 @@
+{% load static %}
+
+{# Token-based; flips with .dark automatically. #}
+<style>
+  .topbar{background:var(--color-page);color:var(--color-text-muted);border-bottom:1px solid var(--color-border-subtle);font-size:var(--text-xs);}
+  .topbar a{transition:color var(--duration) var(--ease);}
+  .topbar a:hover{color:var(--color-primary-text);}
+  .topbar-sep{border-left:1px solid var(--color-border);}
+</style>
+<div class="topbar py-2 hidden md:block">
+  <div class="max-w-7xl mx-auto px-4 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      {% if site_settings.phone %}
+      <a href="tel:{{ site_settings.phone }}" class="flex items-center gap-1.5">
+        <i class="ti ti-phone text-sm"></i> {{ site_settings.phone }}
+      </a>
+      {% endif %}
+      {% if site_settings.email %}
+      <a href="mailto:{{ site_settings.email }}" class="flex items-center gap-1.5">
+        <i class="ti ti-mail text-sm"></i> {{ site_settings.email }}
+      </a>
+      {% endif %}
+    </div>
+    <div class="flex items-center gap-4">
+      {% if site_settings.working_hours %}
+      <span class="flex items-center gap-1.5">
+        <i class="ti ti-clock text-sm"></i> {{ site_settings.working_hours }}
+      </span>
+      {% endif %}
+      <div class="topbar-sep flex items-center gap-3 pl-3">
+        {% for sl in social_links %}
+        <a href="{{ sl.url }}" target="_blank" rel="noopener" aria-label="{{ sl.get_platform_display|default:sl.url }}">
+          <i class="ti {{ sl.get_icon_class }} text-sm"></i>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

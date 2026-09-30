@@ -1,0 +1,39 @@
+{% comment %}
+  The one breadcrumb for every page. Render it with the tag, directly above the page's <h1>:
+    {% load ui %}{% breadcrumbs "Products" list_url "Compare" %}   (on_dark=True on coloured banners)
+  (see core/templatetags/ui.py). Styles: .crumbs in components.css.
+  The last crumb is the current page (not linked). Also emits a JSON-LD BreadcrumbList.
+{% endcomment %}
+{% if crumbs %}
+{% if bar %}<div class="crumb-bar"><div class="crumb-bar-inner">{% endif %}
+<nav aria-label="Breadcrumb" class="crumbs{% if on_dark %} crumbs--on-dark{% endif %}{% if align == 'center' %} crumbs--center{% endif %}">
+  <ol>
+    {% for c in crumbs %}
+    <li>
+      {% if not forloop.last and c.url %}
+        {% if forloop.first %}<a href="{{ c.url }}" class="crumbs-home"><i class="ti ti-home" aria-hidden="true"></i><span>{{ c.title }}</span></a>
+        {% else %}<a href="{{ c.url }}">{{ c.title }}</a>{% endif %}
+        <i class="ti ti-chevron-right crumbs-sep" aria-hidden="true"></i>
+      {% else %}
+        <span aria-current="page">{{ c.title }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>
+{% if bar %}</div></div>{% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {% for c in crumbs %}{
+      "@type": "ListItem",
+      "position": {{ forloop.counter }},
+      "name": "{{ c.title|escapejs }}"{% if c.url %},
+      "item": "{{ request.scheme }}://{{ request.get_host }}{{ c.url }}"{% endif %}
+    }{% if not forloop.last %},{% endif %}{% endfor %}
+  ]
+}
+</script>
+{% endif %}

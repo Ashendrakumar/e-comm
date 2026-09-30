@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+{% block title %}All Categories — {{ site_name }}{% endblock %}
+{% block meta_description %}Browse all electronics categories at {{ site_name }} — mobiles, laptops, TVs, cameras and more.{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/category-cards.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-primary-300 rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-6 text-center">
+    {% breadcrumbs "All Categories" on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-tight">Shop by Category</h1>
+    <p class="text-primary-100 text-base max-w-xl mx-auto">Browse our complete range of premium electronics across {{ root_categories|length }} categories</p>
+  </div>
+</div>
+
+<!-- Categories Grid -->
+<div class="max-w-7xl mx-auto px-4 py-12">
+  {% for cat in root_categories %}
+  <div class="mb-12"{% if cat.color %} style="--cat: {{ cat.color }}"{% endif %}>
+    <!-- Category header row -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <div class="cat-group-ico">
+          <i class="ti {{ cat.icon|default:'ti-tag' }}" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h2 class="cat-heading text-xl font-bold">{{ cat.name }}</h2>
+          <p class="text-sm text-muted">
+            {{ cat.total_product_count }} product{{ cat.total_product_count|pluralize }}
+            {% if cat.children.count %} · {{ cat.children.count }} sub-categor{{ cat.children.count|pluralize:"y,ies" }}{% endif %}
+          </p>
+        </div>
+      </div>
+      <a href="{{ cat.get_absolute_url }}"
+         class="cat-group-link group hidden sm:inline-flex items-center gap-2 text-sm font-semibold">
+        View all <i class="ti ti-arrow-right text-sm transition-transform group-hover:translate-x-1"></i>
+      </a>
+    </div>
+
+    <!-- Banner + subcategories row -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <!-- Parent category banner tile -->
+      <a href="{{ cat.get_absolute_url }}" class="cat-hero group lg:col-span-1"
+         aria-label="{{ cat.name }} — {{ cat.total_product_count }} product{{ cat.total_product_count|pluralize }}">
+        {% if cat.banner %}
+        <img src="{{ cat.banner.url }}" alt="" class="cat-hero-img" loading="lazy" decoding="async">
+        {% endif %}
+        <div class="cat-hero-scrim"></div>
+        <div class="cat-hero-sheen"></div>
+        <div class="relative z-10 p-5">
+          {% if cat.icon %}
+          <div class="cat-hero-ico mb-3">
+            <i class="ti {{ cat.icon }}" aria-hidden="true"></i>
+          </div>
+          {% endif %}
+          <h3 class="text-white font-bold text-lg leading-tight mb-1">{{ cat.name }}</h3>
+          {% if cat.description %}
+          <p class="text-white/70 text-xs line-clamp-2">{{ cat.description|truncatewords:12 }}</p>
+          {% endif %}
+          <span class="mt-3 inline-flex items-center gap-1 text-white/90 text-xs font-semibold group-hover:gap-2 transition-all">
+            Shop Now <i class="ti ti-arrow-right text-xs"></i>
+          </span>
+        </div>
+      </a>
+
+      <!-- Subcategory cards: same tile treatment as the homepage category rail -->
+      <div class="lg:col-span-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
+        {% for sub in cat.children.all %}
+        {% if sub.is_active %}
+        <a href="{{ sub.get_absolute_url }}" class="cat-card cat-card--sm"
+           style="--i: {{ forloop.counter0 }}"
+           aria-label="{{ sub.name }} — {{ sub.total_product_count }} product{{ sub.total_product_count|pluralize }}">
+          <span class="cat-ico">
+            {% if sub.image %}
+            <img src="{{ sub.image.url }}" alt="" loading="lazy" decoding="async">
+            {% else %}
+            <i class="ti {{ sub.icon|default:'ti-tag' }}" aria-hidden="true"></i>
+            {% endif %}
+          </span>
+          <span class="cat-name line-clamp-2">{{ sub.name }}</span>
+          <span class="cat-count">{{ sub.total_product_count }} item{{ sub.total_product_count|pluralize }}</span>
+        </a>
+        {% endif %}
+        {% empty %}
+        <!-- If no subcategories, show featured products from this category.
+             Cards are a fixed size, so they get their own full-width rail
+             rather than sitting in the sub-category tile columns. -->
+        {% with featured=cat.get_featured_products %}
+        <div class="col-span-full product-rail">
+          {% for product in featured|slice:":4" %}
+          {% include "products/partials/product_card.html" %}
+          {% endfor %}
+        </div>
+        {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if not forloop.last %}
+    <hr class="divider mt-10">
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <!-- CTA -->
+  <div class="cat-cta mt-6 text-center p-10">
+    <i class="cat-cta-ico ti ti-package text-5xl block mb-4" aria-hidden="true"></i>
+    <h2 class="cat-heading text-2xl font-bold mb-2">Can't find what you're looking for?</h2>
+    <p class="text-muted mb-6 max-w-md mx-auto">Browse all products or contact our expert team for personalised recommendations.</p>
+    <div class="flex items-center justify-center gap-4 flex-wrap">
+      <a href="{% url 'products:list' %}" class="btn btn-primary btn-lg">Browse All Products</a>
+      <a href="{% url 'core:contact' %}" class="btn btn-outline btn-lg">Talk to an Expert</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

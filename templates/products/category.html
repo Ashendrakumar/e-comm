@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+{% block title %}{{ category.name }} — {{ site_name }}{% endblock %}
+{% block meta_description %}{{ meta_description|default:category.name }}{% endblock %}
+
+{% block extra_head %}
+{% include "products/partials/filter_panel_styles.html" %}
+<link rel="stylesheet" href="{% static 'css/product-category.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ═══════ BANNER ═══════ -->
+{% if category.banner %}
+<div class="cat-banner">
+  <img src="{{ category.banner.url }}" alt="{{ category.name }}"
+       class="absolute inset-0 w-full h-full object-cover object-center" loading="eager" fetchpriority="high" decoding="async">
+  <div class="cat-banner-overlay"></div>
+  <div class="relative z-10 w-full max-w-7xl mx-auto px-6 pb-6 pt-12">
+    <div class="flex items-end gap-4 flex-wrap">
+      {% if category.icon %}
+      <div class="w-14 h-14 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+        <i class="ti {{ category.icon }} text-3xl text-white"></i>
+      </div>
+      {% endif %}
+      <div>
+        {% url 'products:categories' as cats_url %}{% breadcrumbs "Categories" cats_url trail=breadcrumbs on_dark=True %}
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white leading-tight">{{ category.name }}</h1>
+        {% if category.description %}<p class="text-white/70 text-sm mt-1.5 max-w-xl">{{ category.description|truncatewords:20 }}</p>{% endif %}
+        <div class="flex flex-wrap items-center gap-4 mt-3 text-sm">
+          <span class="text-white/80"><span class="font-bold text-white" id="result-count">{{ total_count }}</span> products</span>
+          {% if in_stock_count %}<span class="text-green-300 flex items-center gap-1"><i class="ti ti-circle-check text-xs"></i>{{ in_stock_count }} in stock</span>{% endif %}
+          {% if on_sale_count %}<span class="text-orange-300 flex items-center gap-1"><i class="ti ti-tag text-xs"></i>{{ on_sale_count }} on sale</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<!-- Theme banner (no category image uploaded) — same as the other pages -->
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 relative py-6 md:py-8 overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-16 -left-16 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-6">
+    <div class="flex items-center gap-4 flex-wrap">
+      {% if category.icon %}
+      <div class="w-14 h-14 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center flex-shrink-0">
+        <i class="ti {{ category.icon }} text-3xl text-white"></i>
+      </div>
+      {% endif %}
+      <div>
+        {% url 'products:categories' as cats_url %}{% breadcrumbs "Categories" cats_url trail=breadcrumbs on_dark=True %}
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">{{ category.name }}</h1>
+        {% if category.description %}<p class="text-white/70 text-sm mt-1.5">{{ category.description|truncatewords:20 }}</p>{% endif %}
+        <p class="text-white/80 text-sm mt-2">
+          <span class="font-bold text-white" id="result-count">{{ total_count }}</span> products
+          {% if in_stock_count %} · <span class="text-green-300">{{ in_stock_count }} in stock</span>{% endif %}
+          {% if on_sale_count %} · <span class="text-orange-300">{{ on_sale_count }} on sale</span>{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ═══════ SUBCATEGORY PILLS (sticky) ═══════ -->
+{% if subcategories %}
+<div class="lp-subnav z-30" data-sticky-subnav>
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 overflow-x-auto scrollbar-hide">
+    <span class="lp-eyebrow is-primary flex-shrink-0">Sub-categories:</span>
+    {% for sub in subcategories %}
+    <a href="{{ sub.get_absolute_url }}" class="lp-subpill" title="{{ sub.name }}">
+      {% if sub.icon %}<i class="ti {{ sub.icon }} text-sm"></i>{% endif %}
+      <span class="hidden sm:inline-block">{{ sub.name }}</span>
+      <span class="check-count">{{ sub.total_product_count }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ═══════ MAIN LAYOUT ═══════ -->
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="flex gap-6">
+
+    <!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+    <aside class="hidden lg:block w-64 flex-shrink-0">
+      <div class="lp-sticky space-y-4">
+
+      <!-- Filter panel (shared with the all-products route) -->
+      <form method="get" id="filter-form" data-ajax-url="{% url 'products:ajax_filter' %}">
+
+        <div class="card card-pad">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="lp-strong font-bold flex items-center gap-2 text-sm">
+              <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters
+            </h3>
+            <a href="{{ clear_url }}" class="btn-link">Clear all</a>
+          </div>
+
+          {% include "products/partials/filter_panel.html" with filter_form_id="desktop" %}
+
+          <button type="submit" class="btn btn-primary btn-block mt-4">
+            <i class="ti ti-search"></i> Apply Filters
+          </button>
+        </div>
+      </form>
+
+      <!-- Related categories (siblings) -->
+      {% if siblings %}
+      <div class="card card-pad">
+        <p class="lp-eyebrow mb-3">Related Categories</p>
+        {% for sib in siblings %}
+        <a href="{{ sib.get_absolute_url }}" class="lp-side-link">
+          {% if sib.icon %}
+            <i class="ti {{ sib.icon }} text-sm shrink-0"></i>
+          {% endif %}
+          <span class="flex-1 min-w-0 truncate">{{ sib.name }}</span>
+          <span class="text-[11px] shrink-0">{{ sib.product_count }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Parent category link -->
+      {% if category.parent %}
+      <div class="lp-parent p-4">
+        <p class="lp-eyebrow is-primary mb-2">Parent Category</p>
+        <a href="{{ category.parent.get_absolute_url }}" class="flex items-center gap-2 text-sm font-semibold">
+          {% if category.parent.icon %}<i class="ti {{ category.parent.icon }} text-sm"></i>{% endif %}
+          {{ category.parent.name }}
+        </a>
+      </div>
+      {% endif %}
+
+      </div>
+    </aside>
+
+    <!-- ── PRODUCT AREA ────────────────────────────────────────── -->
+    <div class="flex-1 min-w-0">
+
+      <!-- Active filter chips (hidden by CSS while empty) -->
+      <div class="flex flex-wrap gap-2 items-center mb-4" id="chip-wrap">
+        {% include "products/partials/filter_chips.html" %}
+      </div>
+
+      <!-- Mobile filter + sort drawer (wrapper carries lg:hidden — .btn's display would override it) -->
+      <div class="lg:hidden mb-4">
+        <button type="button" onclick="openMobileFilter()" class="btn btn-secondary btn-sm">
+          <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters &amp; Sort
+          {% if active_chips %}<span class="lp-badge">{{ active_chips|length }}</span>{% endif %}
+        </button>
+      </div>
+
+      <!-- Products (AJAX target) -->
+      <div id="products-section">
+        {% include "products/partials/product_grid.html" %}
+        <div id="load-more-section">{% include "products/partials/load_more.html" %}</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MOBILE FILTER DRAWER ═══════ -->
+<div id="mob-filter" class="hidden fixed inset-0 z-50 flex">
+  <div class="lp-backdrop absolute inset-0" onclick="closeMobileFilter()"></div>
+  <div class="lp-drawer relative ml-auto w-80 max-w-full h-full overflow-y-auto flex flex-col translate-x-full transition-transform duration-300" id="mob-panel">
+    <div class="lp-drawer-head flex items-center justify-between px-5 py-4 sticky top-0 z-10">
+      <h3 class="lp-strong font-bold flex items-center gap-2">
+        <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters
+      </h3>
+      <button type="button" onclick="closeMobileFilter()" class="btn btn-ghost btn-icon btn-sm" aria-label="Close filters">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+    <div class="flex-1 p-5 overflow-y-auto">
+      {# Same panel as the desktop sidebar; submits normally (full reload) #}
+      <form method="get" class="space-y-0">
+        {% include "products/partials/filter_panel.html" with filter_form_id="mobile" %}
+        <button type="submit" class="btn btn-primary btn-block mt-5">
+          <i class="ti ti-search"></i> Apply Filters
+        </button>
+        <a href="{{ clear_url }}" class="btn btn-outline btn-block mt-2"><i class="ti ti-x"></i> Clear All</a>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# Quick View modal & Compare bar are provided globally by products/partials/product_card_scripts.html #}
+
+{% endblock %}
+
+{% block extra_scripts %}
+{# All filter/sort/infinite-scroll behaviour is shared with the all-products route: #}
+{% include "products/partials/filter_scripts.html" %}
+{% endblock %}

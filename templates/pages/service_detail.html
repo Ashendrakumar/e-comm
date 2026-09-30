@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+{% block title %}{{ service.meta_title|default:service.title }} — {{ site_name }}{% endblock %}
+{% block meta_description %}{{ service.meta_description|default:service.short_description }}{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<div class="relative bg-gradient-to-br from-primary-800 to-primary-900 text-white overflow-hidden">
+  {% if service.banner %}
+  <img src="{{ service.banner.url }}" alt="{{ service.title }}" class="absolute inset-0 w-full h-full object-cover opacity-25" loading="eager" fetchpriority="high" decoding="async">
+  {% endif %}
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4 py-6 md:py-8">
+    <div class="flex items-start gap-5 max-w-3xl">
+      <div class="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center flex-shrink-0 backdrop-blur">
+        <i class="ti {{ service.icon }} text-3xl"></i>
+      </div>
+      <div>
+        {% url 'pages:services' as services_url %}{% breadcrumbs "Services" services_url service.title on_dark=True %}
+        <h1 class="text-2xl md:text-3xl font-extrabold mb-2">{{ service.title }}</h1>
+        <p class="text-primary-50 text-base leading-relaxed">{{ service.short_description }}</p>
+        {% if service.price_info %}
+        <div class="inline-flex items-center gap-2 mt-5 bg-accent-500 px-4 py-2 rounded-xl font-semibold text-sm">
+          <i class="ti ti-tag"></i> {{ service.price_info }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-12">
+  <div class="grid lg:grid-cols-3 gap-10">
+
+    <!-- Main content -->
+    <div class="lg:col-span-2">
+      {% if service.image %}
+      <img src="{{ service.image.url }}" alt="{{ service.title }}" class="w-full rounded-2xl mb-8 object-cover max-h-96" loading="lazy" decoding="async">
+      {% endif %}
+
+      <div class="prose-content text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
+        {% if service.description %}
+          {{ service.description|safe|linebreaks }}
+        {% else %}
+          <p>{{ service.short_description }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Features -->
+      {% if service.features.all %}
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mt-10 mb-6">What's Included</h2>
+      <div class="grid sm:grid-cols-2 gap-4">
+        {% for f in service.features.all %}
+        <div class="tile rise flex items-start gap-3 p-5" style="--c: {{ service.color|default:'#0f766e' }}; --i: {{ forloop.counter0 }}">
+          <span class="chip chip-sm"><i class="ti {{ f.icon }}" aria-hidden="true"></i></span>
+          <div>
+            <h3 class="font-semibold text-gray-900 dark:text-white text-sm mb-1">{{ f.title }}</h3>
+            {% if f.description %}<p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{{ f.description }}</p>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Inquiry sidebar -->
+    <div class="lg:col-span-1">
+      <div class="sticky top-24 space-y-6">
+        <div id="inquiry" class="card p-6">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Request This Service</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">Fill in your details and we'll get back within 24 hours.</p>
+          <form id="service-inquiry-form" method="post" action="{% url 'pages:service_inquiry' service.slug %}" class="space-y-3"
+                data-ajax-form data-validate data-msg-target="#inquiry-msg"
+                data-msg-ok-class="text-sm text-center text-green-600"
+                data-error-text="Please check your details and try again.">
+            {% csrf_token %}{% include "partials/honeypot.html" with hp_id="service" %}
+            {% for field in inquiry_form %}
+            <div class="field">
+              <label class="sr-only" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary btn-block"><i class="ti ti-send"></i> Send Inquiry</button>
+            <p id="inquiry-msg" class="hidden text-sm text-center"></p>
+          </form>
+          {% if site_settings.whatsapp %}
+          <a href="https://wa.me/{{ site_settings.whatsapp }}?text=I'm%20interested%20in%20{{ service.title|urlencode }}" target="_blank"
+             class="btn btn-success btn-block mt-3">
+            <i class="ti ti-brand-whatsapp"></i> Chat on WhatsApp
+          </a>
+          {% endif %}
+        </div>
+
+        {% if site_settings.phone %}
+        <div class="card p-6 text-center" style="background:color-mix(in srgb,var(--color-primary) 7%,var(--color-bg))">
+          <i class="ti ti-phone-call text-3xl text-primary-600 mb-2 block"></i>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Prefer to call?</p>
+          <a href="tel:{{ site_settings.phone }}" class="link text-lg font-bold">{{ site_settings.phone }}</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Other services -->
+  {% if other_services %}
+  <section class="mt-16 pt-10 border-t border-gray-100 dark:border-gray-800">
+    <h2 class="section-title mb-8">Explore Other Services</h2>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {% for svc in other_services %}
+      <a href="{{ svc.get_absolute_url }}" class="tile rise group block p-6" style="--c: {{ svc.color|default:'#0f766e' }}; --i: {{ forloop.counter0 }}">
+        <span class="chip mb-4"><i class="ti {{ svc.icon }}" aria-hidden="true"></i></span>
+        <h3 class="font-bold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 transition-colors">{{ svc.title }}</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{{ svc.short_description }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

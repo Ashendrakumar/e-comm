@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}My Wishlist — {{ site_name }}{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
+{% block content %}
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4">
+    {% breadcrumbs "My Wishlist" on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">My Wishlist</h1>
+    <p class="text-primary-100 text-base max-w-xl mx-auto">
+      <b class="text-white" id="wl-count">{{ products|length }}</b> saved product{{ products|length|pluralize }} · kept in this browser, no account needed
+    </p>
+    {% if products %}
+    <div class="flex flex-wrap justify-center gap-2 mt-6" id="wl-actions">
+        {% if site_settings.whatsapp %}
+        <a class="btn btn-success" id="wl-whatsapp" target="_blank" rel="noopener"
+           href="https://wa.me/{{ site_settings.whatsapp }}?text={% filter urlencode %}Hi {{ site_name }}! I'm interested in these products:
+{% for p in products %}• {{ p.name }} — ₹{{ p.effective_price|floatformat:0 }} ({{ request.scheme }}://{{ request.get_host }}{{ p.get_absolute_url }})
+{% endfor %}{% endfilter %}">
+          <i class="ti ti-brand-whatsapp"></i> Ask about these on WhatsApp
+        </a>
+        {% endif %}
+        <button type="button" class="btn btn-inverse" id="wl-clear"><i class="ti ti-trash"></i> Clear wishlist</button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="product-shelf" id="wl-grid"{% if not products %} hidden{% endif %}>
+    {% for product in products %}
+      {% include "products/partials/product_card.html" %}
+    {% endfor %}
+  </div>
+
+  <div class="text-center py-16" id="wl-empty"{% if products %} hidden{% endif %}>
+    <div class="pc-empty-ico w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-5">
+      <i class="ti ti-heart text-4xl" aria-hidden="true"></i>
+    </div>
+    <h2 class="qv-title text-xl font-bold mb-2">Your wishlist is empty</h2>
+    <p class="text-muted mb-6 max-w-sm mx-auto">Tap the ♡ on any product to save it here, then send us one enquiry for everything you like.</p>
+    <a href="{% url 'products:list' %}" class="btn btn-primary">Browse products</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* The saved ids live in localStorage (see toggleWishlist in product-card.js). The server
+   renders whatever ids are in the URL; this keeps the page and the browser list in step. */
+(function(){
+  const hasIds = {{ has_ids|yesno:"true,false" }};
+  const saved = getWishlist();
+  // Opened as plain /products/wishlist/ (e.g. from a bookmark): load the saved items.
+  if(!hasIds && saved.length){ location.replace(wishlistUrl(saved)); return; }
+
+  const grid=document.getElementById('wl-grid'), empty=document.getElementById('wl-empty'),
+        count=document.getElementById('wl-count'), actions=document.getElementById('wl-actions');
+  function refresh(){
+    const n=grid.querySelectorAll('.product-card').length;
+    count.textContent=n; grid.hidden=!n; empty.hidden=!!n; if(actions) actions.hidden=!n;
+  }
+  // Un-hearting a card here removes it from the page straight away.
+  document.addEventListener('wishlist:change',e=>{
+    if(e.detail.ids.includes(e.detail.id)) return;
+    const btn=grid.querySelector(`.wishlist-btn[data-product="${e.detail.id}"]`);
+    const card=btn && btn.closest('.product-card');
+    if(card) card.remove();
+    refresh();
+  });
+  const clear=document.getElementById('wl-clear');
+  if(clear) clear.addEventListener('click',()=>{
+    setWishlist([]); syncWishlistUI();
+    grid.querySelectorAll('.product-card').forEach(c=>c.remove()); refresh();
+    showToast('Wishlist cleared','info');
+    history.replaceState(null,'',wishlistUrl([]));
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% load static %}
+{% comment %}
+  Service availability strip. Items come from the API (static/js/service-availability.js);
+  the server only renders the frame and loading placeholders.
+
+  {% include "partials/service_availability.html" with layout="tiles" %}
+  {% include "partials/service_availability.html" with layout="list" area=area title="Available in Surat" %}
+{% endcomment %}
+<section class="avail avail--{{ layout|default:'tiles' }}" data-availability data-layout="{{ layout|default:'tiles' }}"
+         data-api="{% url 'service-availability-list' %}{% if area %}?area={{ area.slug|urlencode }}{% endif %}"
+         {% if title %}aria-labelledby="avail-title"{% else %}aria-label="Services available"{% endif %}>
+  {% if title %}<h2 id="avail-title" class="avail-heading">{{ title }}</h2>{% endif %}
+  <div class="avail-list" data-availability-list aria-busy="true">
+    {% for i in "1234" %}<div class="avail-item is-loading" aria-hidden="true"><span class="avail-ico"></span><div class="avail-body"><p class="avail-title">&nbsp;</p></div></div>{% endfor %}
+  </div>
+</section>

@@ -1,0 +1,74 @@
+/* Site-wide behaviour: theme toggle, toasts, CSRF helper, mobile menu,
+   the Swiper carousels and the back-to-top button.
+   The INITIAL theme resolution deliberately stays inline in <head> (see
+   base.html) — moving it here would cost a request before first paint and
+   bring back the light->dark flash. */
+// Theme — the initial resolution happens in a blocking inline script in <head>
+// (see base.html) so there is no light→dark flash. This only handles changes.
+function applyTheme(dark){
+  const root=document.documentElement;
+  root.classList.toggle('dark',dark);
+  root.style.colorScheme=dark?'dark':'light';
+}
+function toggleDark(){
+  const dark=!document.documentElement.classList.contains('dark');
+  applyTheme(dark);
+  try{ localStorage.setItem('theme',dark?'dark':'light'); }catch(e){}
+}
+// Follow the OS while the visitor has not made an explicit choice.
+if(window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{
+    let stored=null;
+    try{ stored=localStorage.getItem('theme'); }catch(_){}
+    if(!stored) applyTheme(e.matches);
+  });
+}
+// Toasts (server messages, base.html) auto-dismiss with a short fade.
+setTimeout(()=>document.querySelectorAll('.toast-msg').forEach(e=>{
+  e.style.transition='opacity .3s';e.style.opacity='0';setTimeout(()=>e.remove(),300);
+}),5000);
+// CSRF helper
+function getCookie(n){const v=document.cookie.split(';').find(c=>c.trim().startsWith(n+'='));return v?decodeURIComponent(v.trim().slice(n.length+1)):null}
+const csrfToken=getCookie('csrftoken');
+// Mobile menu: see static/js/header.js — it owns toggleMobileMenu() and
+// matches the actual header markup (slide-in panel + backdrop).
+
+// Hero swiper
+if(document.querySelector('.hero-swiper')){
+  new Swiper('.hero-swiper',{loop:true,autoplay:{delay:5000,disableOnInteraction:false},pagination:{el:'.swiper-pagination',clickable:true},navigation:{nextEl:'.swiper-button-next',prevEl:'.swiper-button-prev'},effect:'fade',fadeEffect:{crossFade:true}});
+}
+// Product swipers
+document.querySelectorAll('.product-swiper').forEach(el=>{
+  new Swiper(el,{slidesPerView:2,spaceBetween:16,navigation:{nextEl:el.querySelector('.swiper-button-next'),prevEl:el.querySelector('.swiper-button-prev')},breakpoints:{640:{slidesPerView:3},768:{slidesPerView:4},1024:{slidesPerView:5}}});
+});
+// Brand swiper
+if(document.querySelector('.brand-swiper')){
+  new Swiper('.brand-swiper',{slidesPerView:3,spaceBetween:16,autoplay:{delay:2500},loop:true,breakpoints:{480:{slidesPerView:4},768:{slidesPerView:6},1024:{slidesPerView:8}}});
+}
+// Expose CSRF token globally for shared product-card scripts.
+window.csrfToken=csrfToken;
+
+// Dropdowns (components.css: details.dropdown) — close on outside click / Escape,
+// and keep only one open at a time.
+document.addEventListener('click',e=>{
+  document.querySelectorAll('details.dropdown[open]').forEach(d=>{ if(!d.contains(e.target)) d.removeAttribute('open'); });
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape') return;
+  document.querySelectorAll('details.dropdown[open]').forEach(d=>{ d.removeAttribute('open'); d.querySelector('summary')?.focus(); });
+});
+
+// Back to top (partials/footer.html: #to-top) — appears after scrolling one screen down
+function scrollToTop(){
+  const reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
+  document.getElementById('main-content')?.focus({preventScroll:true});   // keyboard users land at the top too
+}
+(function(){
+  const btn=document.getElementById('to-top');
+  if(!btn) return;
+  let ticking=false;
+  const update=()=>{ btn.classList.toggle('show',window.scrollY>window.innerHeight*0.8); ticking=false; };
+  window.addEventListener('scroll',()=>{ if(!ticking){ ticking=true; requestAnimationFrame(update); } },{passive:true});
+  update();
+})();

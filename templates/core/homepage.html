@@ -1,0 +1,595 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/category-cards.css' %}">
+<link rel="stylesheet" href="{% static 'css/homepage.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ========== HERO ========== -->
+{# Inset panel + quick-entry rail, sitting on a soft mesh instead of a full-bleed band. #}
+<section class="home-mesh pt-5 lg:pt-7">
+  <div class="relative max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-[1.85fr_1fr] gap-4 lg:gap-5">
+
+      <!-- Banner panel -->
+      <div class="hero-main">
+        {% if hero_banners %}
+        <div class="swiper hero-swiper h-full">
+          <div class="swiper-wrapper">
+            {% for banner in hero_banners %}
+            <div class="swiper-slide">
+              {% if banner.image %}
+              <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="hero-img"
+                   loading="eager" fetchpriority="high" decoding="async">
+              {% endif %}
+              <div class="hero-scrim"></div>
+              <div class="hero-grid-tex"></div>
+              <div class="relative z-10 w-full px-8 md:px-11 py-14 md:py-16">
+                <div class="max-w-xl">
+                  {% if banner.badge_text %}
+                  <span class="hero-badge mb-5">
+                    <i class="ti ti-sparkles text-xs"></i> {{ banner.badge_text }}
+                  </span>
+                  {% endif %}
+                  <h1 class="text-white text-3xl md:text-5xl font-extrabold leading-[1.08] tracking-tight mb-4">
+                    {{ banner.title }}
+                  </h1>
+                  {% if banner.subtitle %}
+                  <p class="text-gray-300 text-base md:text-lg leading-relaxed max-w-md mb-8">{{ banner.subtitle }}</p>
+                  {% endif %}
+                  {% if banner.link %}
+                  <a href="{{ banner.link }}" class="btn btn-lg hero-cta">
+                    {{ banner.button_text }} <i class="ti ti-arrow-right"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="swiper-pagination"></div>
+          <div class="swiper-button-prev"></div>
+          <div class="swiper-button-next"></div>
+        </div>
+        {% else %}
+        {# Default hero when no banners are configured #}
+        <div class="relative flex items-center min-h-[460px]">
+          <div class="hero-grid-tex"></div>
+          <div class="relative z-10 w-full px-8 md:px-11 py-16">
+            <div class="max-w-xl">
+              <span class="hero-badge mb-6">
+                <i class="ti ti-sparkles text-xs"></i> Premium Electronics Store
+              </span>
+              <h1 class="text-white text-4xl md:text-5xl font-extrabold leading-[1.08] tracking-tight mb-5">
+                Discover the Future of
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-300 to-emerald-200">Electronics</span>
+              </h1>
+              <p class="text-gray-300 text-lg leading-relaxed max-w-md mb-9">
+                Top brands, unbeatable prices, expert service — your one-stop destination for premium electronics.
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <a href="{% url 'products:list' %}" class="btn btn-lg hero-cta">Shop Now <i class="ti ti-arrow-right"></i></a>
+                <a href="{% url 'core:contact' %}" class="btn btn-lg hero-cta hero-cta-ghost">Get Consultation <i class="ti ti-headset"></i></a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Quick-entry rail -->
+      <aside class="hidden lg:flex flex-col gap-5">
+        {% if featured_categories %}
+        <div class="hero-rail-tile flex-1" style="--c: var(--color-primary)">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-[11px] font-extrabold uppercase tracking-[.14em] text-gray-400">Top Categories</p>
+            <a href="{% url 'products:categories' %}" class="btn-link">All</a>
+          </div>
+          <div class="space-y-0.5">
+            {% for cat in featured_categories|slice:":4" %}
+            <a href="{{ cat.get_absolute_url }}" class="rail-link" style="--c: {{ cat.color|default:'var(--color-primary)' }}">
+              <span class="rail-ico"><i class="ti {{ cat.icon|default:'ti-tag' }}" aria-hidden="true"></i></span>
+              <span class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{{ cat.name }}</span>
+              <i class="ti ti-chevron-right text-xs text-gray-300 ml-auto flex-shrink-0" aria-hidden="true"></i>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <a href="{% url 'core:contact' %}" class="hero-rail-tile hero-rail-tile--dark">
+          <span class="svc-ico"><i class="ti ti-headset" aria-hidden="true"></i></span>
+          <p class="font-bold text-white text-base mt-4">Need help choosing?</p>
+          <p class="text-primary-100 text-xs mt-1 leading-relaxed">Talk to a product expert before you buy.</p>
+          {% if site_settings.phone %}
+          <p class="text-white font-bold text-sm mt-3">{{ site_settings.phone }}</p>
+          {% endif %}
+          <span class="mt-auto pt-4 inline-flex items-center gap-1.5 text-xs font-bold text-white">
+            Get consultation <i class="ti ti-arrow-right text-xs"></i>
+          </span>
+        </a>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Trust strip, overlapping the seam into the next section -->
+  <div class="relative z-10 max-w-7xl mx-auto px-4 mt-5 lg:mt-7 -mb-10">
+    <div class="usp-strip grid grid-cols-2 md:grid-cols-4">
+      <div class="usp-item" style="--c: var(--color-primary)">
+        <span class="chip chip-sm"><i class="ti ti-truck" aria-hidden="true"></i></span>
+        <div class="min-w-0">
+          <p class="font-bold text-gray-900 dark:text-white text-sm truncate">Free Delivery</p>
+          <p class="text-xs text-gray-500 truncate">On orders above ₹999</p>
+        </div>
+      </div>
+      <div class="usp-item" style="--c: var(--green-600)">
+        <span class="chip chip-sm"><i class="ti ti-shield-check" aria-hidden="true"></i></span>
+        <div class="min-w-0">
+          <p class="font-bold text-gray-900 dark:text-white text-sm truncate">Genuine Products</p>
+          <p class="text-xs text-gray-500 truncate">100% authentic brands</p>
+        </div>
+      </div>
+      <div class="usp-item" style="--c: var(--color-accent)">
+        <span class="chip chip-sm"><i class="ti ti-refresh" aria-hidden="true"></i></span>
+        <div class="min-w-0">
+          <p class="font-bold text-gray-900 dark:text-white text-sm truncate">Easy Returns</p>
+          <p class="text-xs text-gray-500 truncate">7-day hassle-free returns</p>
+        </div>
+      </div>
+      <div class="usp-item" style="--c: #7c3aed">
+        <span class="chip chip-sm"><i class="ti ti-headset" aria-hidden="true"></i></span>
+        <div class="min-w-0">
+          <p class="font-bold text-gray-900 dark:text-white text-sm truncate">Expert Support</p>
+          <p class="text-xs text-gray-500 truncate">Mon–Sat, 10am–8pm</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SHOP BY CATEGORY ========== -->
+{% if featured_categories %}
+<section class="sec sec-under-strip bg-white dark:bg-gray-900" style="--c: var(--color-primary)">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="sec-head">
+      <div>
+        <span class="sec-eyebrow">Browse</span>
+        <h2 class="section-title">Shop by Category</h2>
+        <p class="section-subtitle">Our full range of electronics, grouped the way you shop</p>
+      </div>
+      <a href="{% url 'products:categories' %}" class="sec-link hidden md:inline-flex">
+        View All <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
+      {% for cat in featured_categories %}
+      <a href="{{ cat.get_absolute_url }}" class="cat-card"
+        style="--cat: {{ cat.color|default:'var(--color-primary)' }}; --i: {{ forloop.counter0 }}"
+        aria-label="{{ cat.name }} — {{ cat.product_count }} product{{ cat.product_count|pluralize }}">
+        <span class="cat-ico">
+          {% if cat.image %}
+          <img src="{{ cat.image.url }}" alt="" loading="lazy" decoding="async">
+          {% else %}
+          <i class="ti {{ cat.icon|default:'ti-tag' }}" aria-hidden="true"></i>
+          {% endif %}
+        </span>
+        <span class="cat-name line-clamp-2">{{ cat.name }}</span>
+        <span class="cat-count">{{ cat.product_count }} item{{ cat.product_count|pluralize }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== OFFERS BENTO ========== -->
+{% if promo_banners %}
+<section class="sec-tight bg-white dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[minmax(170px,auto)]">
+      {% for banner in promo_banners %}
+      <a href="{{ banner.link|default:'#' }}"
+         class="promo group rise {% if forloop.first %}promo-lead sm:col-span-2 lg:row-span-2{% endif %}"
+         style="--c: {% cycle '#1d4ed8' '#0891b2' '#7c3aed' '#f97316' as promocolor %}; --i: {{ forloop.counter0 }}">
+        {% if banner.image %}
+        <img src="{{ banner.image.url }}" alt="" class="promo-img" loading="lazy" decoding="async">
+        {% endif %}
+        <div class="promo-scrim"></div>
+        <div class="promo-sheen"></div>
+        <div class="relative z-10 p-5 {% if forloop.first %}md:p-7{% endif %}">
+          {% if banner.badge_text %}
+          <span class="promo-tag mb-3">{{ banner.badge_text }}</span>
+          {% endif %}
+          <h3 class="text-white font-bold leading-tight {% if forloop.first %}text-2xl md:text-3xl{% else %}text-base{% endif %}">
+            {{ banner.title }}
+          </h3>
+          {% if banner.subtitle %}
+          <p class="text-white/75 mt-1.5 {% if forloop.first %}text-sm max-w-sm{% else %}text-xs{% endif %}">{{ banner.subtitle }}</p>
+          {% endif %}
+          <span class="mt-3 inline-flex items-center gap-1.5 text-white text-xs font-bold transition-all group-hover:gap-2.5">
+            {{ banner.button_text }} <i class="ti ti-arrow-right text-xs"></i>
+          </span>
+        </div>
+      </a>
+      {% endfor %}
+      <!-- Fills out the bento grid -->
+      <a href="{% url 'products:list' %}" class="tile group flex flex-col justify-center items-start p-5" style="--c: var(--color-primary)">
+        <span class="chip chip-sm"><i class="ti ti-tags" aria-hidden="true"></i></span>
+        <p class="font-bold text-gray-900 dark:text-white text-base mt-3">All Offers</p>
+        <p class="text-xs text-gray-500 mt-1">Every deal in one place</p>
+        <span class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 transition-all group-hover:gap-2.5">
+          Browse <i class="ti ti-arrow-right text-xs"></i>
+        </span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== FEATURED PRODUCTS ========== -->
+{% if featured_products %}
+<section class="sec sec-wash" style="--c: var(--color-primary)">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="sec-head">
+      <div>
+        <span class="sec-eyebrow">Handpicked</span>
+        <h2 class="section-title">Featured Products</h2>
+        <p class="section-subtitle">Premium electronics our team stands behind</p>
+      </div>
+      <a href="{% url 'products:list' %}?featured=1" class="sec-link hidden md:inline-flex">
+        View All <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    <div class="product-shelf">
+      {% for product in featured_products %}
+        {% include "products/partials/product_card.html" %}
+      {% endfor %}
+    </div>
+    <div class="text-center mt-9 md:hidden">
+      <a href="{% url 'products:list' %}?featured=1" class="sec-link">View All Featured <i class="ti ti-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== TRENDING PRODUCTS ========== -->
+{% if trending_products %}
+<section class="sec bg-white dark:bg-gray-900" style="--c: var(--color-accent)">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="sec-head">
+      <div>
+        <span class="sec-eyebrow"><span class="dot animate-pulse"></span> Hot Right Now</span>
+        <h2 class="section-title">Trending Products</h2>
+        <p class="section-subtitle">Most popular electronics this week</p>
+      </div>
+      <a href="{% url 'products:list' %}?trending=1" class="sec-link hidden md:inline-flex">
+        View All <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    <div class="product-shelf">
+      {% for product in trending_products %}
+        {% include "products/partials/product_card.html" %}
+      {% endfor %}
+    </div>
+    <div class="text-center mt-9 md:hidden">
+      <a href="{% url 'products:list' %}?trending=1" class="sec-link">View All Trending <i class="ti ti-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== WHY CHOOSE US ========== -->
+{% if why_choose_us %}
+<section class="sec sec-wash" style="--c: #7c3aed">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="sec-head sec-head-center mb-12">
+      <span class="sec-eyebrow">The {{ site_name }} difference</span>
+      <h2 class="section-title">Why Choose {{ site_name }}?</h2>
+      <p class="section-subtitle max-w-xl">We're committed to delivering the best electronics shopping experience — quality, value and service in equal measure.</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for item in why_choose_us %}
+      <div class="tile feat rise"
+           style="--c: {% cycle '#0f766e' '#16a34a' '#f97316' '#7c3aed' '#0891b2' '#db2777' as featcolor %}; --i: {{ forloop.counter0 }}">
+        <span class="feat-num" aria-hidden="true">{{ forloop.counter }}</span>
+        <span class="chip"><i class="ti {{ item.icon }}" aria-hidden="true"></i></span>
+        <h3 class="font-bold text-gray-900 dark:text-white text-base mt-5 mb-2">{{ item.title }}</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{{ item.description }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== NEW ARRIVALS ========== -->
+{% if new_arrivals %}
+<section class="sec bg-white dark:bg-gray-900" style="--c: var(--green-600)">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="sec-head">
+      <div>
+        <span class="sec-eyebrow"><span class="dot"></span> Just Landed</span>
+        <h2 class="section-title">New Arrivals</h2>
+        <p class="section-subtitle">Fresh off the shelf — the latest electronics</p>
+      </div>
+      <a href="{% url 'products:list' %}?new=1" class="sec-link hidden md:inline-flex">
+        View All <i class="ti ti-arrow-right"></i>
+      </a>
+    </div>
+    <div class="product-shelf">
+      {% for product in new_arrivals %}
+        {% include "products/partials/product_card.html" %}
+      {% endfor %}
+    </div>
+    <div class="text-center mt-9 md:hidden">
+      <a href="{% url 'products:list' %}?new=1" class="sec-link">View All New <i class="ti ti-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== BRAND PARTNERS ========== -->
+{% if featured_brands %}
+<section class="sec-tight bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800" style="--c: var(--color-primary)">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="sec-head sec-head-center mb-6">
+      <span class="sec-eyebrow">Authorized partners</span>
+      <h2 class="section-title">Brands We Carry</h2>
+      <p class="section-subtitle">Authentic products, backed by official warranty</p>
+    </div>
+  </div>
+  {# Logo-only tiles with the category-card hover, in an endless marquee; the list is rendered twice for a seamless loop (copy hidden from AT). #}
+  <div class="brand-marquee">
+    <div class="brand-track">
+      {% for brand in featured_brands %}
+      <a href="{% url 'products:list' %}?brand={{ brand.pk }}" class="cat-card cat-card--brand brand-logo"
+         style="--cat: {% cycle '#0f766e' '#16a34a' '#f97316' '#7c3aed' '#0891b2' '#db2777' as brandcolor %}"
+         aria-label="{{ brand.name }}">
+        {% if brand.logo %}
+        <img src="{{ brand.logo.url }}" alt="" loading="lazy" decoding="async">
+        {% else %}
+        <span class="brand-wordmark">{{ brand.name }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+      {% for brand in featured_brands %}
+      <span aria-hidden="true" class="cat-card cat-card--brand brand-logo"
+         style="--cat: {% cycle '#0f766e' '#16a34a' '#f97316' '#7c3aed' '#0891b2' '#db2777' as brandcolor2 %}">
+        {% if brand.logo %}
+        <img src="{{ brand.logo.url }}" alt="" loading="lazy" decoding="async">
+        {% else %}
+        <span class="brand-wordmark">{{ brand.name }}</span>
+        {% endif %}
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== SERVICES ========== -->
+<section class="sec-tight bg-white dark:bg-gray-900">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="svc-panel p-8 md:p-12">
+      <div class="relative grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-10 items-center">
+        <div>
+          <span class="sec-eyebrow" style="--c: var(--brand-300)">What we do</span>
+          <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">Our Services</h2>
+          <p class="text-primary-100 leading-relaxed mb-8">
+            Complete electronics solutions for home, business and beyond — from choosing the right product to installing and supporting it.
+          </p>
+          <a href="{% url 'pages:services' %}" class="btn btn-lg hero-cta">
+            Explore All Services <i class="ti ti-arrow-right"></i>
+          </a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {% for svc in homepage_services %}
+          <a href="{% url 'pages:services' %}" class="svc-tile rise" style="--i: {{ forloop.counter0 }}">
+            <span class="svc-ico"><i class="ti {{ svc.icon }}" aria-hidden="true"></i></span>
+            <span class="text-sm font-semibold text-white leading-tight">{{ svc.title }}</span>
+            <i class="ti ti-arrow-right text-sm svc-arrow" aria-hidden="true"></i>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TESTIMONIALS ========== -->
+{% if testimonials %}
+<section class="sec sec-wash" style="--c: #0891b2">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="sec-head sec-head-center mb-12">
+      <span class="sec-eyebrow">Customer stories</span>
+      <h2 class="section-title">What Our Customers Say</h2>
+      <p class="section-subtitle">Real reviews from real electronics enthusiasts</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for t in testimonials %}
+      <figure class="tile quote rise flex flex-col"
+              style="--c: {% cycle '#0891b2' '#0f766e' '#7c3aed' as quotecolor %}; --i: {{ forloop.counter0 }}">
+        <div class="quote-stars mb-4" role="img" aria-label="Rated {{ t.rating }} out of 5">
+          {% for i in "12345" %}
+          {% if forloop.counter <= t.rating %}
+          <i class="ti ti-star-filled" aria-hidden="true"></i>
+          {% else %}
+          <i class="ti ti-star text-gray-300 dark:text-gray-700" aria-hidden="true"></i>
+          {% endif %}
+          {% endfor %}
+        </div>
+        <blockquote class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6">{{ t.content }}</blockquote>
+        <figcaption class="flex items-center gap-3 mt-auto">
+          <span class="quote-avatar">
+            {% if t.avatar %}
+            <img src="{{ t.avatar.url }}" alt="{{ t.name }}" loading="lazy" decoding="async">
+            {% else %}
+            {{ t.name|slice:":1" }}
+            {% endif %}
+          </span>
+          <span>
+            <span class="block font-bold text-gray-900 dark:text-white text-sm">{{ t.name }}</span>
+            {% if t.designation %}
+            <span class="block text-xs text-gray-500">{{ t.designation }}</span>
+            {% endif %}
+          </span>
+        </figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========== SERVING AREAS ========== -->
+<section class="sec bg-white dark:bg-gray-900" style="--c: var(--color-primary)">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <span class="sec-eyebrow">Coverage</span>
+        <h2 class="section-title mb-4">Serving Across Gujarat &amp; Beyond</h2>
+        <p class="text-gray-500 dark:text-gray-400 leading-relaxed mb-7">
+          We deliver and service electronics across major cities. Get expert consultation, delivery and installation at your doorstep.
+        </p>
+        <div class="flex flex-wrap gap-2 mb-8">
+          {% for area in serving_areas %}
+          <a href="{{ area.get_absolute_url }}" class="area-chip">
+            <i class="ti ti-map-pin" aria-hidden="true"></i> {{ area.city }}
+          </a>
+          {% empty %}
+          {% for area in serving_area_cities %}
+          <a href="{% url 'pages:serving_areas' %}" class="area-chip">
+            <i class="ti ti-map-pin" aria-hidden="true"></i> {{ area }}
+          </a>
+          {% endfor %}
+          {% endfor %}
+        </div>
+        <a href="{% url 'pages:serving_areas' %}" class="btn btn-primary">
+          View All Areas <i class="ti ti-arrow-right"></i>
+        </a>
+      </div>
+
+      {# Decorative coverage graphic — not a geographic map #}
+      <div class="hidden lg:flex items-center justify-center" aria-hidden="true">
+        <div class="map-panel">
+          <div class="map-dots"></div>
+          <span class="map-ring" style="animation-delay:0s"></span>
+          <span class="map-ring" style="animation-delay:1.3s"></span>
+          <span class="map-ring" style="animation-delay:2.6s"></span>
+          <span class="map-pin map-pin-lead" style="top:48%;left:47%;animation-delay:.1s"></span>
+          <span class="map-pin" style="top:28%;left:32%;animation-delay:.25s"></span>
+          <span class="map-pin" style="top:34%;left:66%;animation-delay:.35s"></span>
+          <span class="map-pin" style="top:62%;left:28%;animation-delay:.45s"></span>
+          <span class="map-pin" style="top:70%;left:60%;animation-delay:.55s"></span>
+          <span class="map-pin" style="top:22%;left:52%;animation-delay:.65s"></span>
+          <span class="map-pin" style="top:56%;left:76%;animation-delay:.75s"></span>
+          <div class="absolute inset-x-0 bottom-0 p-6 text-center">
+            <p class="font-bold text-primary-700 dark:text-primary-300 text-sm">Pan-Gujarat Coverage</p>
+            <p class="text-primary-500 dark:text-primary-400 text-xs mt-0.5">Delivery, installation &amp; on-site support</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CONTACT ========== -->
+<section class="sec sec-wash" style="--c: var(--color-primary)">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-10 items-start">
+      <div>
+        <span class="sec-eyebrow">Get in touch</span>
+        <h2 class="section-title mb-4">Have Questions? We're Here to Help</h2>
+        <p class="text-gray-500 dark:text-gray-400 leading-relaxed mb-8">
+          Our expert team can guide you to the right electronics — personalised recommendations, bulk pricing or technical support.
+        </p>
+        <div class="space-y-3">
+          {% if site_settings.phone %}
+          <a href="tel:{{ site_settings.phone }}" class="chan group" style="--c: var(--color-primary)">
+            <span class="chip chip-sm"><i class="ti ti-phone" aria-hidden="true"></i></span>
+            <span>
+              <span class="block font-bold text-gray-900 dark:text-white text-sm">Call Us</span>
+              <span class="block text-gray-500 dark:text-gray-400 text-sm">{{ site_settings.phone }}</span>
+            </span>
+            <i class="ti ti-arrow-right chan-arrow" aria-hidden="true"></i>
+          </a>
+          {% endif %}
+          {% if site_settings.whatsapp %}
+          <a href="https://wa.me/{{ site_settings.whatsapp }}" target="_blank" rel="noopener" class="chan group" style="--c: var(--green-600)">
+            <span class="chip chip-sm"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i></span>
+            <span>
+              <span class="block font-bold text-gray-900 dark:text-white text-sm">WhatsApp</span>
+              <span class="block text-gray-500 dark:text-gray-400 text-sm">Chat with our team</span>
+            </span>
+            <i class="ti ti-arrow-right chan-arrow" aria-hidden="true"></i>
+          </a>
+          {% endif %}
+          {% if site_settings.email %}
+          <a href="mailto:{{ site_settings.email }}" class="chan group" style="--c: #7c3aed">
+            <span class="chip chip-sm"><i class="ti ti-mail" aria-hidden="true"></i></span>
+            <span class="min-w-0">
+              <span class="block font-bold text-gray-900 dark:text-white text-sm">Email Us</span>
+              <span class="block text-gray-500 dark:text-gray-400 text-sm truncate">{{ site_settings.email }}</span>
+            </span>
+            <i class="ti ti-arrow-right chan-arrow" aria-hidden="true"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Contact form -->
+      <div class="form-panel p-7 md:p-8">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="chip chip-sm" style="--c: var(--color-primary)"><i class="ti ti-send" aria-hidden="true"></i></span>
+          <div>
+            <h3 class="font-bold text-gray-900 dark:text-white text-lg leading-tight">Send us a Message</h3>
+            <p class="text-xs text-gray-500 mt-0.5">We usually reply within one business day</p>
+          </div>
+        </div>
+        <form method="post" action="{% url 'core:contact_submit' %}" id="contact-form" class="space-y-4"
+              data-ajax-form data-validate data-msg-target="#home-contact-msg"
+              data-msg-ok-class="text-sm text-center font-medium mt-2 text-green-600"
+              data-msg-err-class="text-sm text-center font-medium mt-2 text-red-600"
+              data-error-text="Please fix the highlighted fields."
+              data-loading-text="&lt;i class=&quot;ti ti-loader animate-spin&quot;&gt;&lt;/i&gt; Sending...">
+          {% csrf_token %}{% include "partials/honeypot.html" with hp_id="home-contact" %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="field">
+              <label class="label" for="home-contact-name">Your Name <span class="req">*</span></label>
+              <input type="text" id="home-contact-name" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="John Doe" class="input">
+            </div>
+            <div class="field">
+              <label class="label" for="home-contact-phone">Phone</label>
+              <input type="tel" id="home-contact-phone" name="phone" maxlength="20" autocomplete="tel" inputmode="tel" placeholder="+91 98765 43210" class="input">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label" for="home-contact-email">Email Address <span class="req">*</span></label>
+            <input type="email" id="home-contact-email" name="email" required maxlength="254" autocomplete="email" placeholder="you@example.com" class="input">
+          </div>
+          <div class="field">
+            <label class="label" for="home-contact-subject">Subject <span class="req">*</span></label>
+            <input type="text" id="home-contact-subject" name="subject" required minlength="2" maxlength="200" placeholder="How can we help?" class="input">
+          </div>
+          <div class="field">
+            <label class="label" for="home-contact-message">Message <span class="req">*</span></label>
+            <textarea id="home-contact-message" name="message" required minlength="10" maxlength="2000" rows="4" placeholder="Tell us more about your requirements..." class="textarea"></textarea>
+          </div>
+          <input type="hidden" name="inquiry_type" value="general">
+          <button type="submit" class="btn btn-primary btn-lg btn-block">
+            <i class="ti ti-send"></i> Send Message
+          </button>
+          <p id="home-contact-msg" class="hidden text-sm text-center font-medium mt-2"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

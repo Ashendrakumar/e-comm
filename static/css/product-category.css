@@ -1,0 +1,4 @@
+/* Category landing page: hero banner treatments.
+   The scrim darkens a photo in both themes, so it mixes raw --black. */
+.cat-banner{position:relative;overflow:hidden;min-height:200px;display:flex;align-items:flex-end;}
+.cat-banner-overlay{position:absolute;inset:0;background:linear-gradient(to top,color-mix(in srgb,var(--black) 82%,transparent) 0%,color-mix(in srgb,var(--black) 20%,transparent) 55%,transparent 100%);}

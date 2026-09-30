@@ -1,0 +1,850 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+
+{% block title %}{{ page_title }} — {{ site_name }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/product-detail.css' %}">
+
+{# ── Product structured data (schema.org/Product) for rich SEO results ── #}
+{% spaceless %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ product.name|escapejs }}",
+  "sku": "{{ product.sku|escapejs }}",
+  "description": "{{ product.short_description|default:product.meta_description|default:product.name|escapejs }}",
+  "image": [{% for img in product.images.all %}"{{ request.scheme }}://{{ request.get_host }}{{ img.image.url }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+  {% if product.brand %}"brand": {"@type": "Brand", "name": "{{ product.brand.name|escapejs }}"},{% endif %}
+  {% if product.category %}"category": "{{ product.category.name|escapejs }}",{% endif %}
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ request.scheme }}://{{ request.get_host }}{{ request.path }}",
+    "priceCurrency": "INR",
+    "price": "{{ product.effective_price }}",
+    "itemCondition": "https://schema.org/{% if product.condition == 'new' %}NewCondition{% elif product.condition == 'refurbished' %}RefurbishedCondition{% else %}UsedCondition{% endif %}",
+    "availability": "https://schema.org/{% if product.is_in_stock %}InStock{% else %}OutOfStock{% endif %}"
+  }{% if product.review_count %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ product.average_rating }}",
+    "reviewCount": "{{ product.review_count }}"
+  }{% endif %}
+}
+</script>
+{% endspaceless %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 pt-5 pb-16">
+
+  <!-- ── Breadcrumb ── -->
+  {% breadcrumbs trail=breadcrumbs %}
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TOP SECTION: Gallery  +  Product Info
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-14">
+
+    <!-- ── LEFT: Image Gallery ── -->
+    <div class="pd-gallery w-full max-w-xl mx-auto lg:mx-0 lg:max-w-none">
+      <!-- Main Swiper -->
+      {% if product.images.count > 0 %}
+      <div class="swiper main-gallery-swiper card mb-3 overflow-hidden">
+        <div class="swiper-wrapper">
+          {% for img in product.images.all %}
+          <div class="swiper-slide pd-slide">
+            <img src="{{ img.image.url }}"
+                 alt="{{ img.alt_text|default:product.name }}"
+                 class="max-w-full max-h-full object-contain cursor-zoom-in select-none"
+                 onclick="openZoom(this.src)"
+                 decoding="async"
+                 {% if forloop.first %}fetchpriority="high"{% endif %}
+                 loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+          </div>
+          {% endfor %}
+        </div>
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-pagination"></div>
+      </div>
+      <!-- Thumbnails: click one to show it in the main viewer (product-detail.js) -->
+      {% if product.images.count > 1 %}
+      <div class="pd-thumbs" role="group" aria-label="Product images">
+        {% for img in product.images.all %}
+        <button type="button" class="pd-thumb{% if forloop.first %} is-active{% endif %}" data-index="{{ forloop.counter0 }}"
+                aria-label="Show image {{ forloop.counter }}"{% if forloop.first %} aria-current="true"{% endif %}>
+          <img src="{{ img.image.url }}" alt="" loading="lazy" decoding="async">
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <!-- No images placeholder -->
+      <div class="card flex items-center justify-center pd-slide">
+        <div class="text-center pd-faint">
+          <i class="ti ti-photo-off text-7xl block mb-3"></i>
+          <p class="text-sm">No images available</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Desktop only: fills the space under the gallery. On phones the info column
+           follows the gallery directly and carries the compact trust badges instead. -->
+      <div class="pd-aside">
+        <div class="pd-card pd-assure">
+          <p class="pd-eyebrow">Why buy from {{ site_name }}</p>
+          <ul>
+            <li>
+              <span class="pd-assure-ico is-success"><i class="ti ti-truck-delivery"></i></span>
+              <span><strong>Free delivery</strong>On orders above ₹999</span>
+            </li>
+            <li>
+              <span class="pd-assure-ico is-primary"><i class="ti ti-rosette-discount-check"></i></span>
+              <span><strong>Genuine product</strong>{% if product.warranty %}{{ product.warranty }}{% elif product.brand %}Original {{ product.brand.name }} product{% else %}Original product{% endif %}</span>
+            </li>
+            <li>
+              <span class="pd-assure-ico is-accent"><i class="ti ti-refresh"></i></span>
+              <span><strong>7-day return</strong>Easy returns within 7 days of delivery</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="pd-card pd-help">
+          <span class="pd-help-ico" aria-hidden="true"><i class="ti ti-headset"></i></span>
+          <div class="pd-help-body">
+            <p class="pd-help-title">Need help choosing?</p>
+            <p class="pd-help-text">Ask our specialists about specs, pricing or bulk orders &mdash; we reply within 24 hours.</p>
+            <div class="pd-help-actions">
+              {% if site_settings.phone %}
+              <a href="tel:{{ site_settings.phone }}" class="btn btn-secondary btn-sm"><i class="ti ti-phone"></i> Call us</a>
+              {% endif %}
+              {% if site_settings.whatsapp %}
+              <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi!%20I%20have%20a%20question%20about%20*{{ product.name|urlencode }}*."
+                 target="_blank" rel="noopener" class="btn btn-secondary btn-sm pd-help-wa"><i class="ti ti-brand-whatsapp"></i> WhatsApp</a>
+              {% endif %}
+              <button type="button" onclick="openInquiryModal()" class="btn btn-primary btn-sm"><i class="ti ti-message-2"></i> Ask a question</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT: Product Info ── -->
+    <div class="detail-sticky flex flex-col gap-4">
+
+      <!-- Brand + badges -->
+      <div class="flex items-center gap-2 flex-wrap">
+        {% if product.brand %}
+        <a href="{% url 'products:list' %}?brand={{ product.brand.pk }}"
+           class="link text-xs font-extrabold uppercase tracking-widest">
+          {{ product.brand.name }}
+        </a>
+        <span class="pd-faint">|</span>
+        {% endif %}
+        {% if product.is_new_arrival %}<span class="badge badge-primary">New</span>{% endif %}
+        {% if product.is_trending %}<span class="badge badge-accent">🔥 Trending</span>{% endif %}
+        <span class="text-xs pd-faint flex items-center gap-1"><i class="ti ti-eye text-xs"></i>{{ product.views_count }} views</span>
+      </div>
+
+      <!-- Title -->
+      <h1 class="text-2xl md:text-3xl font-extrabold pd-strong leading-tight tracking-tight">
+        {{ product.name }}
+      </h1>
+
+      <!-- Rating summary -->
+      {% if product.review_count %}
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-1">
+          {% for i in "12345" %}
+            {% if forloop.counter <= product.average_rating %}
+            <i class="ti ti-star-filled star-filled"></i>
+            {% else %}
+            <i class="ti ti-star star-empty"></i>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <span class="text-sm font-bold pd-strong">{{ product.average_rating }}/5</span>
+        <a href="#reviews" class="link text-sm">
+          {{ product.review_count }} review{{ product.review_count|pluralize }}
+        </a>
+      </div>
+      {% endif %}
+
+      <!-- Price block -->
+      <div class="pd-panel p-5">
+        <div class="flex items-end gap-4 flex-wrap mb-2">
+          {% if product.sale_price %}
+          <span class="text-4xl font-extrabold pd-strong">₹{{ product.sale_price|floatformat:0 }}</span>
+          <span class="text-xl pd-faint line-through mb-1">₹{{ product.price|floatformat:0 }}</span>
+          <span class="badge badge-danger mb-1">{{ product.discount_percent }}% OFF</span>
+          {% else %}
+          <span class="text-4xl font-extrabold pd-strong">₹{{ product.price|floatformat:0 }}</span>
+          {% endif %}
+        </div>
+        {% if product.sale_price %}
+        <div class="flex items-center gap-2 pd-success">
+          <i class="ti ti-piggy-bank"></i>
+          <p class="text-sm font-semibold">
+            You save ₹{{ product.savings_amount|floatformat:0 }} on this purchase!
+          </p>
+        </div>
+        {% endif %}
+        <p class="text-xs pd-faint mt-1.5">Inclusive of all taxes. Free delivery on orders above ₹999.</p>
+      </div>
+
+      <!-- Availability -->
+      <div class="flex items-center gap-2.5 py-2">
+        {% if product.is_in_stock %}
+          <span class="pd-dot is-in animate-pulse"></span>
+          <span class="text-sm font-bold pd-success">
+            In Stock
+            {% if product.is_low_stock %}
+            <span class="pd-warning"> — Only {{ product.stock }} units left!</span>
+            {% else %}
+            <span class="pd-faint font-normal"> · {{ product.stock }} units available</span>
+            {% endif %}
+          </span>
+        {% else %}
+          <span class="pd-dot is-out"></span>
+          <span class="text-sm font-bold pd-danger">Out of Stock</span>
+        {% endif %}
+      </div>
+
+      <!-- Short description -->
+      {% if product.short_description %}
+      <p class="pd-lede leading-relaxed text-sm pl-4">
+        {{ product.short_description }}
+      </p>
+      {% endif %}
+
+      <!-- Color + Condition -->
+      <div class="flex flex-wrap gap-4 text-sm">
+        {% if product.color %}
+        <div class="flex items-center gap-2">
+          <span class="font-semibold pd-soft">Color:</span>
+          <span class="pd-chip">{{ product.color }}</span>
+        </div>
+        {% endif %}
+        <div class="flex items-center gap-2">
+          <span class="font-semibold pd-soft">Condition:</span>
+          <span class="pd-chip">{{ product.get_condition_display }}</span>
+        </div>
+      </div>
+
+      <!-- Variants -->
+      {% if product.variants.count %}
+      <div>
+        <p class="label mb-2">Available Variants:</p>
+        <div class="flex flex-wrap gap-2">
+          {% for v in product.variants.all %}{% if v.is_active %}
+          <button type="button" class="pill">
+            {% if v.color_code %}<span class="w-3 h-3 rounded-full border flex-shrink-0" style="background:{{ v.color_code }};border-color:var(--color-border-strong);"></span>{% endif %}
+            {{ v.name }}
+            {% if v.price_modifier %}
+            <span class="pd-faint">({% if v.price_modifier > 0 %}+{% endif %}₹{{ v.price_modifier|floatformat:0 }})</span>
+            {% endif %}
+          </button>
+          {% endif %}{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- CTA Buttons -->
+      <div class="pd-ctas pt-1">
+        <button type="button" onclick="openInquiryModal()" class="btn btn-primary">
+          <i class="ti ti-message-2"></i> Send Enquiry
+        </button>
+        {% if site_settings.whatsapp %}
+        <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi!%20I'm%20interested%20in%20*{{ product.name|urlencode }}*%20priced%20at%20₹{{ product.effective_price|floatformat:0 }}.%20Please%20provide%20more%20details."
+           target="_blank" rel="noopener"
+           class="btn btn-whatsapp">
+          <i class="ti ti-brand-whatsapp"></i> WhatsApp Us
+        </a>
+        {% endif %}
+        <div class="pd-ctas-icons">
+          <button type="button" id="wishlist-btn"
+                  class="btn btn-secondary btn-icon pd-icon-btn pd-wishlist"
+                  data-product="{{ product.pk }}" onclick="toggleWishlistBtn(this)"
+                  aria-pressed="false" aria-label="Add to wishlist" title="Add to wishlist">
+            <i class="ti ti-heart"></i>
+          </button>
+          <button type="button" onclick="toggleCompare('{{ product.pk }}','{{ product.name|escapejs }}')"
+                  class="compare-btn btn btn-secondary btn-icon pd-icon-btn"
+                  data-id="{{ product.pk }}" title="Compare" aria-label="Add to compare">
+            <i class="ti ti-arrows-diff"></i>
+          </button>
+          <!-- Share: opens a menu of networks + copy link (product-detail.js) -->
+          {% with share_url=request.scheme|add:"://"|add:request.get_host|add:product.get_absolute_url %}
+          <div class="pd-share" id="pd-share">
+            <button type="button" id="share-toggle"
+                    class="btn btn-secondary btn-icon pd-icon-btn pd-share-btn"
+                    aria-haspopup="true" aria-expanded="false" aria-controls="share-menu"
+                    title="Share" aria-label="Share this product">
+              <i class="ti ti-share"></i>
+            </button>
+            <div class="pd-share-menu" id="share-menu" role="dialog" aria-label="Share this product" hidden>
+              <div class="pd-share-head">
+                <span>Share this product</span>
+                <button type="button" class="pd-share-close" data-share-close aria-label="Close"><i class="ti ti-x"></i></button>
+              </div>
+              <div class="pd-share-grid">
+                <a class="pd-share-opt" style="--net:#25d366" target="_blank" rel="noopener"
+                   href="https://wa.me/?text={% filter urlencode %}{{ product.name }} — ₹{{ product.effective_price|floatformat:0 }} {{ share_url }}{% endfilter %}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-whatsapp"></i></span>WhatsApp
+                </a>
+                <a class="pd-share-opt" style="--net:#1877f2" target="_blank" rel="noopener"
+                   href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-facebook"></i></span>Facebook
+                </a>
+                <a class="pd-share-opt is-x" target="_blank" rel="noopener"
+                   href="https://twitter.com/intent/tweet?text={{ product.name|urlencode }}&amp;url={{ share_url|urlencode }}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-x"></i></span>X
+                </a>
+                <a class="pd-share-opt" style="--net:#229ed9" target="_blank" rel="noopener"
+                   href="https://t.me/share/url?url={{ share_url|urlencode }}&amp;text={{ product.name|urlencode }}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-telegram"></i></span>Telegram
+                </a>
+                <a class="pd-share-opt" style="--net:#0a66c2" target="_blank" rel="noopener"
+                   href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url|urlencode }}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-linkedin"></i></span>LinkedIn
+                </a>
+                <a class="pd-share-opt" style="--net:var(--color-primary)"
+                   href="mailto:?subject={{ product.name|urlencode }}&amp;body={% filter urlencode %}Take a look at this: {{ product.name }} — {{ share_url }}{% endfilter %}">
+                  <span class="pd-share-ico"><i class="ti ti-mail"></i></span>Email
+                </a>
+              </div>
+              <div class="pd-share-copy">
+                <input type="text" id="share-url" value="{{ share_url }}" readonly aria-label="Product link">
+                <button type="button" class="btn btn-primary btn-sm" id="share-copy">
+                  <i class="ti ti-copy"></i><span>Copy</span>
+                </button>
+              </div>
+              <button type="button" class="pd-share-native" id="share-native" hidden>
+                <i class="ti ti-dots"></i> More options
+              </button>
+            </div>
+          </div>
+          {% endwith %}
+        </div>
+      </div>
+
+      <!-- Key Specs Quick View -->
+      {% with attrs=product.attributes.all|slice:":6" %}{% if attrs %}
+      <div class="pd-card overflow-hidden mt-1">
+        <div class="pd-card-head px-4 py-2.5 border-b pd-rule flex items-center justify-between">
+          <span class="pd-eyebrow">Key Specifications</span>
+          <a href="#specs" onclick="switchTab('specs',null);return true;" class="link text-xs">View all</a>
+        </div>
+        <div class="pd-specs-grid grid grid-cols-2 divide-x divide-y">
+          {% for av in attrs %}
+          <div class="px-4 py-3">
+            <p class="pd-eyebrow text-[10px] mb-0.5">{{ av.attribute.name }}</p>
+            <p class="text-sm font-bold pd-strong">{{ av.value }}</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}{% endwith %}
+
+      <!-- Meta info strip -->
+      <div class="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted pt-1 border-t pd-rule">
+        {% if product.sku %}<span class="flex items-center gap-1"><i class="ti ti-barcode text-xs"></i>SKU: <span class="font-mono pd-soft">{{ product.sku }}</span></span>{% endif %}
+        {% if product.warranty %}<span class="flex items-center gap-1"><i class="ti ti-shield-check text-xs pd-success"></i>{{ product.warranty }}</span>{% endif %}
+        {% if product.weight %}<span class="flex items-center gap-1"><i class="ti ti-weight text-xs"></i>{{ product.weight }} kg</span>{% endif %}
+      </div>
+
+      <!-- Delivery/trust badges (phones/tablets; desktop shows .pd-assure under the gallery) -->
+      <div class="pd-trust-row grid grid-cols-3 gap-3">
+        <div class="pd-trust is-success">
+          <i class="ti ti-truck"></i>
+          <span>Free Delivery</span>
+        </div>
+        <div class="pd-trust is-primary">
+          <i class="ti ti-shield-check"></i>
+          <span>Genuine Product</span>
+        </div>
+        <div class="pd-trust is-accent">
+          <i class="ti ti-refresh"></i>
+          <span>7-Day Return</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TABS: Description | Specifications | Reviews | FAQs
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="card mb-12" id="product-tabs">
+    <!-- Tab nav -->
+    <div class="flex overflow-x-auto scrollbar-hide border-b pd-rule px-2" id="tab-nav" role="tablist">
+      {% if product.description %}
+      <button type="button" class="tab-btn active" onclick="switchTab('desc',this)">
+        <i class="ti ti-file-text text-sm"></i>Description
+      </button>
+      {% endif %}
+      {% if product.attributes.count %}
+      <button type="button" class="tab-btn {% if not product.description %}active{% endif %}" onclick="switchTab('specs',this)" id="specs-tab-btn">
+        <i class="ti ti-table text-sm"></i>Specifications
+      </button>
+      {% endif %}
+      <button type="button" class="tab-btn {% if not product.description and not product.attributes.count %}active{% endif %}" onclick="switchTab('reviews',this)" id="reviews-tab-btn">
+        <i class="ti ti-star text-sm"></i>Reviews ({{ product.review_count }})
+      </button>
+      {% if product.faqs.filter %}
+      <button type="button" class="tab-btn" onclick="switchTab('faqs',this)">
+        <i class="ti ti-help-circle text-sm"></i>FAQs
+      </button>
+      {% endif %}
+    </div>
+
+    <div class="p-6 md:p-8">
+
+      <!-- ── Description ── -->
+      {% if product.description %}
+      <div id="tab-desc">
+        <div class="prose prose-sm dark:prose-invert max-w-none pd-soft leading-relaxed text-sm">
+          {{ product.description|linebreaks }}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ── Specifications ── -->
+      {% if product.attributes.count %}
+      <div id="tab-specs" class="hidden" id="specs">
+        <div class="pd-card overflow-hidden" style="border-radius:var(--radius-lg);">
+          <table class="spec-table w-full text-sm">
+            <thead>
+              <tr>
+                <th class="text-left px-5 py-3 font-bold w-2/5">Specification</th>
+                <th class="text-left px-5 py-3 font-bold">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for av in product.attributes.all %}
+              <tr class="spec-row">
+                <td class="px-5 py-3.5 font-semibold pd-soft align-top">{{ av.attribute.name }}</td>
+                <td class="px-5 py-3.5 text-muted">{{ av.value }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ── Reviews ── -->
+      <div id="tab-reviews" class="hidden {% if not product.description and not product.attributes.count %}block{% endif %}" id="reviews">
+
+        <!-- Rating Summary -->
+        <div class="pd-panel grid grid-cols-1 md:grid-cols-3 gap-8 mb-10 p-6">
+          <!-- Big number -->
+          <div class="text-center flex flex-col items-center justify-center">
+            <span class="text-7xl font-extrabold pd-strong leading-none mb-2">
+              {% if product.review_count %}{{ product.average_rating }}{% else %}—{% endif %}
+            </span>
+            <div class="flex gap-1 mb-2">
+              {% for i in "12345" %}
+                {% if forloop.counter <= product.average_rating %}
+                <i class="ti ti-star-filled star-filled text-xl"></i>
+                {% else %}
+                <i class="ti ti-star star-empty text-xl"></i>
+                {% endif %}
+              {% endfor %}
+            </div>
+            <p class="text-sm text-muted">{{ product.review_count }} review{{ product.review_count|pluralize }}</p>
+          </div>
+          <!-- Breakdown bars -->
+          <div class="md:col-span-2 flex flex-col gap-3 justify-center">
+            {% for star, data in rating_dist.items %}
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-bold pd-soft w-6 text-right flex-shrink-0">{{ star }}★</span>
+              <div class="flex-1 rating-bar">
+                <div class="rating-bar-fill" style="width:{{ data.percent }}%;"></div>
+              </div>
+              <span class="text-xs text-muted w-7 flex-shrink-0">{{ data.count }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Review list -->
+        {% if reviews %}
+        <div class="space-y-6 mb-10">
+          {% for review in reviews %}
+          <div class="pd-card pd-review p-5">
+            <div class="flex items-start justify-between gap-3 mb-3 flex-wrap">
+              <div class="flex items-center gap-3">
+                <div class="pd-avatar">
+                  {{ review.name|slice:":1"|upper }}
+                </div>
+                <div>
+                  <p class="font-bold text-sm pd-strong">{{ review.name }}</p>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <div class="flex gap-0.5">
+                      {% for i in "12345" %}{% if forloop.counter <= review.rating %}<i class="ti ti-star-filled star-filled text-xs"></i>{% else %}<i class="ti ti-star star-empty text-xs"></i>{% endif %}{% endfor %}
+                    </div>
+                    {% if review.is_verified_purchase %}
+                    <span class="badge badge-success">
+                      <i class="ti ti-circle-check text-xs"></i> Verified Purchase
+                    </span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <span class="text-xs pd-faint">{{ review.created_at|date:"d M Y" }}</span>
+            </div>
+            {% if review.title %}
+            <p class="font-bold pd-strong text-sm mb-2">{{ review.title }}</p>
+            {% endif %}
+            <p class="text-sm pd-soft leading-relaxed">{{ review.content }}</p>
+            {% if review.pros or review.cons %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+              {% if review.pros %}
+              <div class="pd-pros">
+                <p class="text-xs font-bold mb-1.5 flex items-center gap-1.5"><i class="ti ti-thumb-up text-sm"></i> Pros</p>
+                <p class="text-xs leading-relaxed">{{ review.pros }}</p>
+              </div>
+              {% endif %}
+              {% if review.cons %}
+              <div class="pd-cons">
+                <p class="text-xs font-bold mb-1.5 flex items-center gap-1.5"><i class="ti ti-thumb-down text-sm"></i> Cons</p>
+                <p class="text-xs leading-relaxed">{{ review.cons }}</p>
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+            <!-- Helpful -->
+            <div class="flex items-center gap-2 mt-4 pt-3 border-t pd-rule">
+              <span class="text-xs text-muted">Was this helpful?</span>
+              <button type="button" onclick="markHelpful({{ review.pk }}, this)" class="btn btn-outline btn-sm helpful-btn">
+                <i class="ti ti-thumb-up"></i> Yes (<span class="helpful-count-{{ review.pk }}">{{ review.helpful_count }}</span>)
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 mb-8">
+          <i class="ti ti-message-circle-off text-5xl pd-faint block mb-4"></i>
+          <h3 class="font-bold pd-strong text-lg mb-2">No Reviews Yet</h3>
+          <p class="text-sm text-muted">Be the first to share your experience!</p>
+        </div>
+        {% endif %}
+
+        <!-- ── Write Review Form ── -->
+        <div class="pd-panel p-6" id="write-review">
+          <h3 class="text-lg font-bold pd-strong mb-1 flex items-center gap-2">
+            <i class="ti ti-pencil pd-primary"></i> Write a Review
+          </h3>
+          <p class="text-sm text-muted mb-6">Share your honest experience with this product.</p>
+
+          <form id="review-form" class="space-y-4" novalidate data-validate>
+            {% csrf_token %}{% include "partials/honeypot.html" with hp_id="review" %}
+            <!-- Star picker -->
+            <div class="field">
+              <span class="label" id="star-picker-label">Your Rating <span class="req">*</span></span>
+              <div class="star-input" id="star-picker" role="radiogroup" aria-labelledby="star-picker-label">
+                {% for i in "54321" %}
+                <input type="radio" name="rating_display" id="star-{{ i }}" value="{{ i }}" required data-msg-required="Please select a star rating.">
+                <label for="star-{{ i }}" title="{{ i }} star{% if i != '1' %}s{% endif %}">★</label>
+                {% endfor %}
+              </div>
+              <input type="hidden" name="rating" id="rating-input" value="">
+              <p class="field-error hidden" id="rating-error" data-error-for="rating_display rating"></p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="field">
+                <label class="label" for="rv-name">Name <span class="req">*</span></label>
+                <input type="text" id="rv-name" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Your name" class="input">
+              </div>
+              <div class="field">
+                <label class="label" for="rv-email">Email <span class="req">*</span></label>
+                <input type="email" id="rv-email" name="email" required maxlength="254" autocomplete="email" placeholder="your@email.com" class="input">
+              </div>
+            </div>
+            <div class="field">
+              <label class="label" for="rv-title">Review Title</label>
+              <input type="text" id="rv-title" name="title" maxlength="200" placeholder="Summarise your experience" class="input">
+            </div>
+            <div class="field">
+              <label class="label" for="rv-content">Your Review <span class="req">*</span></label>
+              <textarea id="rv-content" name="content" required minlength="10" maxlength="2000" rows="4" placeholder="Tell others what you think about this product…" class="textarea"></textarea>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="field">
+                <label class="label" for="rv-pros">Pros <span class="field-hint font-normal">(optional)</span></label>
+                <textarea id="rv-pros" name="pros" maxlength="1000" rows="2" placeholder="What did you love?" class="textarea"></textarea>
+              </div>
+              <div class="field">
+                <label class="label" for="rv-cons">Cons <span class="field-hint font-normal">(optional)</span></label>
+                <textarea id="rv-cons" name="cons" maxlength="1000" rows="2" placeholder="Any downsides?" class="textarea"></textarea>
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-4 flex-wrap pt-2">
+              <p class="field-hint">Reviews are published after moderation (usually within 24h).</p>
+              <button type="submit" class="btn btn-primary" id="review-submit-btn">
+                <i class="ti ti-send"></i> Submit Review
+              </button>
+            </div>
+            <div id="review-msg" class="hidden pd-msg" role="status"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── FAQs ── -->
+      {% if product.faqs.filter %}
+      <div id="tab-faqs" class="hidden space-y-3" x-data>
+        {% for faq in product.faqs.all %}{% if faq.is_active %}
+        <div class="pd-card overflow-hidden" x-data="{open:{{ forloop.first|yesno:'true,false' }}}">
+          <button type="button" @click="open=!open" :aria-expanded="open"
+                  class="pd-faq-q w-full flex items-start justify-between px-5 py-4 text-left font-semibold pd-strong text-sm transition-colors gap-4">
+            <span>{{ faq.question }}</span>
+            <i class="ti ti-chevron-down pd-faint flex-shrink-0 mt-0.5 acc-chev" :class="{ 'rotate-180': open }"></i>
+          </button>
+          <div class="acc-panel" :class="{ 'is-open': open }">
+            <div><div class="px-5 pb-5 text-sm pd-soft leading-relaxed border-t pd-rule pt-4">
+              {{ faq.answer }}
+            </div></div>
+          </div>
+        </div>
+        {% endif %}{% endfor %}
+        <!-- Ask a question CTA -->
+        <div class="pd-ask mt-6 p-5 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p class="font-bold pd-strong text-sm">Have a different question?</p>
+            <p class="text-xs pd-primary mt-0.5">Send us a message and our experts will answer within 24 hours.</p>
+          </div>
+          <button type="button" onclick="openInquiryModal()" class="btn btn-primary flex-shrink-0">
+            Ask a Question <i class="ti ti-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ═══ RELATED PRODUCTS ═════════════════════════════════════ -->
+  {% if related_products %}
+  <section class="mb-14">
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="pd-section-icon">
+          <i class="ti ti-tags"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-extrabold pd-strong">Related Products</h2>
+          <p class="text-sm text-muted mt-0.5">You might also like these</p>
+        </div>
+      </div>
+
+      <a href="{{ product.category.get_absolute_url }}" class="btn-link">
+        View all in {{ product.category.name }} <i class="ti ti-arrow-right text-xs"></i>
+      </a>
+    </div>
+    <div class="product-shelf">
+      {% for rp in related_products %}{% include "products/partials/product_card.html" with product=rp %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+
+<!-- ═══ ZOOM OVERLAY ═══════════════════════════════════════════ -->
+<div id="zoom-overlay" onclick="closeZoom()">
+  <button type="button" class="btn btn-icon btn-round zoom-close" onclick="closeZoom();event.stopPropagation()" aria-label="Close zoom">
+    <i class="ti ti-x"></i>
+  </button>
+  <img id="zoom-img" src="" alt="Zoomed product image">
+</div>
+
+<!-- ═══ INQUIRY MODAL ══════════════════════════════════════════ -->
+<div id="inquiry-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" onclick="if(event.target===this)closeInquiryModal()" role="dialog" aria-modal="true" aria-labelledby="inquiry-title">
+  <div class="pd-modal-backdrop"></div>
+  <div class="pd-modal w-full max-w-lg p-7 animate-fade-in">
+    <button type="button" onclick="closeInquiryModal()" class="btn btn-ghost btn-icon btn-sm btn-round absolute top-4 right-4" aria-label="Close">
+      <i class="ti ti-x"></i>
+    </button>
+    <div class="flex items-center gap-3 mb-6">
+      {% if product.primary_image %}
+      <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" class="pd-card w-14 h-14 object-contain p-1 flex-shrink-0" style="border-radius:var(--radius-md);" loading="lazy" decoding="async">
+      {% endif %}
+      <div>
+        <h3 class="font-bold pd-strong" id="inquiry-title">Send Enquiry</h3>
+        <p class="text-xs text-muted mt-0.5 line-clamp-1">{{ product.name }}</p>
+      </div>
+    </div>
+    <form id="inquiry-form" class="space-y-4" novalidate data-validate>
+      {% csrf_token %}{% include "partials/honeypot.html" with hp_id="inquiry" %}
+      <div class="grid grid-cols-2 gap-4">
+        <div class="field">
+          <label class="label" for="iq-name">Name <span class="req">*</span></label>
+          <input type="text" id="iq-name" name="name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Your name" class="input">
+        </div>
+        <div class="field">
+          <label class="label" for="iq-phone">Phone</label>
+          <input type="tel" id="iq-phone" name="phone" maxlength="20" autocomplete="tel" inputmode="tel" placeholder="+91 98765 43210" class="input">
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="iq-email">Email <span class="req">*</span></label>
+        <input type="email" id="iq-email" name="email" required maxlength="254" autocomplete="email" placeholder="your@email.com" class="input">
+      </div>
+      <div class="field">
+        <label class="label" for="iq-message">Message <span class="req">*</span></label>
+        <textarea id="iq-message" name="message" required minlength="10" maxlength="2000" rows="4" placeholder="Ask about price, availability, bulk orders, specifications…" class="textarea"></textarea>
+      </div>
+      <div class="{% if site_settings.whatsapp %}btn-pair{% endif %}">
+        <button type="submit" class="btn btn-primary btn-block" id="inquiry-submit-btn">
+          <i class="ti ti-send"></i> Send Enquiry
+        </button>
+        {% if site_settings.whatsapp %}
+        <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi!%20I'm%20interested%20in%20*{{ product.name|urlencode }}*%20priced%20at%20₹{{ product.effective_price|floatformat:0 }}.%20Please%20provide%20more%20details."
+           target="_blank" rel="noopener" class="btn btn-success btn-block">
+          <i class="ti ti-brand-whatsapp"></i> Chat on WhatsApp
+        </a>
+        {% endif %}
+      </div>
+      <p class="field-hint text-center">Prefer to chat? WhatsApp gets you the fastest reply.</p>
+      <div id="inquiry-msg" class="hidden pd-msg" role="status"></div>
+    </form>
+  </div>
+</div>
+<!-- ═══ END INQUIRY MODAL ══════════════════════════════════════ -->
+
+<!-- ═══ RELATED PRODUCT SECTIONS ═══════════════════════════════ -->
+<div class="max-w-7xl mx-auto px-4 pb-16">
+
+  <!-- ═══ MODULE 5 — FREQUENTLY VIEWED TOGETHER ═══════════════ -->
+  {% if fvt_products %}
+  <section class="mb-14">
+    <div class="flex items-center gap-3 mb-6 flex-wrap justify-between">
+      <div class="flex items-center gap-3">
+        <div class="pd-section-icon">
+          <i class="ti ti-eye-share"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-extrabold pd-strong">Frequently Viewed Together</h2>
+          <p class="text-xs text-muted mt-0.5">Customers who viewed this also viewed</p>
+        </div>
+      </div>
+    </div>
+    <div class="product-shelf">
+      {% for rp in fvt_products %}{% include "products/partials/product_card.html" with product=rp %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ═══ MODULE 5 — SCORED RELATED PRODUCTS ══════════════════ -->
+  {% if related_products %}
+  <section class="mb-14">
+    <div class="flex items-center gap-3 mb-6 flex-wrap justify-between">
+      <div class="flex items-center gap-3">
+        <div class="pd-section-icon">
+          <i class="ti ti-sparkles"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-extrabold pd-strong">You May Also Like</h2>
+          <p class="text-xs text-muted mt-0.5">Personalised picks based on this product</p>
+        </div>
+      </div>
+      <a href="{{ product.category.get_absolute_url }}"
+         class="btn-link">
+        View all in {{ product.category.name }} <i class="ti ti-arrow-right text-xs"></i>
+      </a>
+    </div>
+    <div id="related-grid">
+      {% include "products/partials/related_row.html" with products=related_products %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ═══ MODULE 5 — SAME BRAND ═══════════════════════════════ -->
+  {% if same_brand_products %}
+  <section class="mb-14">
+    <div class="flex items-center gap-3 mb-6 flex-wrap justify-between">
+      <div class="flex items-center gap-3">
+        <div class="pd-section-icon">
+          <i class="ti ti-award"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-extrabold pd-strong">
+            More from {{ product.brand.name }}
+          </h2>
+          <p class="text-xs text-muted mt-0.5">Other products by this brand</p>
+        </div>
+      </div>
+      <a href="{% url 'products:list' %}?brand={{ product.brand.pk }}"
+         class="btn-link">
+        All {{ product.brand.name }} products <i class="ti ti-arrow-right text-xs"></i>
+      </a>
+    </div>
+    <div class="product-shelf">
+      {% for rp in same_brand_products %}{% include "products/partials/product_card.html" with product=rp %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ═══ MODULE 5 — POPULAR IN CATEGORY ══════════════════════ -->
+  {% if popular_products %}
+  <section class="mb-14">
+    <div class="flex items-center gap-3 mb-6 flex-wrap justify-between">
+      <div class="flex items-center gap-3">
+        <div class="pd-section-icon">
+          <i class="ti ti-flame"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-extrabold pd-strong">
+            Popular in {{ product.category.name }}
+          </h2>
+          <p class="text-xs text-muted mt-0.5">Top-viewed products in this category</p>
+        </div>
+      </div>
+      <a href="{{ product.category.get_absolute_url }}"
+         class="btn-link">
+        Browse category <i class="ti ti-arrow-right text-xs"></i>
+      </a>
+    </div>
+    <div class="product-shelf">
+      {% for rp in popular_products %}{% include "products/partials/product_card.html" with product=rp %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ═══ MODULE 5 — RECENTLY VIEWED ══════════════════════════ -->
+  {% if recently_viewed %}
+  <section class="mb-6">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="pd-section-icon">
+          <i class="ti ti-history"></i>
+        </div>
+      <div>
+        <h2 class="text-xl font-extrabold pd-strong">Recently Viewed</h2>
+        <p class="text-xs text-muted mt-0.5">Products you browsed in this session</p>
+      </div>
+    </div>
+    <div class="product-rail">
+      {% for rv_product in recently_viewed %}
+        {% include "products/partials/product_card.html" with product=rv_product %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{# Swiper is loaded once, by base.html #}
+<div id="pd-config" hidden
+     data-review-url="{% url 'products:submit_review' product.slug %}"
+     data-inquiry-url="{% url 'products:submit_inquiry' product.slug %}"
+     data-helpful-url="{% url 'products:mark_helpful' 999999999 %}"></div>
+<script src="{% static 'js/product-detail.js' %}"></script>
+{% endblock %}

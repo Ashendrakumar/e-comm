@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load ui %}
+{% load static %}
+{% block title %}Our Services — {{ site_name }}{% endblock %}
+{% block content %}
+
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative">
+    {% breadcrumbs "Services" on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">Our Services</h1>
+    <p class="text-primary-100 text-base max-w-xl mx-auto">Complete electronics solutions for home, business and beyond</p>
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 py-14">
+
+  {% if services %}
+  <!-- Services from database -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for svc in services %}
+    <a href="{{ svc.get_absolute_url }}" class="tile rise group block p-7"
+       style="--c: {{ svc.color|default:'#0f766e' }}; --i: {{ forloop.counter0 }}">
+      <div class="flex items-start justify-between mb-5">
+        <span class="chip"><i class="ti {{ svc.icon }}" aria-hidden="true"></i></span>
+        {% if svc.price_info %}<span class="badge bg-primary-50 dark:bg-primary-950 text-primary-600">{{ svc.price_info }}</span>{% endif %}
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3 group-hover:text-primary-600 transition-colors">{{ svc.title }}</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5 line-clamp-3">{{ svc.short_description }}</p>
+      <span class="inline-flex items-center gap-2 text-primary-600 font-semibold text-sm group-hover:gap-3 transition-all">
+        Learn More <i class="ti ti-arrow-right text-xs"></i>
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Fallback hardcoded services -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    <div class="tile rise p-7" style="--c: #0f766e; --i: 0">
+      <span class="chip mb-5"><i class="ti ti-bulb" aria-hidden="true"></i></span>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Product Consultation</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">Expert advice to help you choose the right electronics for your needs and budget.</p>
+      <a href="{% url 'core:contact' %}" class="btn-link">Get free consultation <i class="ti ti-arrow-right text-xs"></i></a>
+    </div>
+
+    <div class="tile rise p-7" style="--c: #16a34a; --i: 1">
+      <span class="chip mb-5"><i class="ti ti-tool" aria-hidden="true"></i></span>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Installation Services</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">Professional installation of TVs, appliances and networking equipment at your home.</p>
+      <a href="{% url 'core:contact' %}" class="btn-link">Book installation <i class="ti ti-arrow-right text-xs"></i></a>
+    </div>
+
+    <div class="tile rise p-7" style="--c: #f97316; --i: 2">
+      <span class="chip mb-5"><i class="ti ti-device-mobile" aria-hidden="true"></i></span>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Device Repair</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">Fast and reliable repair services for mobiles, laptops, tablets and other electronics.</p>
+      <a href="{% url 'core:contact' %}" class="btn-link">Get repair quote <i class="ti ti-arrow-right text-xs"></i></a>
+    </div>
+
+    <div class="tile rise p-7" style="--c: #7c3aed; --i: 3">
+      <span class="chip mb-5"><i class="ti ti-shield-checkered" aria-hidden="true"></i></span>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Warranty Support</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">Hassle-free warranty claims and after-sales support for all products purchased from us.</p>
+      <a href="{% url 'core:contact' %}" class="btn-link">Claim warranty <i class="ti ti-arrow-right text-xs"></i></a>
+    </div>
+
+    <div class="tile rise p-7" style="--c: #0891b2; --i: 4">
+      <span class="chip mb-5"><i class="ti ti-package" aria-hidden="true"></i></span>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Bulk Orders</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">Special pricing and dedicated support for bulk electronics purchases for businesses.</p>
+      <a href="{% url 'core:contact' %}" class="btn-link">Request bulk quote <i class="ti ti-arrow-right text-xs"></i></a>
+    </div>
+
+    <div class="tile rise p-7" style="--c: #db2777; --i: 5">
+      <span class="chip mb-5"><i class="ti ti-home" aria-hidden="true"></i></span>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Home Delivery</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">Fast and safe delivery to your doorstep across Gujarat and beyond. Same-day in Surat.</p>
+      <a href="{% url 'core:contact' %}" class="btn-link">Schedule delivery <i class="ti ti-arrow-right text-xs"></i></a>
+    </div>
+
+    <div class="tile rise p-7" style="--c: #0f766e; --i: 6">
+      <span class="chip mb-5"><i class="ti ti-building-community" aria-hidden="true"></i></span>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3">Corporate Solutions</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">End-to-end electronics procurement and support for offices and enterprise businesses.</p>
+      <a href="{% url 'core:contact' %}" class="btn-link">Contact corporate team <i class="ti ti-arrow-right text-xs"></i></a>
+    </div>
+
+  </div>
+  {% endif %}
+
+  <!-- CTA -->
+  <div class="card mt-14 text-center p-10" style="background:color-mix(in srgb,var(--color-primary) 7%,var(--color-bg))">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Need a Custom Solution?</h2>
+    <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">Our team is ready to create a tailored electronics solution for your specific requirements.</p>
+    <a href="{% url 'core:contact' %}" class="btn btn-primary btn-lg">Get in Touch <i class="ti ti-arrow-right"></i></a>
+  </div>
+</div>
+{% endblock %}
