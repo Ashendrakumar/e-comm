@@ -13,28 +13,19 @@
 {% block content %}
 
 <!-- ═══ PAGE HEADER ═══════════════════════════════════════════ -->
-<div class="lp-head">
-  <div class="max-w-7xl mx-auto px-4 py-5">
-
-    <!-- Breadcrumb -->
-
-    <div class="flex items-start justify-between gap-4 flex-wrap">
-      <div>
-        {% breadcrumbs page_title %}
-        <h1 class="lp-strong text-2xl font-extrabold">
-          {% if q %}Results for "<span class="lp-accent">{{ q }}</span>"
-          {% else %}{{page_title}}{% endif %}
-        </h1>
-        <p class="text-sm text-muted mt-0.5">
-          <span class="lp-strong font-bold" id="result-count">{{ total_count }}</span> products
-        </p>
-      </div>
-
-      <!-- Active filter chips -->
-      <div class="flex flex-wrap gap-2 items-center" id="chip-wrap">
-        {% include "products/partials/filter_chips.html" %}
-      </div>
-    </div>
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4">
+    {% breadcrumbs page_title on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">
+      {% if q %}Results for &ldquo;{{ q }}&rdquo;{% else %}{{ page_title }}{% endif %}
+    </h1>
+    <p class="text-primary-100 text-base">
+      <span class="font-bold text-white" id="result-count">{{ total_count }}</span> products
+    </p>
   </div>
 </div>
 
@@ -77,6 +68,11 @@
           <i class="ti ti-adjustments-horizontal lp-accent"></i> Filters &amp; Sort
           {% if active_chips %}<span class="lp-badge">{{ active_chips|length }}</span>{% endif %}
         </button>
+      </div>
+
+      <!-- Active filter chips (re-rendered by the AJAX filter) -->
+      <div class="flex flex-wrap gap-2 items-center mb-4" id="chip-wrap">
+        {% include "products/partials/filter_chips.html" %}
       </div>
 
       <!-- Products (AJAX target) -->

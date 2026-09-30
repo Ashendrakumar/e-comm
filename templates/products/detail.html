@@ -93,37 +93,46 @@
       </div>
       {% endif %}
 
-      <!-- Share Buttons -->
-      <div class="flex items-center gap-2 mt-5 pt-4 border-t pd-rule flex-wrap">
-        <span class="pd-eyebrow mr-1">Share:</span>
-        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}"
-           target="_blank" rel="noopener"
-           class="btn btn-ghost btn-icon btn-sm share-btn" title="Share on Facebook" aria-label="Share on Facebook">
-          <i class="ti ti-brand-facebook"></i>
-        </a>
-        <a href="https://twitter.com/intent/tweet?text={{ product.name|urlencode }}&url={{ request.build_absolute_uri|urlencode }}"
-           target="_blank" rel="noopener"
-           class="btn btn-ghost btn-icon btn-sm share-btn" title="Share on Twitter" aria-label="Share on Twitter">
-          <i class="ti ti-brand-twitter"></i>
-        </a>
-        {% if site_settings.whatsapp %}
-        <a href="https://wa.me/?text={{ product.name|urlencode }}%20-%20{{ request.build_absolute_uri|urlencode }}"
-           target="_blank" rel="noopener"
-           class="btn btn-ghost btn-icon btn-sm share-btn is-whatsapp" title="Share on WhatsApp" aria-label="Share on WhatsApp">
-          <i class="ti ti-brand-whatsapp"></i>
-        </a>
-        {% endif %}
-        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri|urlencode }}"
-           target="_blank" rel="noopener"
-           class="btn btn-ghost btn-icon btn-sm share-btn" title="Share on LinkedIn" aria-label="Share on LinkedIn">
-          <i class="ti ti-brand-linkedin"></i>
-        </a>
-        <button type="button" onclick="copyLink()"
-                class="btn btn-ghost btn-icon btn-sm share-btn" title="Copy link" aria-label="Copy link">
-          <i class="ti ti-link" id="copy-icon"></i>
-        </button>
-        <span id="copy-toast" class="text-xs pd-success font-semibold hidden">Link copied!</span>
+      <!-- Desktop only: fills the space under the gallery. On phones the info column
+           follows the gallery directly and carries the compact trust badges instead. -->
+      <div class="pd-aside">
+        <div class="pd-card pd-assure">
+          <p class="pd-eyebrow">Why buy from {{ site_name }}</p>
+          <ul>
+            <li>
+              <span class="pd-assure-ico is-success"><i class="ti ti-truck-delivery"></i></span>
+              <span><strong>Free delivery</strong>On orders above ₹999</span>
+            </li>
+            <li>
+              <span class="pd-assure-ico is-primary"><i class="ti ti-rosette-discount-check"></i></span>
+              <span><strong>Genuine product</strong>{% if product.warranty %}{{ product.warranty }}{% elif product.brand %}Original {{ product.brand.name }} product{% else %}Original product{% endif %}</span>
+            </li>
+            <li>
+              <span class="pd-assure-ico is-accent"><i class="ti ti-refresh"></i></span>
+              <span><strong>7-day return</strong>Easy returns within 7 days of delivery</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="pd-card pd-help">
+          <span class="pd-help-ico" aria-hidden="true"><i class="ti ti-headset"></i></span>
+          <div class="pd-help-body">
+            <p class="pd-help-title">Need help choosing?</p>
+            <p class="pd-help-text">Ask our specialists about specs, pricing or bulk orders &mdash; we reply within 24 hours.</p>
+            <div class="pd-help-actions">
+              {% if site_settings.phone %}
+              <a href="tel:{{ site_settings.phone }}" class="btn btn-secondary btn-sm"><i class="ti ti-phone"></i> Call us</a>
+              {% endif %}
+              {% if site_settings.whatsapp %}
+              <a href="https://wa.me/{{ site_settings.whatsapp }}?text=Hi!%20I%20have%20a%20question%20about%20*{{ product.name|urlencode }}*."
+                 target="_blank" rel="noopener" class="btn btn-secondary btn-sm pd-help-wa"><i class="ti ti-brand-whatsapp"></i> WhatsApp</a>
+              {% endif %}
+              <button type="button" onclick="openInquiryModal()" class="btn btn-primary btn-sm"><i class="ti ti-message-2"></i> Ask a question</button>
+            </div>
+          </div>
+        </div>
       </div>
+
     </div>
 
     <!-- ── RIGHT: Product Info ── -->
@@ -270,6 +279,58 @@
                   data-id="{{ product.pk }}" title="Compare" aria-label="Add to compare">
             <i class="ti ti-arrows-diff"></i>
           </button>
+          <!-- Share: opens a menu of networks + copy link (product-detail.js) -->
+          {% with share_url=request.scheme|add:"://"|add:request.get_host|add:product.get_absolute_url %}
+          <div class="pd-share" id="pd-share">
+            <button type="button" id="share-toggle"
+                    class="btn btn-secondary btn-icon pd-icon-btn pd-share-btn"
+                    aria-haspopup="true" aria-expanded="false" aria-controls="share-menu"
+                    title="Share" aria-label="Share this product">
+              <i class="ti ti-share"></i>
+            </button>
+            <div class="pd-share-menu" id="share-menu" role="dialog" aria-label="Share this product" hidden>
+              <div class="pd-share-head">
+                <span>Share this product</span>
+                <button type="button" class="pd-share-close" data-share-close aria-label="Close"><i class="ti ti-x"></i></button>
+              </div>
+              <div class="pd-share-grid">
+                <a class="pd-share-opt" style="--net:#25d366" target="_blank" rel="noopener"
+                   href="https://wa.me/?text={% filter urlencode %}{{ product.name }} — ₹{{ product.effective_price|floatformat:0 }} {{ share_url }}{% endfilter %}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-whatsapp"></i></span>WhatsApp
+                </a>
+                <a class="pd-share-opt" style="--net:#1877f2" target="_blank" rel="noopener"
+                   href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-facebook"></i></span>Facebook
+                </a>
+                <a class="pd-share-opt is-x" target="_blank" rel="noopener"
+                   href="https://twitter.com/intent/tweet?text={{ product.name|urlencode }}&amp;url={{ share_url|urlencode }}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-x"></i></span>X
+                </a>
+                <a class="pd-share-opt" style="--net:#229ed9" target="_blank" rel="noopener"
+                   href="https://t.me/share/url?url={{ share_url|urlencode }}&amp;text={{ product.name|urlencode }}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-telegram"></i></span>Telegram
+                </a>
+                <a class="pd-share-opt" style="--net:#0a66c2" target="_blank" rel="noopener"
+                   href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url|urlencode }}">
+                  <span class="pd-share-ico"><i class="ti ti-brand-linkedin"></i></span>LinkedIn
+                </a>
+                <a class="pd-share-opt" style="--net:var(--color-primary)"
+                   href="mailto:?subject={{ product.name|urlencode }}&amp;body={% filter urlencode %}Take a look at this: {{ product.name }} — {{ share_url }}{% endfilter %}">
+                  <span class="pd-share-ico"><i class="ti ti-mail"></i></span>Email
+                </a>
+              </div>
+              <div class="pd-share-copy">
+                <input type="text" id="share-url" value="{{ share_url }}" readonly aria-label="Product link">
+                <button type="button" class="btn btn-primary btn-sm" id="share-copy">
+                  <i class="ti ti-copy"></i><span>Copy</span>
+                </button>
+              </div>
+              <button type="button" class="pd-share-native" id="share-native" hidden>
+                <i class="ti ti-dots"></i> More options
+              </button>
+            </div>
+          </div>
+          {% endwith %}
         </div>
       </div>
 
@@ -298,8 +359,8 @@
         {% if product.weight %}<span class="flex items-center gap-1"><i class="ti ti-weight text-xs"></i>{{ product.weight }} kg</span>{% endif %}
       </div>
 
-      <!-- Delivery/trust badges -->
-      <div class="grid grid-cols-3 gap-3">
+      <!-- Delivery/trust badges (phones/tablets; desktop shows .pd-assure under the gallery) -->
+      <div class="pd-trust-row grid grid-cols-3 gap-3">
         <div class="pd-trust is-success">
           <i class="ti ti-truck"></i>
           <span>Free Delivery</span>

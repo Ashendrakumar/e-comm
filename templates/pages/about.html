@@ -2,10 +2,10 @@
 {% load static ui %}
 {% block title %}About Us — {{ site_name }}{% endblock %}
 {% block content %}
-<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-16 text-white text-center">
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center">
   {% breadcrumbs "About" on_dark=True align="center" %}
-  <h1 class="text-4xl font-extrabold mb-3">About {{ site_name }}</h1>
-  <p class="text-primary-100 text-lg max-w-xl mx-auto">Your trusted partner for premium electronics since 2015</p>
+  <h1 class="text-2xl md:text-3xl font-extrabold mb-2">About {{ site_name }}</h1>
+  <p class="text-primary-100 text-base max-w-xl mx-auto">Your trusted partner for premium electronics since 2015</p>
 </div>
 <div class="max-w-5xl mx-auto px-4 py-14">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-14 items-center">

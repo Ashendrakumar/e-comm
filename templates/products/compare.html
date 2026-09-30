@@ -8,12 +8,25 @@
 {% endblock %}
 
 {% block content %}
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
+    <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto px-4">
+    {% url 'products:list' as list_url %}{% breadcrumbs "Products" list_url "Compare" on_dark=True align="center" %}
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">Compare Products</h1>
+    <p class="text-primary-100 text-base max-w-xl mx-auto">
+      {% if products %}<b class="text-white">{{ products|length }} of 3</b> selected · see specs and prices side by side
+      {% else %}Pick up to 3 products and see their specs and prices side by side{% endif %}
+    </p>
+  </div>
+</div>
+
 <div class="cmp-page">
 
   <header class="cmp-top">
-    {% url 'products:list' as list_url %}{% breadcrumbs "Products" list_url "Compare" %}
     <div class="cmp-titlebar">
-      <h1>Compare{% if products %} <span class="cmp-count">{{ products|length }} of 3</span>{% endif %}</h1>
       {% if products %}
       <div class="cmp-tools">
         {% if products|length > 1 %}

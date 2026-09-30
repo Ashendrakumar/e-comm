@@ -17,7 +17,7 @@
   <img src="{{ category.banner.url }}" alt="{{ category.name }}"
        class="absolute inset-0 w-full h-full object-cover object-center" loading="eager" fetchpriority="high" decoding="async">
   <div class="cat-banner-overlay"></div>
-  <div class="relative z-10 w-full max-w-7xl mx-auto px-6 pb-8 pt-20">
+  <div class="relative z-10 w-full max-w-7xl mx-auto px-6 pb-6 pt-12">
     <div class="flex items-end gap-4 flex-wrap">
       {% if category.icon %}
       <div class="w-14 h-14 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
@@ -26,7 +26,7 @@
       {% endif %}
       <div>
         {% url 'products:categories' as cats_url %}{% breadcrumbs "Categories" cats_url trail=breadcrumbs on_dark=True %}
-        <h1 class="text-3xl md:text-4xl font-extrabold text-white leading-tight">{{ category.name }}</h1>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white leading-tight">{{ category.name }}</h1>
         {% if category.description %}<p class="text-white/70 text-sm mt-1.5 max-w-xl">{{ category.description|truncatewords:20 }}</p>{% endif %}
         <div class="flex flex-wrap items-center gap-4 mt-3 text-sm">
           <span class="text-white/80"><span class="font-bold text-white" id="result-count">{{ total_count }}</span> products</span>
@@ -38,8 +38,8 @@
   </div>
 </div>
 {% else %}
-<!-- Gradient fallback banner -->
-<div class="relative py-14 overflow-hidden" style="background:linear-gradient(135deg,{{ category.color|default:'#1d4ed8' }}f0,{{ category.color|default:'#1e40af' }});">
+<!-- Theme banner (no category image uploaded) — same as the other pages -->
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 relative py-6 md:py-8 overflow-hidden">
   <div class="absolute inset-0 opacity-10">
     <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
     <div class="absolute -bottom-16 -left-16 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
@@ -53,7 +53,7 @@
       {% endif %}
       <div>
         {% url 'products:categories' as cats_url %}{% breadcrumbs "Categories" cats_url trail=breadcrumbs on_dark=True %}
-        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight">{{ category.name }}</h1>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">{{ category.name }}</h1>
         {% if category.description %}<p class="text-white/70 text-sm mt-1.5">{{ category.description|truncatewords:20 }}</p>{% endif %}
         <p class="text-white/80 text-sm mt-2">
           <span class="font-bold text-white" id="result-count">{{ total_count }}</span> products

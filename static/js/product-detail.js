@@ -162,16 +162,63 @@ document.getElementById('inquiry-form')?.addEventListener('submit', async e=>{
   btn.innerHTML = '<i class="ti ti-send"></i> Send Enquiry';
 });
 
-// ── Share: copy link ───────────────────────────────────────
-function copyLink(){
-  navigator.clipboard.writeText(window.location.href).then(()=>{
-    const icon  = document.getElementById('copy-icon');
-    const toast = document.getElementById('copy-toast');
-    icon.className  = 'ti ti-check pd-success';
-    toast.classList.remove('hidden');
-    setTimeout(()=>{ icon.className='ti ti-link'; toast.classList.add('hidden'); }, 2500);
+// ── Share menu (#pd-share in the CTA row) ──────────────────
+// Toggle button + popover: closes on outside click, Esc, or picking a network.
+// "More options" appears only where the browser has a native share sheet.
+(function(){
+  const wrap = document.getElementById('pd-share');
+  if(!wrap) return;
+  const btn   = document.getElementById('share-toggle');
+  const menu  = document.getElementById('share-menu');
+  const url   = document.getElementById('share-url');
+  const copy  = document.getElementById('share-copy');
+  const nativ = document.getElementById('share-native');
+
+  const open = (fromKeyboard)=>{
+    menu.hidden = false;
+    btn.setAttribute('aria-expanded','true');
+    btn.classList.add('is-active');
+    if(fromKeyboard) menu.querySelector('.pd-share-opt')?.focus();   // mouse users get no focus ring
+  };
+  const close = (refocus)=>{
+    if(menu.hidden) return;
+    menu.hidden = true;
+    btn.setAttribute('aria-expanded','false');
+    btn.classList.remove('is-active');
+    if(refocus) btn.focus();
+  };
+
+  // e.detail is 0 when the button was pressed with Enter / Space
+  btn.addEventListener('click', e=> menu.hidden ? open(e.detail === 0) : close(true));
+  menu.querySelector('[data-share-close]').addEventListener('click', ()=> close(true));
+  menu.querySelectorAll('.pd-share-opt').forEach(a => a.addEventListener('click', ()=> close(false)));
+  document.addEventListener('click', e=>{ if(!wrap.contains(e.target)) close(false); });
+  document.addEventListener('keydown', e=>{ if(e.key === 'Escape') close(true); });
+
+  copy.addEventListener('click', async ()=>{
+    try{
+      await navigator.clipboard.writeText(url.value);
+    }catch{
+      url.select(); document.execCommand('copy');       // http:// or older browsers
+    }
+    copy.classList.add('is-copied');
+    copy.innerHTML = '<i class="ti ti-check"></i><span>Copied</span>';
+    if(typeof showToast === 'function') showToast('Link copied','success');
+    setTimeout(()=>{
+      copy.classList.remove('is-copied');
+      copy.innerHTML = '<i class="ti ti-copy"></i><span>Copy</span>';
+    }, 2000);
   });
-}
+  url.addEventListener('focus', ()=> url.select());
+
+  if(navigator.share){
+    nativ.hidden = false;
+    nativ.addEventListener('click', ()=>{
+      navigator.share({title: document.title, url: url.value}).catch(()=>{});
+      close(false);
+    });
+  }
+})();
 
 // ── Wishlist ───────────────────────────────────────────────
 // Stored in the browser by the shared toggleWishlist() in product-card.js,

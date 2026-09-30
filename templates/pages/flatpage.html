@@ -5,13 +5,13 @@
 {% block meta_description %}{{ page.meta_description }}{% endblock %}
 {% block content %}
 
-<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white text-center relative overflow-hidden">
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
   <div class="absolute inset-0 opacity-10">
     <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
   </div>
   <div class="relative">
     {% breadcrumbs page.title on_dark=True align="center" %}
-    <h1 class="text-4xl font-extrabold">{{ page.title }}</h1>
+    <h1 class="text-2xl md:text-3xl font-extrabold">{{ page.title }}</h1>
   </div>
 </div>
 

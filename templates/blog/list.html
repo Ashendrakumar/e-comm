@@ -6,17 +6,17 @@
 {% block content %}
 
 <!-- Page header -->
-<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-14 text-white text-center relative overflow-hidden">
+<div class="bg-gradient-to-br from-primary-800 to-primary-900 py-6 md:py-8 text-white text-center relative overflow-hidden">
   <div class="absolute inset-0 opacity-10">
     <div class="absolute -top-20 -right-20 w-72 h-72 bg-white rounded-full filter blur-3xl"></div>
     <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-white rounded-full filter blur-3xl"></div>
   </div>
   <div class="relative">
     {% url 'blog:list' as blog_url %}{% if active_category %}{% breadcrumbs "Blog" blog_url active_category.name on_dark=True align="center" %}{% else %}{% breadcrumbs "Blog" on_dark=True align="center" %}{% endif %}
-    <h1 class="text-4xl font-extrabold mb-3">
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">
       {% if active_category %}{{ active_category.name }}{% else %}Blog &amp; News{% endif %}
     </h1>
-    <p class="text-primary-100 text-lg max-w-xl mx-auto">
+    <p class="text-primary-100 text-base max-w-xl mx-auto">
       {% if active_category and active_category.description %}{{ active_category.description }}
       {% else %}Buying guides, reviews, tech tips and the latest electronics news.{% endif %}
     </p>

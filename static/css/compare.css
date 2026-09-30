@@ -9,9 +9,7 @@
 #compare-bar{display:none !important;}
 
 /* ── Header ─────────────────────────────────────────────── */
-.cmp-titlebar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;margin-bottom:24px;}
-.cmp-titlebar h1{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px;}
-.cmp-count{font-size:.8rem;font-weight:500;color:var(--color-text-muted);}
+.cmp-titlebar{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:12px 24px;margin-bottom:24px;}
 .cmp-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;font-size:.85rem;color:var(--color-text-muted);}
 
 .cmp-notice{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 14px;border-radius:var(--radius-md);font-size:.85rem;color:var(--color-warning);background:var(--color-warning-soft);}
@@ -81,7 +79,6 @@
 }
 @media (max-width:480px){
   .cmp-page{padding-top:16px;}
-  .cmp-titlebar h1{font-size:1.25rem;}
   .cmp-label,.cmp-cell{padding-inline:10px;}
   .cmp-img{padding:6px;margin-bottom:6px;}
   .cmp-name{font-size:.8rem;}
