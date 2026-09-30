@@ -2,6 +2,7 @@
 # run `python manage.py test`, commit. Django 5.2 is the LTS line (security fixes to April 2028).
 Django==5.2.17
 djangorestframework==3.17.2
+django-cors-headers==4.9.0   # CORS for /api/ (Expo web / browser clients)
 whitenoise==6.12.0
 Pillow==12.3.0
 psycopg2-binary==2.9.12

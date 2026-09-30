@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.core import mail
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from pages.models import FlatPage
@@ -62,3 +62,23 @@ class SiteApiTests(TestCase):
         self.assertEqual(self.client.post('/api/v1/newsletter/', {'email': 'a@example.com'}).status_code, 200)
         self.assertEqual(self.client.post('/api/v1/newsletter/', {'email': 'nope'}).status_code, 400)
         self.assertEqual(NewsletterSubscription.objects.count(), 1)
+
+
+@override_settings(CORS_ALLOW_ALL_ORIGINS=False, CORS_ALLOWED_ORIGINS=['https://app.example.in'])
+class CorsTests(TestCase):
+    """Browser clients (Expo web) may call /api/ from the configured origins only."""
+
+    def preflight(self, path, origin):
+        return self.client.options(path, HTTP_ORIGIN=origin, HTTP_ACCESS_CONTROL_REQUEST_METHOD='GET',
+                                   HTTP_ACCESS_CONTROL_REQUEST_HEADERS='authorization, content-type')
+
+    def test_allowed_origin_can_call_the_api_with_a_token_header(self):
+        resp = self.preflight('/api/v1/home/', 'https://app.example.in')
+        self.assertEqual(resp['Access-Control-Allow-Origin'], 'https://app.example.in')
+        self.assertIn('authorization', resp['Access-Control-Allow-Headers'])
+        self.assertNotIn('Access-Control-Allow-Credentials', resp)
+
+    def test_other_origins_and_non_api_pages_get_no_cors_headers(self):
+        self.assertNotIn('Access-Control-Allow-Origin', self.preflight('/api/v1/home/', 'https://evil.example'))
+        self.assertNotIn('Access-Control-Allow-Origin',
+                         self.client.get('/', HTTP_ORIGIN='https://app.example.in'))

@@ -74,7 +74,7 @@ The app signs users in with email and password. Each account has **one token**, 
 
 Passwords must pass the server's rules: at least 8 characters, not too common, not entirely numeric, and not too similar to the name or email. A failing password returns `{"password": ["…", …]}`.
 
-**Password reset.** The email contains a *Reset ID* (`uid`) and a *Reset code* (`token`), and the user can type both into the app. If the server sets `API_PASSWORD_RESET_URL` (e.g. `techzone://reset-password?uid={uid}&token={token}`), the email also carries that deep link. A code works once and expires after 3 days, or as soon as the password changes.
+**Password reset.** The email contains a *Reset ID* (`uid`) and a *Reset code* (`token`), and the user can type both into the app. If the server sets `API_PASSWORD_RESET_URL` (e.g. `toyollamobileapp://forgot-password?uid={uid}&token={token}`), the email also carries that deep link. A code works once and expires after 3 days, or as soon as the password changes.
 
 ---
 

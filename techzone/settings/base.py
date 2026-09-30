@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'taggit',
     'rest_framework',
     'rest_framework.authtoken',     # mobile app sign-in tokens
+    'corsheaders',                  # lets browser-based clients (Expo web) call /api/
 
     # Local apps
     'accounts',
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'core.middleware.HealthCheckMiddleware',        # /healthz/ — answered before host checks / SSL redirect
+    'corsheaders.middleware.CorsMiddleware',        # before anything that can return a response (CommonMiddleware, WhiteNoise)
     'django.middleware.security.SecurityMiddleware',
     'core.middleware.ContentSecurityPolicyMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -214,8 +216,17 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {'anon': os.environ.get('API_THROTTLE_ANON', '120/min'),
                                'user': os.environ.get('API_THROTTLE_USER', '240/min')},
 }
+# CORS (django-cors-headers): which *browser* origins may call the API. Native apps don't
+# send an Origin and aren't affected. Only /api/ is opened; no cookies are shared
+# (the app authenticates with an Authorization: Token header).
+CORS_URLS_REGEX = r'^/api/.*$'
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if o.strip()
+]
+CORS_ALLOW_CREDENTIALS = False
+
 # Deep link put in password-reset emails from the app, e.g.
-# "techzone://reset-password?uid={uid}&token={token}". Empty: the email carries the code only.
+# "toyollamobileapp://forgot-password?uid={uid}&token={token}". Empty: the email carries the code only.
 API_PASSWORD_RESET_URL = os.environ.get('API_PASSWORD_RESET_URL', '')
 
 # ── Security ───────────────────────────────────────────────────────
