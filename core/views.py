@@ -10,22 +10,35 @@ from .notifications import notify_staff
 from .ratelimit import protect_form
 
 
+def home_display_lists():
+    """Rarely-changing homepage lists, cached for 10 minutes to cut DB hits.
+    Shared by the homepage and the app's GET /api/v1/home/."""
+    from django.core.cache import cache
+    return {
+        'hero_banners':        cache.get_or_set('home_hero_banners',  lambda: list(Banner.objects.filter(banner_type='hero', is_active=True)[:3]), 600),
+        'promo_banners':       cache.get_or_set('home_promo_banners', lambda: list(Banner.objects.filter(banner_type='promo', is_active=True)[:4]), 600),
+        'featured_categories': cache.get_or_set('home_featured_cats', lambda: list(Category.objects.filter(is_featured=True, is_active=True, parent=None)[:10]), 600),
+        'featured_brands':     cache.get_or_set('home_featured_brands_v2', lambda: list(Brand.objects.filter(is_featured=True, is_active=True)[:12]), 600),
+        'testimonials':        cache.get_or_set('home_testimonials',  lambda: list(Testimonial.objects.filter(is_active=True)[:6]), 600),
+        'why_choose_us':       cache.get_or_set('home_why_choose_us', lambda: list(WhyChooseUs.objects.filter(is_active=True)[:6]), 600),
+    }
+
+
 def homepage(request):
     from pages.models import Service, ServingArea
-    from django.core.cache import cache
 
     # Product lists change often (stock/featured flags) — query live.
     featured_products = Product.objects.filter(is_featured=True, is_active=True).select_related('category', 'brand').prefetch_related('images')[:8]
     trending_products = Product.objects.filter(is_trending=True, is_active=True).select_related('category', 'brand').prefetch_related('images')[:8]
     new_arrivals      = Product.objects.filter(is_new_arrival=True, is_active=True).order_by('-created_at').select_related('category', 'brand').prefetch_related('images')[:8]
 
-    # Rarely-changing display lists — cache for 10 minutes to cut DB hits.
-    hero_banners        = cache.get_or_set('home_hero_banners',  lambda: list(Banner.objects.filter(banner_type='hero', is_active=True)[:3]), 600)
-    promo_banners       = cache.get_or_set('home_promo_banners', lambda: list(Banner.objects.filter(banner_type='promo', is_active=True)[:4]), 600)
-    featured_categories = cache.get_or_set('home_featured_cats', lambda: list(Category.objects.filter(is_featured=True, is_active=True, parent=None)[:10]), 600)
-    featured_brands     = cache.get_or_set('home_featured_brands_v2', lambda: list(Brand.objects.filter(is_featured=True, is_active=True)[:12]), 600)
-    testimonials        = cache.get_or_set('home_testimonials',  lambda: list(Testimonial.objects.filter(is_active=True)[:6]), 600)
-    why_choose_us       = cache.get_or_set('home_why_choose_us', lambda: list(WhyChooseUs.objects.filter(is_active=True)[:6]), 600)
+    lists = home_display_lists()
+    hero_banners        = lists['hero_banners']
+    promo_banners       = lists['promo_banners']
+    featured_categories = lists['featured_categories']
+    featured_brands     = lists['featured_brands']
+    testimonials        = lists['testimonials']
+    why_choose_us       = lists['why_choose_us']
 
     # Services for homepage — from DB or hardcoded fallback
     homepage_services = list(Service.objects.filter(is_active=True).order_by('order')[:6])
@@ -61,7 +74,7 @@ def homepage(request):
     return render(request, 'core/homepage.html', context)
 
 
-def _notify_inquiry(inquiry):
+def notify_contact_inquiry(inquiry):
     """Email the shop about a new contact / city-page enquiry (best-effort)."""
     notify_staff(
         subject=f'[{get_site_name()}] {inquiry.get_inquiry_type_display()}: {inquiry.subject or "New enquiry"}',
@@ -77,7 +90,7 @@ def contact_submit(request):
     form = ContactForm(request.POST)
     if form.is_valid():
         inquiry = form.save()
-        _notify_inquiry(inquiry)
+        notify_contact_inquiry(inquiry)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': 'Thank you! We will get back to you shortly.'})
         messages.success(request, 'Thank you for reaching out! We will contact you within 24 hours.')
@@ -120,7 +133,7 @@ def contact_page(request):
         form = ContactForm(request.POST)
         if form.is_valid():
             inquiry = form.save()
-            _notify_inquiry(inquiry)
+            notify_contact_inquiry(inquiry)
             messages.success(request, 'Message sent successfully! Our team will get back to you within 24 hours.')
             form = ContactForm()
         else:

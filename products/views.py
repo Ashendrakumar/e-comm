@@ -1,14 +1,13 @@
-import uuid
-
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.db.models import Q, Min, Max, Avg, Count
+from django.db.models import Q, Min, Max
 from django.urls import reverse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .models import Product, Category, Review, ProductInquiry
 from .forms import ReviewForm, ProductInquiryForm
+from .compare import MAX_COMPARE, build_comparison, parse_ids
 from .related import (
     get_related_products,
     get_frequently_viewed_together,
@@ -249,14 +248,7 @@ def quick_view(request, slug):
 # Saved in the visitor's browser (localStorage 'tzWishlist', see product-card.js),
 # so it works without an account. This page renders whatever ids the browser sends.
 def wishlist_page(request):
-    ids = []
-    for raw in request.GET.getlist('ids')[:60]:
-        try:
-            pk = uuid.UUID(str(raw))
-        except ValueError:
-            continue
-        if pk not in ids:
-            ids.append(pk)
+    ids = parse_ids(request.GET.getlist('ids'), limit=60)
     found = {p.pk: p for p in (Product.objects.filter(pk__in=ids, is_active=True)
                                .select_related('category', 'brand').prefetch_related('images', 'reviews'))}
     products = [found[pk] for pk in ids if pk in found]      # keep the order they were saved in
@@ -269,61 +261,11 @@ def wishlist_page(request):
 
 # ─── compare ──────────────────────────────────────────────────────────────────
 def compare_products(request):
-    # Validate ids up front: pk is a UUID, so a malformed value would raise
-    # ValidationError (500) inside the queryset. Dedupe while keeping order.
-    ids = []
-    for raw in request.GET.getlist('ids'):
-        try:
-            pk = uuid.UUID(str(raw))
-        except ValueError:
-            continue
-        if pk not in ids:
-            ids.append(pk)
-    ids = ids[:3]
-
-    found = {p.pk: p for p in (Product.objects.filter(pk__in=ids, is_active=True)
-                               .select_related('category', 'brand')
-                               .prefetch_related('images', 'attributes__attribute')
-                               .annotate(avg_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True)),
-                                         num_reviews=Count('reviews', filter=Q(reviews__is_approved=True))))}
-    products = [found[pk] for pk in ids if pk in found]   # keep the user's selection order
-
-    for p in products:
-        p.avg_rating = round(p.avg_rating or 0, 1)
-        imgs = list(p.images.all())                        # prefetched — no extra queries
-        p.cover = next((i for i in imgs if i.is_primary), imgs[0] if imgs else None)
-
-    def row(label, values):
-        vals = [v if v not in (None, '') else '—' for v in values]
-        return {'label': label, 'values': vals, 'differs': len({str(v) for v in vals}) > 1}
-
-    general = [
-        row('Brand',     [p.brand.name if p.brand else None for p in products]),
-        row('Category',  [p.category.name for p in products]),
-        row('Condition', [p.get_condition_display() for p in products]),
-        row('Warranty',  [p.warranty for p in products]),
-        row('Color',     [p.color for p in products]),
-        row('Weight',    [f'{p.weight.normalize():f} kg' if p.weight else None for p in products]),
-        row('SKU',       [p.sku for p in products]),
-    ]
-
-    attr_maps = [{av.attribute.name: av.value for av in p.attributes.all()} for p in products]
-    all_attrs = sorted({name for m in attr_maps for name in m})
-    specs     = [row(name, [m.get(name) for m in attr_maps]) for name in all_attrs]
-
-    # Rows no product has a value for add nothing to a comparison.
-    general = [r for r in general if any(v != '—' for v in r['values'])]
-
-    prices = [p.effective_price for p in products]
-    best_price = min(prices) if len(products) > 1 else None
-
+    comparison = build_comparison(parse_ids(request.GET.getlist('ids'), limit=MAX_COMPARE))
+    products   = comparison['products']
     return render(request, 'products/compare.html', {
-        'products': products,
-        'general_rows': general,
-        'spec_rows': specs,
-        'best_price': best_price,
-        'price_differs': len(set(prices)) > 1,
-        'can_add_more': len(products) < 3,
+        **comparison,
+        'can_add_more': len(products) < MAX_COMPARE,
         # Lets compare.js resync localStorage with what's actually shown.
         'compare_items': [{'id': str(p.pk), 'name': p.name} for p in products],
         'page_title': 'Compare Products',
@@ -450,6 +392,18 @@ def submit_review(request, slug):
     return __import__('django.shortcuts', fromlist=['redirect']).redirect(product.get_absolute_url() + '#reviews')
 
 
+def notify_product_inquiry(inquiry, request):
+    """Email the shop about a new product enquiry (best-effort). Also used by the API."""
+    product = inquiry.product
+    notify_staff(
+        subject=f'[{get_site_name()}] Product enquiry: {product.name}',
+        message=(f'{inquiry.name} ({inquiry.email}, {inquiry.phone}) asked about '
+                 f'{product.name} ({request.build_absolute_uri(product.get_absolute_url())}):\n\n'
+                 f'{inquiry.message}\n\nManage it in the admin: Products -> Product inquiries.'),
+        reply_to=inquiry.email,
+    )
+
+
 # ─── submit inquiry ───────────────────────────────────────────────────────────
 @require_POST
 @protect_form('product-inquiry')
@@ -460,13 +414,7 @@ def submit_inquiry(request, slug):
         inquiry         = form.save(commit=False)
         inquiry.product = product
         inquiry.save()
-        notify_staff(
-            subject=f'[{get_site_name()}] Product enquiry: {product.name}',
-            message=(f'{inquiry.name} ({inquiry.email}, {inquiry.phone}) asked about '
-                     f'{product.name} ({request.build_absolute_uri(product.get_absolute_url())}):\n\n'
-                     f'{inquiry.message}\n\nManage it in the admin: Products -> Product inquiries.'),
-            reply_to=inquiry.email,
-        )
+        notify_product_inquiry(inquiry, request)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': 'Enquiry sent! We will respond within 24 hours.'})
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

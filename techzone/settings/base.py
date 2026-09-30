@@ -44,8 +44,10 @@ INSTALLED_APPS = [
     # Third party
     'taggit',
     'rest_framework',
+    'rest_framework.authtoken',     # mobile app sign-in tokens
 
     # Local apps
+    'accounts',
     'core',
     'products',
     'pages',
@@ -195,6 +197,11 @@ SESSION_COOKIE_AGE = 86400 * 30  # 30 days
 
 # ── Django REST Framework (public read API) ────────────────────────
 REST_FRAMEWORK = {
+    # The app sends "Authorization: Token <key>"; sessions keep the browsable API usable.
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 24,
@@ -202,9 +209,14 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
-    'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.AnonRateThrottle'],
-    'DEFAULT_THROTTLE_RATES': {'anon': '120/min'},
+    'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.AnonRateThrottle',
+                                 'rest_framework.throttling.UserRateThrottle'],
+    'DEFAULT_THROTTLE_RATES': {'anon': os.environ.get('API_THROTTLE_ANON', '120/min'),
+                               'user': os.environ.get('API_THROTTLE_USER', '240/min')},
 }
+# Deep link put in password-reset emails from the app, e.g.
+# "techzone://reset-password?uid={uid}&token={token}". Empty: the email carries the code only.
+API_PASSWORD_RESET_URL = os.environ.get('API_PASSWORD_RESET_URL', '')
 
 # ── Security ───────────────────────────────────────────────────────
 X_FRAME_OPTIONS = 'SAMEORIGIN'

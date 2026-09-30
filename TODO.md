@@ -74,6 +74,13 @@ Legend: `[x]` done · `[~]` partial · `[ ]` not started
 - [x] Split settings, `seed_data` sample data, WhiteNoise + manifest static storage
 - [x] **`.env.example`** (full) + **`django-environ`** wired to load `.env` in `base.py`
 - [x] **DRF read API** at `/api/v1/` — products/categories/brands, filtering, search, pagination, throttle
+- [x] **Mobile app API** (2026-09-30) — full reference in `docs/MOBILE_API.md`:
+      token auth (`accounts` app: register/login/logout/profile/change + reset password/delete account),
+      server-side wishlist + guest sync, reviews (list/write/helpful/"my reviews"), product/service/contact
+      enquiries, compare, related, search suggestions, category tree, home feed, app config, banners,
+      testimonials, services, serving areas + pincode check, FAQs, CMS pages, blog + comments, newsletter.
+      Reuses the site's forms, rate-limit scopes and enquiry emails; product lists no longer N+1 on ratings.
+- [ ] Mobile app: push notifications (FCM) and an order/checkout flow — not in scope; the store is enquiry-based
 - [x] **Docker** — `Dockerfile`, `docker-compose.yml` (web + postgres + redis),
       `.dockerignore`, `docker-entrypoint.sh` (waits for DB, migrates)
 - [x] **`gunicorn`** + `djangorestframework` + `django-environ` + `redis` in `requirements.txt`

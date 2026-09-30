@@ -40,16 +40,18 @@ python manage.py runserver
 
 ## REST API (Module 14)
 
-Public, read-only catalog API under `/api/v1/` (DRF, paginated 24/page, 120 req/min anon throttle):
+JSON API for the customer mobile app under `/api/v1/` (DRF; token auth; paginated 24/page;
+120 req/min anonymous, 240 req/min signed in). **Full reference: [docs/MOBILE_API.md](docs/MOBILE_API.md).**
 
-| Endpoint | Description |
+| Area | Endpoints |
 |---|---|
-| `GET /api/v1/products/` | List products. Filters: `category=`, `brand=` (slugs), `min_price=`, `max_price=`, `condition=`, `in_stock=1`, `featured=1`, `trending=1`, `search=`, `ordering=price\|-created_at\|name` |
-| `GET /api/v1/products/{slug}/` | Product detail incl. images + approved reviews |
-| `GET /api/v1/categories/` · `/{slug}/` | Categories with product counts |
-| `GET /api/v1/brands/` | Active brands |
+| Accounts | `auth/register` · `login` · `logout` · `me` · `me/reviews` · `change-password` · `password-reset` (+ `confirm`) · `delete-account` |
+| Catalog | `products` (website filters, search, ordering) · `products/{slug}` · `…/related` · `…/reviews` · `…/inquiry` · `products/compare` · `products/search-suggestions` · `categories` (+ `tree`) · `brands` · `reviews/{id}/helpful` |
+| Wishlist | `wishlist` · `wishlist/ids` · `wishlist/sync` · `wishlist/{product_id}` (signed in) |
+| Content | `home` · `config` · `banners` · `testimonials` · `services` (+ `inquiry`) · `serving-areas` (+ `check?pincode=`) · `service-availability` · `faqs` · `pages` · `blog/posts` (+ `comments`) · `blog/categories` |
+| Forms | `contact` · `newsletter` |
 
-> Note: AJAX UI endpoints (filtering, quick-view, wishlist, reviews) remain under `/products/ajax/…` as server-rendered partials; the DRF API above is the JSON catalog interface.
+> Note: the website's own AJAX endpoints (filtering, quick-view, reviews) remain under `/products/ajax/…` as server-rendered partials.
 
 ---
 

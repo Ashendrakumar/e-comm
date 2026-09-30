@@ -46,8 +46,12 @@ def notify_staff(subject, message, reply_to=None):
     recipients = staff_recipients()
     if not recipients:
         return False
-    email = EmailMessage(subject=subject, body=message, from_email=settings.DEFAULT_FROM_EMAIL,
-                         to=recipients, reply_to=[reply_to] if reply_to else None)
+    return send_email(EmailMessage(subject=subject, body=message, from_email=settings.DEFAULT_FROM_EMAIL,
+                                   to=recipients, reply_to=[reply_to] if reply_to else None))
+
+
+def send_email(email):
+    """Send an EmailMessage best-effort, in the background when NOTIFY_ASYNC is on."""
     if getattr(settings, 'NOTIFY_ASYNC', False):
         threading.Thread(target=_send_in_background, args=(email,), daemon=True,
                          name='notify-staff').start()

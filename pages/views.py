@@ -34,6 +34,16 @@ def service_detail(request, slug):
     })
 
 
+def notify_service_inquiry(inquiry):
+    """Email the shop about a new service enquiry (best-effort). Also used by the API."""
+    notify_staff(
+        subject=f'[{get_site_name()}] Service enquiry: {inquiry.service.title}',
+        message=(f'{inquiry.name} ({inquiry.email}, {inquiry.phone}) from {inquiry.city}:\n\n'
+                 f'{inquiry.message}\n\nManage it in the admin: Pages -> Service inquiries.'),
+        reply_to=inquiry.email,
+    )
+
+
 @require_POST
 @protect_form('service-inquiry')
 def service_inquiry(request, slug):
@@ -43,12 +53,7 @@ def service_inquiry(request, slug):
         inquiry         = form.save(commit=False)
         inquiry.service = service
         inquiry.save()
-        notify_staff(
-            subject=f'[{get_site_name()}] Service enquiry: {service.title}',
-            message=(f'{inquiry.name} ({inquiry.email}, {inquiry.phone}) from {inquiry.city}:\n\n'
-                     f'{inquiry.message}\n\nManage it in the admin: Pages -> Service inquiries.'),
-            reply_to=inquiry.email,
-        )
+        notify_service_inquiry(inquiry)
         msg = 'Thank you! Our team will contact you shortly about this service.'
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': msg})
