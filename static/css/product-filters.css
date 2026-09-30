@@ -22,8 +22,13 @@
   background:none;border:0;cursor:pointer;transition:color var(--duration) var(--ease);}
 .acc-head:hover{color:var(--color-primary-text);}
 .acc-chevron{font-size:14px;transition:transform .25s var(--ease);}
-.acc-body{max-height:600px;overflow:hidden;opacity:1;transition:max-height .3s var(--ease),opacity .2s var(--ease);}
-.filter-section.collapsed .acc-body{max-height:0!important;opacity:0;}
+/* Open sections have no height cap; toggleAcc() animates between 0 and the measured
+   scrollHeight, so tall lists (brands) open fully and collapse starts instantly. */
+.acc-body{overflow:hidden;opacity:1;transition:max-height .3s var(--ease),opacity .2s var(--ease),visibility 0s;}
+/* visibility waits for the collapse to finish, then keeps hidden checkboxes out of the tab order. */
+.filter-section.collapsed .acc-body{max-height:0;opacity:0;visibility:hidden;
+  transition:max-height .3s var(--ease),opacity .2s var(--ease),visibility 0s linear .3s;}
+@media (prefers-reduced-motion:reduce){.acc-body,.acc-chevron{transition:none;}}
 .filter-section.collapsed .acc-chevron{transform:rotate(-90deg);}
 
 /* ── Price inputs with a ₹ prefix ─────────────────────────── */

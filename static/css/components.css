@@ -291,3 +291,19 @@ input:focus,textarea:focus,select:focus{outline:none;}
   .tile,.tile::after,.chip,.chip i{transition:none}
   .tile:hover,.tile:hover .chip{transform:none}
 }
+
+/* ── Accordion panel ──────────────────────────────────────────────────────
+   Smooth expand/collapse for FAQ answers. Animating grid rows 0fr → 1fr moves
+   the real content height (no max-height guess, no display:none jump, no scale).
+   Markup:  <div class="acc-panel" :class="{ 'is-open': open }"><div>…content…</div></div>
+   Put padding on an element *inside* the single child, never on .acc-panel itself.
+   visibility keeps closed answers out of the tab order and screen readers. */
+.acc-panel{display:grid;grid-template-rows:0fr;opacity:0;visibility:hidden;
+  transition:grid-template-rows .32s var(--ease),opacity .2s var(--ease),visibility 0s linear .32s}
+.acc-panel.is-open{grid-template-rows:1fr;opacity:1;visibility:visible;
+  transition:grid-template-rows .32s var(--ease),opacity .28s var(--ease) .04s,visibility 0s}
+.acc-panel > *{overflow:hidden;min-height:0}
+.acc-chev{transition:transform .32s var(--ease)}
+@media (prefers-reduced-motion:reduce){
+  .acc-panel,.acc-panel.is-open,.acc-chev{transition:none}
+}

@@ -8,7 +8,38 @@ const FILTER_AJAX_URL = document.getElementById('filter-form')?.dataset.ajaxUrl;
 // without a #filter-form simply does nothing instead of throwing on line 1.
 
 // ── Accordion ──────────────────────────────────────────────────────
-function toggleAcc(btn){ btn.closest('.filter-section').classList.toggle('collapsed'); }
+// Animates between 0 and the section's real height (measured each time), then clears
+// the inline value so an open section can still grow, e.g. when "show more" adds rows.
+function toggleAcc(btn){
+  const section = btn.closest('.filter-section');
+  const body = section.querySelector('.acc-body');
+  const opening = section.classList.contains('collapsed');
+  btn.setAttribute('aria-expanded', String(opening));
+  if (!body || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    section.classList.toggle('collapsed');
+    return;
+  }
+  body.addEventListener('transitionend', function done(e){
+    if (e.propertyName !== 'max-height') return;
+    body.style.maxHeight = '';
+    body.removeEventListener('transitionend', done);
+  });
+  if (opening) {
+    section.classList.remove('collapsed');
+    body.style.maxHeight = '0px';
+    void body.offsetHeight;                       // commit the start height
+    body.style.maxHeight = body.scrollHeight + 'px';
+  } else {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    void body.offsetHeight;
+    section.classList.add('collapsed');
+    body.style.maxHeight = '0px';
+  }
+}
+// Tell assistive tech which sections start open.
+document.querySelectorAll('.filter-section > .acc-head[onclick]').forEach(btn => {
+  btn.setAttribute('aria-expanded', String(!btn.closest('.filter-section').classList.contains('collapsed')));
+});
 
 // ── Mobile drawer ──────────────────────────────────────────────────
 function openMobileFilter(){

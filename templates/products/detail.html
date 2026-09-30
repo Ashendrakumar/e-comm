@@ -605,10 +605,12 @@
           <button type="button" @click="open=!open" :aria-expanded="open"
                   class="pd-faq-q w-full flex items-start justify-between px-5 py-4 text-left font-semibold pd-strong text-sm transition-colors gap-4">
             <span>{{ faq.question }}</span>
-            <i class="ti ti-chevron-down pd-faint flex-shrink-0 mt-0.5 transition-transform duration-200" :class="open?'rotate-180':''"></i>
+            <i class="ti ti-chevron-down pd-faint flex-shrink-0 mt-0.5 acc-chev" :class="{ 'rotate-180': open }"></i>
           </button>
-          <div x-show="open" x-transition class="px-5 pb-5 text-sm pd-soft leading-relaxed border-t pd-rule pt-4">
-            {{ faq.answer }}
+          <div class="acc-panel" :class="{ 'is-open': open }">
+            <div><div class="px-5 pb-5 text-sm pd-soft leading-relaxed border-t pd-rule pt-4">
+              {{ faq.answer }}
+            </div></div>
           </div>
         </div>
         {% endif %}{% endfor %}

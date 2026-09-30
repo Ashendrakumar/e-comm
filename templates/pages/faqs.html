@@ -34,14 +34,17 @@
       {% for faq in cat.faqs.all %}
       {% if faq.is_active %}
       <div class="card overflow-hidden">
-        <button @click="open === '{{ cat.id }}-{{ faq.id }}' ? open = null : open = '{{ cat.id }}-{{ faq.id }}'"
+        <button type="button" @click="open === '{{ cat.id }}-{{ faq.id }}' ? open = null : open = '{{ cat.id }}-{{ faq.id }}'"
+                :aria-expanded="(open === '{{ cat.id }}-{{ faq.id }}').toString()" aria-expanded="false" aria-controls="faq-{{ cat.id }}-{{ faq.id }}"
                 class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left">
           <span class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ faq.question }}</span>
-          <i class="ti ti-chevron-down text-gray-400 transition-transform flex-shrink-0"
-             :class="open === '{{ cat.id }}-{{ faq.id }}' ? 'rotate-180' : ''"></i>
+          <i class="ti ti-chevron-down text-gray-400 acc-chev flex-shrink-0"
+             :class="{ 'rotate-180': open === '{{ cat.id }}-{{ faq.id }}' }"></i>
         </button>
-        <div x-show="open === '{{ cat.id }}-{{ faq.id }}'" x-cloak x-transition class="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          {{ faq.answer|safe|linebreaks }}
+        <div id="faq-{{ cat.id }}-{{ faq.id }}" class="acc-panel" :class="{ 'is-open': open === '{{ cat.id }}-{{ faq.id }}' }">
+          <div><div class="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            {{ faq.answer|safe|linebreaks }}
+          </div></div>
         </div>
       </div>
       {% endif %}
@@ -59,13 +62,16 @@
     <div class="space-y-3">
       {% for faq in uncategorised %}
       <div class="card overflow-hidden">
-        <button @click="open === 'g-{{ faq.id }}' ? open = null : open = 'g-{{ faq.id }}'"
+        <button type="button" @click="open === 'g-{{ faq.id }}' ? open = null : open = 'g-{{ faq.id }}'"
+                :aria-expanded="(open === 'g-{{ faq.id }}').toString()" aria-expanded="false" aria-controls="faq-g-{{ faq.id }}"
                 class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left">
           <span class="font-semibold text-gray-800 dark:text-gray-200 text-sm">{{ faq.question }}</span>
-          <i class="ti ti-chevron-down text-gray-400 transition-transform flex-shrink-0" :class="open === 'g-{{ faq.id }}' ? 'rotate-180' : ''"></i>
+          <i class="ti ti-chevron-down text-gray-400 acc-chev flex-shrink-0" :class="{ 'rotate-180': open === 'g-{{ faq.id }}' }"></i>
         </button>
-        <div x-show="open === 'g-{{ faq.id }}'" x-cloak x-transition class="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          {{ faq.answer|safe|linebreaks }}
+        <div id="faq-g-{{ faq.id }}" class="acc-panel" :class="{ 'is-open': open === 'g-{{ faq.id }}' }">
+          <div><div class="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            {{ faq.answer|safe|linebreaks }}
+          </div></div>
         </div>
       </div>
       {% endfor %}
