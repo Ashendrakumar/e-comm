@@ -17,7 +17,7 @@
   "name": "{{ product.name|escapejs }}",
   "sku": "{{ product.sku|escapejs }}",
   "description": "{{ product.short_description|default:product.meta_description|default:product.name|escapejs }}",
-  "image": [{% for img in product.images.all %}"{{ request.scheme }}://{{ request.get_host }}{{ img.image.url }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+  "image": [{% for img in product.images.all %}"{{ img.image.url|absolute_url:request }}"{% if not forloop.last %},{% endif %}{% endfor %}],
   {% if product.brand %}"brand": {"@type": "Brand", "name": "{{ product.brand.name|escapejs }}"},{% endif %}
   {% if product.category %}"category": "{{ product.category.name|escapejs }}",{% endif %}
   "offers": {

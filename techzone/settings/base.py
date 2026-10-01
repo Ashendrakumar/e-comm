@@ -139,6 +139,43 @@ PRODUCT_IMAGES_DIR = os.environ.get('PRODUCT_IMAGES_DIR', '')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# ── Uploaded files (media) on Supabase Storage ─────────────────────
+# Every ImageField upload goes through STORAGES['default'], so models, admin,
+# importers and the API need no changes: an upload to upload_to='products/' is
+# stored as object "products/<file>" in the bucket, the DB keeps that relative
+# key, and `.url` returns
+#   https://<ref>.supabase.co/storage/v1/object/public/<bucket>/products/<file>
+# Enabled when the four vars below are set (bucket must be *public*); otherwise
+# files stay on local disk under MEDIA_ROOT. Tests always use local disk.
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')          # https://<ref>.supabase.co
+SUPABASE_STORAGE_BUCKET = os.environ.get('SUPABASE_STORAGE_BUCKET', '')
+SUPABASE_S3_ACCESS_KEY_ID = os.environ.get('SUPABASE_S3_ACCESS_KEY_ID', '')
+SUPABASE_S3_SECRET_ACCESS_KEY = os.environ.get('SUPABASE_S3_SECRET_ACCESS_KEY', '')
+USE_SUPABASE_STORAGE = not TESTING and all(
+    (SUPABASE_URL, SUPABASE_STORAGE_BUCKET, SUPABASE_S3_ACCESS_KEY_ID, SUPABASE_S3_SECRET_ACCESS_KEY))
+
+if USE_SUPABASE_STORAGE:
+    _public_base = f"{SUPABASE_URL.split('://', 1)[-1]}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}"
+    STORAGES['default'] = {
+        'BACKEND': 'storages.backends.s3.S3Storage',
+        'OPTIONS': {
+            'endpoint_url':      f'{SUPABASE_URL}/storage/v1/s3',
+            'region_name':       os.environ.get('SUPABASE_S3_REGION', 'ap-northeast-1'),
+            'access_key':        SUPABASE_S3_ACCESS_KEY_ID,
+            'secret_key':        SUPABASE_S3_SECRET_ACCESS_KEY,
+            'bucket_name':       SUPABASE_STORAGE_BUCKET,
+            'location':          os.environ.get('SUPABASE_STORAGE_PREFIX', '').strip('/'),  # optional folder inside the bucket
+            'custom_domain':     _public_base,      # public, unsigned URLs
+            'querystring_auth':  False,
+            'default_acl':       None,              # Supabase uses bucket policies, not object ACLs
+            'file_overwrite':    False,             # same name twice -> Django appends a suffix
+            'addressing_style':  'path',
+            'signature_version': 's3v4',
+            'object_parameters': {'CacheControl': 'public, max-age=31536000'},  # names are unique; cache hard
+        },
+    }
+    MEDIA_URL = f'https://{_public_base}/'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1

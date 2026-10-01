@@ -6,6 +6,8 @@ django-cors-headers==4.9.0   # CORS for /api/ (Expo web / browser clients)
 whitenoise==6.12.0
 Pillow==12.3.0
 psycopg2-binary==2.9.12
+django-storages==1.14.6    # uploaded media on Supabase Storage (S3-compatible API)
+boto3==1.43.106            # S3 client used by django-storages
 django-taggit==6.1.0
 django-environ==0.13.0
 gunicorn==26.0.0

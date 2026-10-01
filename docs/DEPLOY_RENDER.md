@@ -1,343 +1,299 @@
-# TechZone — Render.com Deployment Guide
+# TechZone — Deploying to Render with Supabase
 
-This guide covers deploying the TechZone E-Commerce Django application to [Render.com](https://render.com).
-
----
-
-## Architecture Overview
-
-| Component | Technology |
-|-----------|------------|
-| Framework | Django 5.2 LTS + DRF |
-| WSGI Server | Gunicorn |
-| Database | PostgreSQL 16 |
-| Cache / Sessions | Redis 7 |
-| Static Files | WhiteNoise |
-| Frontend Build | Tailwind CSS + Alpine.js + Swiper |
-| Container | Docker (multi-stage build) |
+The app runs on **Render** (Docker web service + Key Value/Redis). The **database** is
+**Supabase PostgreSQL** and all **uploaded files** (product photos, banners, logos, blog
+images…) live in **Supabase Storage**. Static CSS/JS is still served by WhiteNoise from the
+container.
 
 ---
 
-## Prerequisites
+## Architecture
 
-- A [Render.com](https://render.com) account
-- Your code pushed to a GitHub/GitLab/Bitbucket repository
-- Node.js installed locally (for building frontend assets before pushing)
+| Piece | Where | Notes |
+|-------|-------|-------|
+| Django 5.2 + DRF, Gunicorn | Render web service (Docker) | `Dockerfile`, `docker-entrypoint.sh` |
+| PostgreSQL | **Supabase** | same `DB_*` settings as your `.env` |
+| Uploaded media | **Supabase Storage** (public bucket `media`) | S3-compatible API via `django-storages` |
+| Static files (CSS/JS/fonts) | WhiteNoise, inside the container | built during `docker build` |
+| Cache / sessions / rate limits | Render Key Value (Redis) | optional but recommended |
 
----
-
-## Deployment Methods
-
-### Method 1: Docker Deployment (Recommended)
-
-Uses the existing `Dockerfile` for a fully containerized deploy.
-
-#### Step 1: Push Code to Git
-
-```bash
-git add .
-git commit -m "Ready for Render deployment"
-git push origin main
+```
+Browser / mobile app
+   │  pages, API              │  <img src="https://<ref>.supabase.co/storage/v1/object/public/media/...">
+   ▼                          ▼
+Render: Django ──SQL──► Supabase Postgres
+      │ uploads (S3 API) ───► Supabase Storage bucket "media"
+      └─cache──► Render Key Value
 ```
 
-#### Step 2: Create PostgreSQL Database
+Because files are no longer on the container's disk, **no Render persistent disk is needed**
+and redeploys never lose images.
 
-1. Go to [Render Dashboard](https://dashboard.render.com)
-2. Click **New** → **PostgreSQL**
-3. Configure:
-   - **Name**: `techzone-db`
-   - **Database**: `techzone`
-   - **User**: `techzone_user`
-   - **Plan**: Free (or Starter for production)
-4. Save the following from the **Connections** panel:
-   - Internal Database URL
-   - External Database URL
-   - Database name, user, password, host, port
+---
 
-#### Step 3: Create Redis Instance
+## Part 1 — Supabase
 
-1. Click **New** → **Redis**
-2. Configure:
-   - **Name**: `techzone-redis`
-   - **Plan**: Free
-3. Save the **Internal Redis URL** from the Connections panel
+### 1.1 Database
 
-#### Step 4: Create Web Service
+The database setup is unchanged — use the same `DB_*` values that already work in your
+`.env` (Supabase pooler host, `postgres.<ref>` user, port, password).
 
-1. Click **New** → **Web Service**
-2. Select your repository
-3. Configure:
-   - **Name**: `techzone`
-   - **Branch**: `main`
-   - **Environment**: **Docker**
-   - **Plan**: Free (or Starter)
-4. Render auto-detects the `Dockerfile`
+### 1.2 Storage bucket
 
-#### Step 5: Configure Environment Variables
+1. Supabase → **Storage** → **New bucket**
+   - **Name:** `media`
+   - **Public bucket:** **ON** (images are shown on public pages, so they must be readable without a token)
+   - *Restrict file upload size:* `5 MB` (matches the app's own validator)
+   - *Allowed MIME types:* `image/*`
+2. Supabase → **Project Settings → Storage → S3 Connection / S3 Access Keys**
+   - Note the **Region** shown there (e.g. `ap-northeast-1`).
+   - Click **New access key** → copy the **Access key ID** and **Secret access key**
+     (the secret is only shown once).
+3. Your **Project URL** is under **Project Settings → Data API** (`https://<ref>.supabase.co`).
 
-In the Web Service → **Environment** tab, add the following:
+The S3 access key has full access to the project's storage — keep it only in Render's
+environment, never in the repo or in the mobile app.
 
-| Key | Value | Example |
-|-----|-------|---------|
-| `SECRET_KEY` | Long random string | `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
-| `DEBUG` | `False` | `False` |
-| `ALLOWED_HOSTS` | Your Render URL | `techzone.onrender.com` |
-| `CSRF_TRUSTED_ORIGINS` | HTTPS origin | `https://techzone.onrender.com` |
-| `SITE_DOMAIN` | Your Render URL | `techzone.onrender.com` |
-| `DB_NAME` | From PostgreSQL | `techzone` |
-| `DB_USER` | From PostgreSQL | `techzone_user` |
-| `DB_PASSWORD` | From PostgreSQL | `••••••••` |
-| `DB_HOST` | Internal hostname | `dpg-xxx.render.com` |
-| `DB_PORT` | `5432` | `5432` |
-| `REDIS_URL` | Internal Redis URL | `rediss://red-xxx.render.com:6379` |
-| `TRUSTED_PROXY_COUNT` | `1` | `1` |
-| `ADMIN_URL` | Admin path (optional) | `admin/` |
-| `SENTRY_DSN` | Error tracking (optional) | `https://xxx@yyy.ingest.sentry.io/zzz` |
+---
 
-#### Step 6: Configure Health Check
+## Part 2 — Render
 
-In the Web Service → **Settings** tab:
-- **Health Check Path**: `/healthz/`
+### Option A: Blueprint (recommended)
 
-#### Step 7: Add Persistent Disk (for media files)
+`render.yaml` in the repo root defines the web service and the Key Value instance.
 
-Render's filesystem is ephemeral. To persist uploaded media:
+1. Push the code to GitHub.
+2. Render → **New → Blueprint** → pick the repo.
+3. Render asks for every value marked `sync: false` — fill them in from the table below.
+   `SECRET_KEY` is generated for you and `REDIS_URL` is wired automatically.
 
-1. In **Settings** → **Disks**, click **Add Disk**
-2. Configure:
-   - **Name**: `media`
-   - **Mount Path**: `/app/media`
-   - **Size**: 1 GB (or as needed)
+### Option B: Manual
 
-> **Alternative**: Use S3, Cloudinary, or Supabase Storage for media files instead of a disk.
+1. **New → Key Value** → name `techzone-redis`, plan Free → copy the **Internal URL**.
+2. **New → Web Service** → your repo → **Language: Docker**, branch `main`.
+3. **Health Check Path:** `/healthz/`
+4. Add the environment variables below.
 
-#### Step 8: Deploy
+### Environment variables
 
-Render automatically builds and deploys the Docker image. The `docker-entrypoint.sh` will:
+| Key | Value / example | Required |
+|-----|-----------------|----------|
+| `SECRET_KEY` | `python -c "import secrets; print(secrets.token_urlsafe(50))"` | ✅ |
+| `DEBUG` | `False` | ✅ |
+| `ALLOWED_HOSTS` | `techzone.onrender.com` | ✅ |
+| `CSRF_TRUSTED_ORIGINS` | `https://techzone.onrender.com` | ✅ |
+| `SITE_DOMAIN` | `techzone.onrender.com` | ✅ |
+| `PORT` | `8000` | ✅ (Gunicorn binds 8000) |
+| `TRUSTED_PROXY_COUNT` | `1` | ✅ |
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT` | same as your working `.env` | ✅ |
+| `SUPABASE_URL` | `https://<ref>.supabase.co` | ✅ |
+| `SUPABASE_STORAGE_BUCKET` | `media` | ✅ |
+| `SUPABASE_S3_ACCESS_KEY_ID` | from 1.2 | ✅ |
+| `SUPABASE_S3_SECRET_ACCESS_KEY` | from 1.2 | ✅ |
+| `SUPABASE_S3_REGION` | `ap-northeast-1` (from 1.2) | ✅ |
+| `SUPABASE_STORAGE_PREFIX` | e.g. `prod` — folder inside the bucket, to share one bucket between environments | optional |
+| `REDIS_URL` | Key Value internal URL | recommended |
+| `CORS_ALLOWED_ORIGINS` | Expo web origin(s), comma-separated | optional |
+| `ADMIN_URL` | e.g. `manage-7f3k/` | optional |
+| `SENTRY_DSN` | Sentry DSN | optional |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | SMTP | optional |
+| `ADMINS` | `Ops <ops@example.com>` | optional |
 
-1. Wait for PostgreSQL to be ready
-2. Run `python manage.py migrate --noinput`
-3. Sync the site domain (`python manage.py sync_site`)
-4. Run `python manage.py check --deploy --fail-level WARNING`
-5. Start Gunicorn on port 8000
+Media storage switches to Supabase **only when all four** `SUPABASE_URL`,
+`SUPABASE_STORAGE_BUCKET`, `SUPABASE_S3_ACCESS_KEY_ID` and `SUPABASE_S3_SECRET_ACCESS_KEY` are
+set. If any is missing, uploads go to the container disk and **disappear on the next deploy**.
 
-#### Step 9: Create Superuser
+### What happens on each deploy
 
-After the first successful deploy, open the **Shell** tab and run:
+`docker-entrypoint.sh` runs, in order:
+
+1. `python manage.py migrate --noinput` (against Supabase)
+2. `python manage.py sync_site` (when `SITE_DOMAIN` is set)
+3. `python manage.py check --deploy --fail-level WARNING`
+4. Gunicorn
+
+### First deploy — one-time steps (Render → web service → **Shell**)
 
 ```bash
 python manage.py createsuperuser
+python manage.py setup_roles      # staff groups/permissions
+python manage.py seed_data        # optional demo content
 ```
-
-#### Step 10: Verify
-
-- Visit `https://techzone.onrender.com` — homepage should load
-- Visit `https://techzone.onrender.com/admin/` — log in with superuser
-- Visit `https://techzone.onrender.com/healthz/` — should return `{"status": "ok"}`
-- Visit `https://techzone.onrender.com/api/v1/` — API should respond
 
 ---
 
-### Method 2: Native Python Web Service (No Docker)
+## Part 3 — Moving existing data and images
 
-Deploy using Render's native Python runtime.
+### Database
 
-#### Step 1: Push Code to Git
+From your machine, with the **old** database in `.env`:
 
 ```bash
-git add .
-git commit -m "Ready for Render deployment"
-git push origin main
+python manage.py dumpdata --natural-foreign --natural-primary \
+  --exclude contenttypes --exclude auth.permission --exclude sessions --exclude admin.logentry \
+  --indent 2 -o data.json
 ```
 
-#### Step 2: Create PostgreSQL & Redis
-
-Same as Method 1, Steps 2–3.
-
-#### Step 3: Create Web Service
-
-1. Click **New** → **Web Service**
-2. Select your repository
-3. Configure:
-   - **Name**: `techzone`
-   - **Branch**: `main`
-   - **Environment**: **Python**
-   - **Build Command**:
-     ```bash
-     pip install -r requirements.txt && npm ci && npm run build && python manage.py collectstatic --noinput
-     ```
-   - **Start Command**:
-     ```bash
-     gunicorn techzone.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --threads 2 --timeout 60
-     ```
-
-#### Step 4: Configure Environment Variables
-
-Same as Method 1, Step 5.
-
-#### Step 5: Configure Health Check & Disk
-
-Same as Method 1, Steps 6–7.
-
-#### Step 6: Deploy & Create Superuser
-
-Same as Method 1, Steps 8–9.
-
----
-
-## Post-Deployment Checklist
-
-| Task | Command / Location |
-|------|-------------------|
-| Create superuser | Shell: `python manage.py createsuperuser` |
-| Create staff roles | Shell: `python manage.py setup_roles` |
-| Seed initial data | Shell: `python manage.py seed_data` |
-| Verify health check | Visit `/healthz/` |
-| Verify admin | Visit `/admin/` |
-| Verify API | Visit `/api/v1/` |
-| Verify sitemap | Visit `/sitemap.xml` |
-| Verify robots.txt | Visit `/robots.txt` |
-| Check static files | Visit `/static/css/app.css` |
-| Set up Sentry | Add `SENTRY_DSN` env var |
-| Configure email | Add `EMAIL_*` env vars |
-
----
-
-## Custom Domain
-
-1. In Web Service → **Settings** → **Custom Domains**, click **Add Custom Domain**
-2. Enter your domain (e.g., `shop.example.com`)
-3. Add the DNS records shown by Render to your domain registrar
-4. Update environment variables:
-   - `ALLOWED_HOSTS` → add your custom domain
-   - `CSRF_TRUSTED_ORIGINS` → add `https://yourdomain.com`
-   - `SITE_DOMAIN` → your custom domain
-5. Render automatically provisions HTTPS via Let's Encrypt
-
----
-
-## Environment Variables Reference
-
-### Required
-
-| Variable | Description |
-|----------|-------------|
-| `SECRET_KEY` | Django secret key (generate with `secrets.token_urlsafe(50)`) |
-| `DEBUG` | Set to `False` in production |
-| `ALLOWED_HOSTS` | Comma-separated list of allowed hostnames |
-| `CSRF_TRUSTED_ORIGINS` | Comma-separated HTTPS origins |
-| `SITE_DOMAIN` | Primary domain for sitemaps and absolute URLs |
-| `DB_NAME` | PostgreSQL database name |
-| `DB_USER` | PostgreSQL username |
-| `DB_PASSWORD` | PostgreSQL password |
-| `DB_HOST` | PostgreSQL internal hostname |
-| `DB_PORT` | PostgreSQL port (`5432`) |
-| `REDIS_URL` | Redis connection URL |
-| `TRUSTED_PROXY_COUNT` | Number of proxy hops (`1` for Render) |
-
-### Optional
-
-| Variable | Description |
-|----------|-------------|
-| `ADMIN_URL` | Admin URL path (default: `admin/`) |
-| `SENTRY_DSN` | Sentry error tracking DSN |
-| `EMAIL_HOST` | SMTP server hostname |
-| `EMAIL_PORT` | SMTP port (`587`) |
-| `EMAIL_HOST_USER` | SMTP username |
-| `EMAIL_HOST_PASSWORD` | SMTP password |
-| `EMAIL_USE_TLS` | Use TLS for email (`True`) |
-| `DEFAULT_FROM_EMAIL` | Default sender email address |
-| `ADMINS` | Comma-separated admin emails for error notifications |
-| `CSP_REPORT_ONLY` | Set to `True` to test CSP without blocking |
-
----
-
-## Updating Your Deployment
-
-### Docker Method
+Then point the `DB_*` vars in `.env` at Supabase and:
 
 ```bash
-git add .
-git commit -m "Update: description of changes"
-git push origin main
+python manage.py migrate
+python manage.py loaddata data.json
 ```
 
-Render automatically rebuilds and redeploys on every push.
+(Or use `pg_dump` / `psql` directly.)
 
-### Manual Redeploy
+### Images already in `media/`
 
-1. Go to your Web Service in Render Dashboard
-2. Click **Manual Deploy** → **Deploy latest commit**
+The database stores each file as a **relative key** (e.g. `products/r50.webp`). Upload the
+local files under the same keys and every existing row works unchanged:
+
+```bash
+# .env must contain the four SUPABASE_* storage vars
+python manage.py upload_media --dry-run     # list what would be uploaded
+python manage.py upload_media               # upload; skips files already in the bucket
+python manage.py upload_media --source D:\backup\media   # from another folder
+```
+
+---
+
+## Part 4 — How file paths work (upload & get)
+
+### Where each upload goes
+
+Every `ImageField` has an `upload_to` folder. That folder becomes the object path inside the
+bucket; the database column stores only the relative key.
+
+| Model.field | `upload_to` | Object in bucket `media` |
+|-------------|-------------|--------------------------|
+| `products.ProductImage.image` | `products/` | `media/products/<file>` |
+| `products.ProductVariant.image` | `variants/` | `media/variants/<file>` |
+| `products.ReviewImage.image` | `reviews/` | `media/reviews/<file>` |
+| `products.Category.image` | `categories/icons/` | `media/categories/icons/<file>` |
+| `products.Category.banner` | `categories/banners/` | `media/categories/banners/<file>` |
+| `products.Category.banner_mobile` | `categories/banners/mobile/` | `media/categories/banners/mobile/<file>` |
+| `core.Brand.logo` | `brands/` | `media/brands/<file>` |
+| `core.Banner.image` | `banners/` | `media/banners/<file>` |
+| `core.Banner.mobile_image` | `banners/mobile/` | `media/banners/mobile/<file>` |
+| `core.Testimonial.avatar` | `testimonials/` | `media/testimonials/<file>` |
+| `core.SiteSettings.logo` / `.favicon` | `site/` | `media/site/<file>` |
+| `pages.Service.image` | `services/` | `media/services/<file>` |
+| `pages.Service.banner` | `services/banners/` | `media/services/banners/<file>` |
+| `blog.BlogPost.featured_image` | `blog/` | `media/blog/<file>` |
+
+With `SUPABASE_STORAGE_PREFIX=prod` every key gets that folder in front
+(`media/prod/products/<file>`).
+
+The public URL of any object is:
+
+```
+https://<ref>.supabase.co/storage/v1/object/public/<bucket>/<key>
+e.g. https://<ref>.supabase.co/storage/v1/object/public/media/products/r50.webp
+```
+
+If a file with the same name already exists, Django appends a random suffix
+(`r50_aB3xYz1.webp`) rather than overwriting it, so URLs never change underneath a cached page.
+
+### Uploading — in code
+
+All existing upload paths (Django admin forms, spreadsheet image import, "Import images from
+Drive", `import_product_images`, review photos) already use the storage API, so they upload to
+Supabase with no code changes. For new code, do the same:
+
+```python
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+
+# Through a model field — the key is built from upload_to
+img = ProductImage(product=product)
+img.image.save('r50.webp', ContentFile(data), save=True)   # -> products/r50.webp
+
+# Straight to the bucket, any path
+key = default_storage.save('exports/report.csv', ContentFile(b'...'))
+
+# Delete
+img.image.delete(save=False)        # removes the object from the bucket
+default_storage.delete(key)
+```
+
+Never use `.path` or `open(settings.MEDIA_ROOT / ...)` — remote storage has no local path.
+Read a file's bytes with `img.image.open('rb')` or `default_storage.open(key)`.
+
+### Getting the URL
+
+| Where | How | Result |
+|-------|-----|--------|
+| Templates | `{{ img.image.url }}` | full Supabase URL |
+| Templates — meta tags / JSON-LD that need an absolute URL | `{% load ui %}{{ img.image.url\|absolute_url:request }}` | works for both local `/media/…` and Supabase URLs |
+| Python | `img.image.url` / `default_storage.url(key)` | full Supabase URL |
+| REST API / mobile app | serializers use `request.build_absolute_uri(file.url)` | full Supabase URL — the app loads images directly from Supabase |
+
+Don't write `{{ request.scheme }}://{{ request.get_host }}{{ x.url }}` — once `.url` is
+absolute that produces a broken `https://site.comhttps://…` link. Use the `absolute_url` filter.
+
+### Local development
+
+- No `SUPABASE_*` vars in `.env` → files are saved to `./media/` and served at `/media/` by
+  `runserver`.
+- With the vars set, local uploads go to the same bucket. Use a separate bucket or
+  `SUPABASE_STORAGE_PREFIX=dev` so test uploads don't mix with production.
+- `manage.py test` always uses local disk, never the bucket.
+
+---
+
+## Verify after deploying
+
+| Check | Expected |
+|-------|----------|
+| `https://<app>.onrender.com/healthz/` | `{"status": "ok"}` |
+| `/admin/` → upload a product image | Saves without error |
+| Right-click that image → *Open in new tab* | URL starts with `https://<ref>.supabase.co/storage/v1/object/public/media/` |
+| Supabase → Storage → `media` | The file appears under `products/` |
+| `/api/v1/products/` | `primary_image` values are Supabase URLs |
+| Redeploy, reload the page | Image still there |
 
 ---
 
 ## Troubleshooting
 
-### Build fails
+**Upload fails with `AccessDenied` / `SignatureDoesNotMatch`**
+Wrong S3 key pair or `SUPABASE_S3_REGION`. Regenerate the key in Supabase and copy the region
+from the S3 Connection panel.
 
-- Check the **Logs** tab for build errors
-- Ensure `requirements.txt` and `package.json` are committed
-- Verify `npm run build` succeeds locally
+**Upload works but the image shows 400/404**
+The bucket isn't **public**, or `SUPABASE_STORAGE_BUCKET` doesn't match the bucket name.
 
-### Database connection errors
+**Images still go to `/media/…` and vanish after redeploy**
+One of the four `SUPABASE_*` storage vars is missing. Check in the Render Shell:
+`python manage.py shell -c "from django.conf import settings; print(settings.USE_SUPABASE_STORAGE)"`
+— it must print `True`.
 
-- Verify `DB_HOST` uses the **Internal** database URL (not external)
-- Check that PostgreSQL is running and accessible
-- Ensure `DB_PASSWORD` is correct
+**Upload rejected with `Payload too large`**
+The bucket's size limit is lower than the file. The app allows up to 5 MB per image.
 
-### Static files not loading
-
-- Verify `collectstatic` ran during build
-- Check that `static/css/app.css` exists
-- Ensure WhiteNoise is configured in production settings
-
-### Media files disappearing
-
-- Add a **Disk** mounted at `/app/media`
-- Or configure external storage (S3, Cloudinary, etc.)
-
-### Health check failing
-
-- Verify `/healthz/` returns 200 OK
-- Check that the database is reachable
-- Review application logs for errors
-
-### Service sleeping (Free tier)
-
-- Free Web Services sleep after 15 minutes of inactivity
-- First request after sleep takes ~30 seconds to wake
-- Upgrade to Starter plan to prevent sleeping
+**Free tier notes**
+Render free web services sleep after 15 minutes (first request then takes ~30 s). Supabase
+free projects pause after a week without activity — unpause them from the dashboard.
 
 ---
+
+## Custom domain
+
+1. Web service → **Settings → Custom Domains** → add `shop.example.com` and create the DNS
+   records Render shows.
+2. Update `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` (`https://shop.example.com`) and
+   `SITE_DOMAIN`.
+3. Image URLs keep pointing at Supabase; nothing to change there.
 
 ## Rollback
 
-1. Go to your Web Service → **Events** tab
-2. Find the previous successful deploy
-3. Click **Rollback to this deploy**
+Web service → **Events** → pick a previous successful deploy → **Rollback**. Migrations are not
+reversed automatically; a rollback across a schema change needs a manual `migrate <app> <n>`.
 
----
+## Cost (monthly, approximate)
 
-## Cost Estimation (Monthly)
-
-| Service | Free | Starter |
-|---------|------|---------|
-| Web Service | $0 (sleeps) | $7 |
-| PostgreSQL | $0 (90 days) | $15 |
-| Redis | $0 | $15 |
-| **Total** | **$0** | **$37** |
-
-> Free PostgreSQL expires after 90 days. Export data before it expires or upgrade.
-
----
-
-## Security Notes
-
-- `DEBUG` is always `False` in production
-- HTTPS is enforced with HSTS (1 year, preload)
-- Secure + HttpOnly cookies
-- `X-Frame-Options: DENY`
-- Content-Security-Policy headers
-- Rate limiting on public forms and admin login
-- Honeypot fields on all public forms
-- Self-hosted frontend libraries (no CDN dependencies)
+| Service | Free | Paid |
+|---------|------|------|
+| Render web service | $0 (sleeps) | Starter $7 |
+| Render Key Value | $0 | Starter $10 |
+| Supabase (DB 500 MB + Storage 1 GB) | $0 (pauses when idle) | Pro $25 (8 GB DB, 100 GB storage) |

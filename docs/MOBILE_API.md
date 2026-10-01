@@ -125,7 +125,7 @@ Lists, the home feed, related products, compare and the wishlist all use the sam
   "price": "79999.00", "sale_price": "69999.00", "effective_price": "69999.00", "discount_percent": 12,
   "condition": "new", "is_in_stock": true, "average_rating": 4.5, "review_count": 12,
   "is_featured": true, "is_trending": false, "is_new_arrival": true,
-  "primary_image": "https://…/media/products/r50.webp", "is_wishlisted": false
+  "primary_image": "https://<ref>.supabase.co/storage/v1/object/public/media/products/r50.webp", "is_wishlisted": false
 }
 ```
 
