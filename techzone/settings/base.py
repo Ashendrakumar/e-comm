@@ -91,15 +91,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'techzone.wsgi.application'
 
-# Database - defaults to SQLite for easy setup
+# Database - PostgreSQL via env vars (see .env / .env.example)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME', default='postgres'),
+        'USER': env('DB_USER', default='postgres'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT', default='5432'),
     }
 }
-
-# PostgreSQL: see production.py (DB_* env vars).
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
