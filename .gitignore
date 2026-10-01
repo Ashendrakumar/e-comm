@@ -1,166 +1,27 @@
-# =========================
-# Django / Django CMS
-# =========================
-*.log
-*.pot
-*.pyc
-__pycache__/
+# Environment variables
+.env
+
+# SQLite
 db.sqlite3
 db.sqlite3-journal
-media/
-staticfiles/
 
-# Local environment variables
-.env
-.env.*
-!.env.example
-
-# Django secret keys / local settings
-local_settings.py
-settings/local.py
-
-# =========================
 # Python
-# =========================
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-pip-wheel-metadata/
+__pycache__/
+*.py[cod]
 *.egg-info/
-.installed.cfg
-*.egg
-
-# =========================
-# Virtual Environments
-# =========================
-venv/
-ENV/
-env/
+dist/
+build/
 .venv/
+venv/
 
-# =========================
-# VS Code / IDE
-# =========================
+# Django
+*.log
+staticfiles/
+media/
+
+# Node
+node_modules/
+
+# IDE
 .vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# =========================
-# OS Files
-# =========================
-.DS_Store
-Thumbs.db
-
-# =========================
-# Pytest / Coverage
-# =========================
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.nox/
-.cache/
-
-# =========================
-# Migrations (Optional)
-# Uncomment if you DON'T want migrations tracked
-# =========================
-# **/migrations/
-# !**/migrations/__init__.py
-
-# =========================
-# Node.js (if using frontend tooling)
-# =========================
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# =========================
-# Celery
-# =========================
-celerybeat-schedule
-celerybeat.pid
-
-# =========================
-# Redis
-# =========================
-dump.rdb
-
-# =========================
-# Docker
-# =========================
-*.pid
-*.seed
-*.pid.lock
-
-# Docker environment
-docker-compose.override.yml
-
-# =========================
-# Gunicorn
-# =========================
-gunicorn.pid
-
-# =========================
-# SASS / Webpack Cache
-# =========================
-.cache-loader/
-.sass-cache/
-
-# =========================
-# Static Build Artifacts
-# =========================
-assets/
-webpack-stats.json
-
-# =========================
-# Jupyter Notebook
-# =========================
-.ipynb_checkpoints
-
-# =========================
-# Type Checking
-# =========================
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# =========================
-# Ruff / Black
-# =========================
-.ruff_cache/
-
-# =========================
-# Django CMS Uploads
-# =========================
-public/media/
-public/static/
-
-# =========================
-# Backup Files
-# =========================
-*.bak
-*.tmp
-*.temp
-
-.claude/settings.local.json
-# Database / media backups (scripts/backup.sh)
-backups/

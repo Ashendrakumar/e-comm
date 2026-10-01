@@ -28,6 +28,18 @@ def _normalise(item):
     return {'title': title, 'url': url}
 
 
+@register.filter
+def absolute_url(url, request):
+    """{{ img.image.url|absolute_url:request }} -> a full https://… URL.
+
+    Media URLs are relative ("/media/…") on local disk but already absolute on
+    Supabase Storage; build_absolute_uri leaves absolute ones untouched.
+    """
+    if not url:
+        return ''
+    return request.build_absolute_uri(url) if request else url
+
+
 @register.inclusion_tag('partials/breadcrumbs.html', takes_context=True)
 def breadcrumbs(context, *args, trail=None, on_dark=False, align='start', bar=False):
     home = reverse('core:homepage')
